@@ -1,0 +1,6 @@
+# SDLC Sync Metadata
+# Tracks which version of dot-claude was used for the last sync.
+# Used by sync-sdlc to detect process/template changes and migrate existing files.
+dot_claude_ref: null         # Skills dir (/home/tomzx/.opencode) is not a git repo; no SHA available
+dot_claude_remote: null      # No remote resolvable for the skills directory
+last_synced: 2026-06-23      # ISO 8601 date of last sync
