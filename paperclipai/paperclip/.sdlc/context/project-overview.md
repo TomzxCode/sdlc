@@ -32,8 +32,11 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 - Workspaces and runtime (project workspaces, execution worktrees, runtime services)
 - Local/self-hosted plugin runtime
 - Company portability (export/import orgs with secret scrubbing)
+- Secrets management with pluggable provider vault (local encrypted, AWS, GCP, Vault) and agent/project binding
+- Auth and access control (local_trusted and authenticated modes, company memberships, invites, permission grants)
+- Company skills catalog and team templates
 - Auditable activity log for all mutating actions
-- Board web UI (dashboard, org chart, tasks, agents, approvals, costs, activity)
+- Board web UI (dashboard, org chart, tasks, agents, approvals, costs, activity, secrets, skills, inbox)
 
 **Out of scope (V1):**
 

@@ -40,6 +40,8 @@ Paperclip is a single-process Node.js control plane that orchestrates externally
 | `packages/plugins/` | Plugin system: SDK, create-paperclip-plugin, sandbox providers, example plugins | TypeScript |
 | `packages/mcp-server/` | MCP server package | TypeScript |
 | `packages/skills-catalog/`, `packages/teams-catalog/` | Skills and teams catalogs | TypeScript |
+| `server/src/secrets/` | Secrets provider implementations (local-encrypted, AWS, GCP, Vault) and provider registry | TypeScript |
+| `server/src/auth/` | Auth middleware (bearer token, session, board/agent resolution) | TypeScript |
 | `cli/` | `paperclipai` CLI (onboard, configure, plugin install) | TypeScript (tsx) |
 | `doc/` | Operational and product docs (SPEC, GOAL, PRODUCT, DATABASE, DEVELOPING) | Markdown |
 
@@ -62,6 +64,7 @@ Paperclip is a single-process Node.js control plane that orchestrates externally
 - **Deployment modes:** `local_trusted` (implicit board, loopback) or `authenticated` (session-based) with `private`/`public` exposure policy (see `doc/DEPLOYMENT-MODES.md`).
 - **CI/CD:** GitHub Actions; `pnpm test` (Vitest) is the cheap default; `pnpm test:e2e` and `pnpm test:release-smoke` are opt-in Playwright suites.
 - **Observability:** opt-in OpenTelemetry auto-instrumentation (traces) when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`@opentelemetry/*` are optional peer deps); structured JSON logs in production with per-request IDs.
+- **Secrets:** Pluggable provider vault (default: local encrypted file); AWS Secrets Manager, GCP, and Vault optional; every secret access audited via `secret_access_events` table.
 - **Releasing:** `scripts/release.sh` (canary/stable), npm package publishing via `scripts/build-npm.sh`, GitHub releases via `scripts/create-github-release.sh`.
 
 ## Architecture Decisions

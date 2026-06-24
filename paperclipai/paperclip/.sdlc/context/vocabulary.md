@@ -43,6 +43,12 @@
 | Request depth | Counter incremented as work is delegated down the org tree. |
 | Activity log | Immutable audit trail for every mutating action (actor_type, action, entity, details). |
 | Budget hard stop | At 100% of monthly UTC budget, the agent is paused and new invocations/checkout are blocked. |
+| Secrets provider | A pluggable vault backend for storing secret material (local encrypted, AWS Secrets Manager, GCP, HashiCorp Vault). |
+| Secret binding | An association between a secret key and a target (agent, project, or routine) with a config path for resolution. |
+| Inline secret reference | The `${{ secrets.key }}` syntax used in JSONB configs to reference a secret that is resolved at runtime. |
+| Board chat / Conference room | An experimental board-level chat assistant that spawns a Claude subprocess with the board skills prompt, streamed via SSE and persisted to a standing issue. |
+| Company membership | A user's role-scoped association with a company (`owner \| admin \| member`). |
+| Principal permission grant | A fine-grained permission override granting a specific action on a specific resource to a principal (user or agent). |
 | Greptile | Automated code-review service used in CI; PRs must reach 5/5 with no open P2+ comments. |
 | Low-trust preset | A containment control for hostile automated work (not general project/issue privacy). |
 
