@@ -53,9 +53,9 @@ jobs:
       - name: Resolve and validate target project
         id: proj
         run: |
-          repository='${{ inputs.repository }}'
-          owner='${repository%%/*}'
-          repo='${repository##*/}'
+          repository="${{ inputs.repository }}"
+          owner="${repository%%/*}"
+          repo="${repository##*/}"
           echo "owner=$owner" >> "$GITHUB_OUTPUT"
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
           if [ ! -d "$owner/$repo/.sdlc" ]; then
