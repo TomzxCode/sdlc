@@ -95,7 +95,7 @@ jobs:
       - name: Install skills from tomzx/agents
         run: |
           agents="$RUNNER_TEMP/agents"
-          git clone --depth 1 https://github.com/tomzx/agents "$agents"
+          git clone https://github.com/tomzx/agents "$agents"
           # Global skill discovery reads ~/.opencode/skills and the global
           # AGENTS.md is read from ~/.config/opencode/AGENTS.md.
           ln -s "$agents/skills" "$HOME/.opencode/skills"
