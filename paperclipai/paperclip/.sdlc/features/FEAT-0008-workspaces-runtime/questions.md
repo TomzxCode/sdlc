@@ -17,3 +17,7 @@ The following items were identified during codebase reconciliation and reflect f
 6. **Sandbox provider runtime** — `server/src/services/sandbox-provider-runtime.ts` supports sandbox-provider-based execution workspaces (e.g., Daytona). Not documented.
 
 7. **Local service supervisor** — `server/src/services/local-service-supervisor.ts` manages local runtime services. Not documented.
+
+## Sync drift (2026-06-24) — update
+
+Item 1 (Projects subsystem) has been partially addressed: Projects now has its own feature file at `.sdlc/features/FEAT-0014-projects/`. The FEAT-0008 spec should be updated to reflect the boundary between workspaces (execution worktrees, runtime services) and projects (organizational grouping with workspaces).
