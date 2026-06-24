@@ -115,13 +115,43 @@ jobs:
             --dangerously-skip-permissions \
             --command sync-sdlc
 
-      - name: Commit and push refreshed artifacts
+      - name: Publish refreshed artifacts
         run: |
           cd "$GITHUB_WORKSPACE"
-          git add "${{ steps.proj.outputs.owner }}/${{ steps.proj.outputs.repo }}"
+          owner="${{ steps.proj.outputs.owner }}"
+          repo="${{ steps.proj.outputs.repo }}"
+          repository="${{ inputs.repository }}"
+          base="$(git branch --show-current)"
+          [ -z "$base" ] && base="${GITHUB_REF_NAME:-main}"
+          refresh_branch="sdlc/refresh/${owner}-${repo}"
+
+          git add "$owner/$repo"
           if git diff --cached --quiet; then
-            echo "No changes for ${{ inputs.repository }}"
-          else
-            git commit -m "Refresh SDLC for ${{ inputs.repository }}"
-            git push
+            echo "No changes for $repository"
+            exit 0
           fi
+          git commit -m "Refresh SDLC for $repository"
+
+          # 1. Persist to a per-project branch first so changes are never lost,
+          #    even if the merge into the default branch below fails. The branch
+          #    is rewritten on every refresh; the workflow's concurrency group
+          #    guarantees a single writer per repo.
+          git push --force origin "HEAD:refs/heads/$refresh_branch"
+          echo "Saved $repository changes on $refresh_branch"
+
+          # 2. Merge into the default branch by rebasing onto its latest tip and
+          #    fast-forwarding (no merge commits). Parallel matrix jobs also push
+          #    here, so retry; conflicts are impossible because each job edits a
+          #    disjoint project path. If this keeps failing, the work is still
+          #    safe on $refresh_branch.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin "$base" || { sleep $((attempt * 5)); continue; }
+            if git rebase "origin/$base" && git push origin "HEAD:$base"; then
+              echo "Merged into $base on attempt $attempt"
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 5))
+          done
+          echo "::error::Could not merge into $base (changes are safe on $refresh_branch)"
+          exit 1
