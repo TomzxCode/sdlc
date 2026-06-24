@@ -51,7 +51,7 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 - The Electron desktop boots the web server in-process; no sidecar subprocess
 - Tauri desktop is legacy and receives no new features; kept only for auto-update migration
 - Shared UI code (`packages/ui`) must work across web, desktop (both shells), and VS Code webview
-- Node.js >= 20 required; Bun is the package manager and runtime for builds
+- Node.js >= 22 required; Bun is the package manager and runtime for builds
 - TypeScript strict mode enforced; no `any` without justification
 - All UI colors must use theme tokens; no hardcoded color values or Tailwind color classes
 - Icons must use the shared SVG sprite system; no direct `@remixicon/react` imports

@@ -54,6 +54,8 @@
 | `packages/desktop` | Legacy Tauri desktop shell (maintenance-only) | Tauri v2, Rust |
 | `packages/vscode` | VS Code extension with sidebar webview | VS Code Extension API, esbuild |
 | `packages/docs` | Documentation website source | MDX |
+| `packages/electron/ssh-manager.mjs` | SSH connection management for remote OpenChamber instances (Electron only) | Node SSH2, Electron IPC |
+| `packages/web/server/lib/preview/` | Preview browser proxy for locally running dev web apps | http-proxy-middleware |
 
 ## Data Flow
 
