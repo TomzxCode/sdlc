@@ -34,11 +34,15 @@
 | SST | The IaC framework used for cloud infra (`sst.config.ts`). |
 | Hono | The web framework used for the HTTP API server. |
 | MCP | Model Context Protocol; external tool/context servers the agent can call. |
+| ACP | Agent Client Protocol; interoperable agent communication protocol implemented in OpenCode. |
 | Plugin | A package extending OpenCode via the `@opencode-ai/plugin` SDK and namespaced hooks. |
 | Compaction | The operation that folds the current complete System Context into a fresh baseline and starts a new Context Epoch. |
 | Generation Controls | Provider-neutral sampling/output controls partitioned from provider wire semantics. |
 | Model Request Options | Provider-semantic model settings resolved from the Catalog before LLM protocol encoding. |
 | PTY Environment | The host-supplied environment overlay applied when creating a PTY. |
+| Managed Tool Output File | A temporary file retaining complete tool output too large for session history. |
+| Snapshot | State snapshots mechanism for saving and restoring session state. |
+| Worktree | Git worktree management utilities for parallel branch contexts. |
 
 ## Acronyms and Abbreviations
 

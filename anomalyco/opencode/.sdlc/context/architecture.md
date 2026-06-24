@@ -34,8 +34,8 @@ A core server process owns sessions, the tool registry, provider adapters, and s
 | `packages/app` | Shared web UI components | SolidJS, Tailwind, Vite |
 | `packages/desktop` | Native desktop app wrapping the web UI | Electron |
 | `packages/server` | HTTP API surface / server package | Hono, Effect |
-| `packages/llm` | Provider-protocol adapters and LLM primitives | Effect, AI SDK |
-| `packages/core` | Lower-level runtime helpers (node-pty fix, shared core) | TypeScript |
+| `packages/llm` | Standalone Effect Schema-first LLM core: route/protocol/endpoint/auth architecture, provider adapters, tool dispatch | Effect |
+| `packages/core` | Shared core: database, Effect services, system context, session runner, PTY, config, tools, agents, providers, plugins, permissions | TypeScript, Effect, Drizzle |
 | `packages/plugin` | Source for `@opencode-ai/plugin` (plugin SDK) | TypeScript |
 | `packages/sdk` (`packages/sdk/js`) | Generated TypeScript client SDK | TypeScript (generated) |
 | `packages/cli` | Standalone CLI distribution package | TypeScript |
@@ -43,6 +43,10 @@ A core server process owns sessions, the tool registry, provider adapters, and s
 | `packages/server` / `packages/function` / `packages/identity` | Cloud/enterprise services (console, auth, stats) | Hono, SST, OpenAuth |
 | `packages/effect-sqlite-node`, `effect-drizzle-sqlite` | Effect-integrated SQLite storage adapters | Effect, Drizzle, Bun SQLite |
 | `packages/http-recorder` | Deterministic record/replay of Effect HTTP traffic | Effect |
+| `packages/slack` | Slack bot integration | TypeScript, @slack/bolt |
+| `packages/enterprise` | Enterprise self-hosted web app (teams, projects) | SolidJS, Hono, SST |
+| `packages/schema` | Shared Effect Schema definitions | Effect |
+| `github/` | GitHub Actions composite action for running in CI | TypeScript |
 | `sdks/vscode` | VSCode editor extension | TypeScript |
 
 ## Data Flow
@@ -57,12 +61,12 @@ A core server process owns sessions, the tool registry, provider adapters, and s
 
 ## Infrastructure
 
-- **CI/CD:** GitHub Actions (`.github/workflows`) covering test, typecheck, lint, publish, containers, docs, triage, pr-standards, release, storybook, and Nix builds.
+- **CI/CD:** GitHub Actions (`.github/workflows`) with 26 workflows covering test, typecheck, lint, publish, containers, docs, triage, pr-standards, release, storybook, Nix builds, SDK regeneration, and more.
 - **Lint/format:** oxlint (lint) and prettier; `bun typecheck` runs turbo typecheck across packages.
 - **Cloud:** SST (`sst.config.ts`) defines stages for app, console, enterprise, lake, monitoring, stats, identity; infra lives under `infra/`.
 - **Distribution:** npm (`opencode-ai`), Homebrew, Scoop, Chocolatey, pacman, AUR, mise, Nix, plus an `install` script and GitHub releases for desktop builds.
 - **Build:** single-executable local builds via `packages/opencode/script/build.ts --single`.
-- **Observability:** Effect telemetry/OpenTelemetry hooks; per-service monitoring defined in `infra/monitoring.ts`.
+- **Observability:** Effect telemetry/OpenTelemetry hooks; Sentry for error tracking (`@sentry/solid`, `@sentry/vite-plugin`); per-service monitoring defined in `infra/monitoring.ts`.
 
 ## Architecture Decisions
 

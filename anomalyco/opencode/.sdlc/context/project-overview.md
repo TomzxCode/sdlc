@@ -22,9 +22,13 @@ Users interact with it through a terminal UI, a web/desktop app, a headless HTTP
 - A durable, replayable session runtime with provider turns, compaction, and a system context algebra.
 - Multiple frontends: terminal UI (TUI), web app, Electron desktop app.
 - A headless HTTP API server exposing project, session, message, and config routes.
-- An LLM provider layer with a model catalog and provider adapters.
+- An LLM provider layer with a model catalog, provider adapters, and a standalone LLM core package for provider-agnostic calls.
 - An agent and tool system with built-in tools, permissions, and skills.
 - A plugin system with namespaced hooks, plus a generated TypeScript SDK and editor integrations.
+- An Agent Client Protocol (ACP) implementation for interoperable agent communication.
+- Enterprise self-hosting platform with team management, SST-deployed console and stats services.
+- Slack bot integration bridging sessions into Slack.
+- A GitHub Actions CI/CD action for running OpenCode in pipelines.
 
 **Out of scope:**
 - Hosting or managing the user's code repositories (OpenCode operates on local directories only).
@@ -35,6 +39,7 @@ Users interact with it through a terminal UI, a web/desktop app, a headless HTTP
 
 - Runtime is Bun 1.3+ on TypeScript; packages are distributed as a Bun workspace monorepo.
 - Provider support is data-driven via models.dev, so new providers should require little or no code change.
+- The LLM package (`packages/llm`) is a standalone Effect Schema-first abstraction that can be consumed independently of the rest of OpenCode.
 - V2 session core separates durable prompt admission from model execution and keeps execution process-local until clustering is implemented.
 - UI/core product features require design review with the core team before implementation.
 - All PRs must reference an existing issue; issue-first policy is enforced.
