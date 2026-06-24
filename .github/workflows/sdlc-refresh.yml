@@ -1,0 +1,114 @@
+name: SDLC Refresh
+
+# Refresh a single project's .sdlc/ artifacts by running the sync-sdlc skill
+# from tomzx/agents against the upstream source, with opencode on the free
+# DeepSeek V4 Flash model from OpenCode Zen. Triggered manually, or called as a
+# reusable workflow by the SDLC Refresh (all) orchestrator, with the target as
+# organization/repository.
+#
+# This workspace is the SDLC_DIR mirror: its {owner}/{repository}/.sdlc tree
+# matches the layout the SDLC skills resolve through $SDLC_DIR, so the skill
+# reads/writes artifacts here while analyzing the upstream checkout.
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Target project as organization/repository (e.g. openchamber/openchamber)"
+        required: true
+        type: string
+      model:
+        description: "opencode model id (provider/model)"
+        required: false
+        type: string
+        default: "opencode/deepseek-v4-flash-free"
+  workflow_call:
+    inputs:
+      repository:
+        description: "Target project as organization/repository"
+        type: string
+        required: true
+      model:
+        description: "opencode model id (provider/model)"
+        type: string
+        required: false
+        default: "opencode/deepseek-v4-flash-free"
+
+permissions:
+  contents: write
+
+# One refresh per project at a time; let an in-flight run finish.
+concurrency:
+  group: sdlc-refresh-${{ inputs.repository }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout this SDLC workspace
+        uses: actions/checkout@v7
+
+      - name: Resolve and validate target project
+        id: proj
+        run: |
+          repository='${{ inputs.repository }}'
+          owner='${repository%%/*}'
+          repo='${repository##*/}'
+          echo "owner=$owner" >> "$GITHUB_OUTPUT"
+          echo "repo=$repo" >> "$GITHUB_OUTPUT"
+          if [ ! -d "$owner/$repo/.sdlc" ]; then
+            echo "::error::No '$owner/$repo/.sdlc' directory in this workspace"
+            exit 1
+          fi
+
+      - name: Clone upstream source
+        env:
+          # Default token clones public upstreams. For private upstream repos,
+          # use a PAT with `repo` scope stored as a secret instead.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          gh repo clone '${{ inputs.repository }}' "$RUNNER_TEMP/source" -- --depth 1
+
+      - name: Install opencode
+        # The installer drops the binary at ~/.opencode/bin and appends it to
+        # $GITHUB_PATH, so `opencode` is on PATH for the steps below.
+        run: curl -fsSL https://opencode.ai/install | bash
+
+      - name: Install skills from tomzx/agents
+        run: |
+          agents="$RUNNER_TEMP/agents"
+          git clone --depth 1 https://github.com/tomzx/agents "$agents"
+          # Global skill discovery reads ~/.opencode/skills and the global
+          # AGENTS.md is read from ~/.config/opencode/AGENTS.md.
+          ln -s "$agents/skills" "$HOME/.opencode/skills"
+          mkdir -p "$HOME/.config/opencode"
+          ln -s "$agents/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+
+      - name: Refresh SDLC artifacts
+        env:
+          SDLC_DIR: ${{ github.workspace }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENCODE_DISABLE_AUTOUPDATE: "1"
+          MODEL: ${{ inputs.model }}
+        run: |
+          opencode run \
+            --model "$MODEL" \
+            --dir "$RUNNER_TEMP/source" \
+            --dangerously-skip-permissions \
+            --command sync-sdlc
+
+      - name: Commit and push refreshed artifacts
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git add "${{ steps.proj.outputs.owner }}/${{ steps.proj.outputs.repo }}"
+          if git diff --cached --quiet; then
+            echo "No changes for ${{ inputs.repository }}"
+          else
+            git commit -m "Refresh SDLC for ${{ inputs.repository }}"
+            git push
+          fi

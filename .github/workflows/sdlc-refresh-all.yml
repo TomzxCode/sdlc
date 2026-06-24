@@ -1,0 +1,65 @@
+name: SDLC Refresh (all)
+
+# Discover every {org}/{repo}/.sdlc directory in this workspace and run the
+# reusable SDLC Refresh workflow for each as an independent matrix job, then
+# rebuild the status dashboards. Native `needs` handles waiting, so there is no
+# API polling and no runner burned while idle.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "opencode model id (provider/model); defaults to DeepSeek V4 Flash Free"
+        required: false
+        type: string
+        default: ""
+  schedule:
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.set.outputs.projects }}
+    steps:
+      - name: Checkout workspace
+        uses: actions/checkout@v7
+
+      - name: Discover projects
+        id: set
+        run: |
+          mapfile -t paths < <(find . -maxdepth 3 -type d -name .sdlc -not -path './.git/*' \
+            | sed 's|^\./||; s|/.sdlc$||' | sort)
+          echo "Discovered projects:"
+          printf '  - %s\n' "${paths[@]}"
+          json=$(printf '%s\n' "${paths[@]}" | jq -R . | jq -sc .)
+          echo "projects=$json" >> "$GITHUB_OUTPUT"
+
+  refresh:
+    needs: discover
+    strategy:
+      fail-fast: false
+      matrix:
+        repository: ${{ fromJson(needs.discover.outputs.projects) }}
+    uses: ./.github/workflows/sdlc-refresh.yml
+    with:
+      repository: ${{ matrix.repository }}
+      model: ${{ inputs.model || 'opencode/deepseek-v4-flash-free' }}
+
+  dashboards:
+    needs: [refresh]
+    # Rebuild regardless of whether individual refresh jobs succeeded.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rebuild status dashboards
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run sdlc-status.yml -R "$GITHUB_REPOSITORY" \
+            && echo "Dispatched SDLC Status Dashboards" \
+            || echo "::warning::Could not dispatch SDLC Status Dashboards"
