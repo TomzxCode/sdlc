@@ -73,6 +73,20 @@ jobs:
           git config --global user.name "github-actions[bot]"
           gh repo clone '${{ inputs.repository }}' "$RUNNER_TEMP/source" -- --depth 1
 
+      - name: Surface existing SDLC artifacts in the upstream checkout
+        run: |
+          # This workspace owns the .sdlc/ artifacts. Bind them into the upstream
+          # checkout so sync-sdlc reads and updates the existing artifacts via its
+          # default repo-first resolution, instead of initializing from scratch.
+          link="$RUNNER_TEMP/source/.sdlc"
+          target="$GITHUB_WORKSPACE/${{ steps.proj.outputs.owner }}/${{ steps.proj.outputs.repo }}/.sdlc"
+          if [ -e "$link" ] || [ -L "$link" ]; then
+            echo "::notice::Upstream already contains a .sdlc; leaving it in place"
+          else
+            ln -s "$target" "$link"
+          fi
+          ls -la "$link"
+
       - name: Install opencode
         # The installer drops the binary at ~/.opencode/bin and appends it to
         # $GITHUB_PATH, so `opencode` is on PATH for the steps below.
@@ -90,7 +104,6 @@ jobs:
 
       - name: Refresh SDLC artifacts
         env:
-          SDLC_DIR: ${{ github.workspace }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENCODE_DISABLE_AUTOUPDATE: "1"
