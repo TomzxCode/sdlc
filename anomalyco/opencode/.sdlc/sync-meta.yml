@@ -1,6 +1,6 @@
 # SDLC Sync Metadata
 # Tracks which version of dot-claude was used for the last sync.
 # Used by sync-sdlc to detect process/template changes and migrate existing files.
-dot_claude_ref: 3b9825bc5ba9042aedad856c82c71d3f8ddf613e
+dot_claude_ref: f75b92a23f4e719fdfe22f8eccd1b9a323924a62
 dot_claude_remote: https://github.com/tomzx/agents
-last_synced: 2026-06-24
+last_synced: 2026-06-29
