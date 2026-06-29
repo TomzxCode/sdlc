@@ -48,7 +48,7 @@
 | Component | Responsibility | Technology |
 |---|---|---|
 | `packages/ui` | Shared React components, hooks, stores, theme, and sync layer | React 19, TypeScript, Zustand, Tailwind v4, Base UI, CodeMirror |
-| `packages/web` | Express server, API routes, CLI, Vite frontend build | Express 5, Node.js >=20, Bun, Vite 7 |
+| `packages/web` | Express server, API routes, CLI, Vite frontend build | Express 5, Node.js >=22, Bun, Vite 7 |
 | `packages/web/server` | Backend runtime: OpenCode lifecycle, SSE event pipeline, Git, terminal, tunnels, auth, TTS, notifications, quota | Express, ws, simple-git, bun-pty/node-pty, Cloudflare tunnel |
 | `packages/electron` | Forward desktop shell; boots web server in-process, native integrations | Electron 41, electron-builder |
 | `packages/desktop` | Legacy Tauri desktop shell (maintenance-only) | Tauri v2, Rust |

@@ -23,6 +23,8 @@ last_updated: "<YYYY-MM-DD>"
 | Planning & Feasibility | review-requirements | — |
 | Planning & Feasibility | create-existing-solutions | — |
 | Planning & Feasibility | review-existing-solutions | — |
+| Planning & Feasibility | create-codebase-analysis | — |
+| Planning & Feasibility | review-codebase-analysis | — |
 | Planning & Feasibility | create-feasibility | — |
 | Planning & Feasibility | review-feasibility | — |
 | Design | create-specifications | — |
@@ -52,7 +54,7 @@ Status values: `—` (not started), `done`, `skipped`, `blocked`, or the current
 ## Task Progress
 
 | ID | Title | Size | Status | Completed | Blocker |
-|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|
 | 0001 | <title> | S | pending | — | — |
 
 **Completion:** 0 / 0 tasks (0%)
