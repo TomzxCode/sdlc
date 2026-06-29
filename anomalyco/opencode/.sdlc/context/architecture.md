@@ -45,6 +45,7 @@ A core server process owns sessions, the tool registry, provider adapters, and s
 | `packages/http-recorder` | Deterministic record/replay of Effect HTTP traffic | Effect |
 | `packages/slack` | Slack bot integration | TypeScript, @slack/bolt |
 | `packages/enterprise` | Enterprise self-hosted web app (teams, projects) | SolidJS, Hono, SST |
+| `packages/protocol` | Public HTTP API contract: middleware, route groups, OpenAPI | Effect HttpApi |
 | `packages/schema` | Shared Effect Schema definitions | Effect |
 | `github/` | GitHub Actions composite action for running in CI | TypeScript |
 | `sdks/vscode` | VSCode editor extension | TypeScript |
