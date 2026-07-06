@@ -23,6 +23,7 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 - Web/PWA frontend and Express server for hosting OpenCode sessions
 - Electron desktop app (macOS and Windows; Linux planned)
 - Tauri desktop app (legacy, maintenance-only for auto-update)
+- Capacitor mobile app (iOS and Android) with native push notifications and QR pairing
 - VS Code extension with sidebar webview
 - Shared UI component library (`@openchamber/ui`)
 - CLI for starting, stopping, configuring, and tunneling the web server
@@ -40,10 +41,9 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 **Out of scope:**
 
 - The OpenCode server itself (separate project at opencode.ai)
-- Windows and Linux desktop apps (on roadmap, not yet implemented)
-- Mobile native app (on roadmap)
+- Windows and Linux desktop apps (Electron supports them but packaging/release not fully automated)
 - Linear integration (on roadmap)
-- Built-in browser for running dev apps (on roadmap)
+- Built-in browser for running dev apps (on roadmap, preview browser exists for local dev servers)
 
 ## Key Constraints
 

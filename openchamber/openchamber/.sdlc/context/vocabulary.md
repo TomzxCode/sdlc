@@ -40,6 +40,11 @@
 | PWA | Progressive Web App; the browser-based runtime that supports offline access, installation, and push notifications. |
 | Skills Catalog | A registry of available skills that users can browse, install, and configure to extend agent capabilities. |
 | Project Management | Tools for tracking issues, todo lists, and project status within OpenChamber, integrating with Linear and other PM systems. |
+| Snippets | Reusable text templates that can be expanded in the chat input via autocomplete, supporting global and project-level scopes with aliases. |
+| Plugins | OpenCode plugin scripts (JS/TS) that extend agent behavior, installable as npm packages or local files with configurable options. |
+| Session Assist | Server-side feature that generates a short recap of the agent's last reply and one suggested user follow-up using a small model after a session goes idle. |
+| Auto Review | Automated iterative review flow where a reviewer agent examines a session's output, generates findings, and passes them back to the original agent for revision. |
+| Capacitor | Cross-platform native runtime for building iOS and Android apps from web code; used by OpenChamber Mobile. |
 | AI-Generated Commits/PR | Automatic git commit message generation and pull request creation from session changes, with human review before submission. |
 | Docker Self-Hosted | Docker deployment support with Dockerfile and docker-compose.yml for running OpenChamber on a server. |
 | MCP | Model Context Protocol integration for connecting AI agents to external tools and data sources through a standardized protocol. |

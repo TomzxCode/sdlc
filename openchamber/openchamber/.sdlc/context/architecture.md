@@ -52,6 +52,7 @@
 | `packages/web/server` | Backend runtime: OpenCode lifecycle, SSE event pipeline, Git, terminal, tunnels, auth, TTS, notifications, quota | Express, ws, simple-git, bun-pty/node-pty, Cloudflare tunnel |
 | `packages/electron` | Forward desktop shell; boots web server in-process, native integrations | Electron 41, electron-builder |
 | `packages/desktop` | Legacy Tauri desktop shell (maintenance-only) | Tauri v2, Rust |
+| `packages/mobile` | Capacitor mobile app wrapping the mobile web UI for iOS and Android | Capacitor, iOS (Swift), Android (Java/Kotlin) |
 | `packages/vscode` | VS Code extension with sidebar webview | VS Code Extension API, esbuild |
 | `packages/docs` | Documentation website source | MDX |
 | `packages/electron/ssh-manager.mjs` | SSH connection management for remote OpenChamber instances (Electron only) | Node SSH2, Electron IPC |
