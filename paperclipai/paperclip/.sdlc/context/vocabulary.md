@@ -66,3 +66,12 @@
 | JWT | JSON Web Token (short-lived run tokens) |
 | PGlite | Embedded PostgreSQL (see Technical Terms) |
 | CSP | Content Security Policy |
+| Pipeline | A stage-based workflow definition with ordered stages and allowed transitions |
+| Pipeline case | A work item flowing through a pipeline with structured fields, workspace references, and lease ownership |
+| Pipeline stage | A named step in a pipeline (working, review, done, cancelled) with position and config |
+| Pipeline transition | A defined allowed move from one pipeline stage to another |
+| Cloud upstream | An OAuth-based connection from a local Paperclip instance to a remote instance for company sync |
+| Lease | Time-limited ownership claim on a pipeline case preventing concurrent work |
+| System prompt | The per-agent instruction set that defines behavior (stored in agent_config_revisions) |
+| Run continuation | Mechanism for agents to resume interrupted heartbeat runs with preserved context |
+| Work product | A typed deliverable attached to an issue, backed by an artifact or referencing a workspace file |

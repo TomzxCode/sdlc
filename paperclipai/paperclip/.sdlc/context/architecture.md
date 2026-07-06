@@ -42,6 +42,8 @@ Paperclip is a single-process Node.js control plane that orchestrates externally
 | `packages/skills-catalog/`, `packages/teams-catalog/` | Skills and teams catalogs | TypeScript |
 | `server/src/secrets/` | Secrets provider implementations (local-encrypted, AWS, GCP, Vault) and provider registry | TypeScript |
 | `server/src/auth/` | Auth middleware (bearer token, session, board/agent resolution) | TypeScript |
+| `server/src/services/pipelines.ts` | Pipeline management (stages, cases, automation, transitions, events) | TypeScript |
+| `server/src/services/cloud-upstreams.ts` | Cross-instance company sync via OAuth (experimental) | TypeScript |
 | `cli/` | `paperclipai` CLI (onboard, configure, plugin install) | TypeScript (tsx) |
 | `doc/` | Operational and product docs (SPEC, GOAL, PRODUCT, DATABASE, DEVELOPING) | Markdown |
 
