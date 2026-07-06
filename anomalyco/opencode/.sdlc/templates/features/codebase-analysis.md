@@ -16,7 +16,7 @@ status: draft
 ## Relevant Existing Components
 
 | Component | Path | Responsibility | Interaction |
-|---|---|---|---|---|
+|---|---|---|---|
 | <name> | <file/module path> | <what it does today> | Reuse / Extend / Refactor / Replace / Read-only |
 
 ## Dependency and Coupling Map

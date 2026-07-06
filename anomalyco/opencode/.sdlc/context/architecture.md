@@ -35,6 +35,7 @@ A core server process owns sessions, the tool registry, provider adapters, and s
 | `packages/desktop` | Native desktop app wrapping the web UI | Electron |
 | `packages/server` | HTTP API surface / server package | Hono, Effect |
 | `packages/llm` | Standalone Effect Schema-first LLM core: route/protocol/endpoint/auth architecture, provider adapters, tool dispatch | Effect |
+| `packages/codemode` | Confined code execution runtime: schema-described tools, one-shot and reusable execution, sandbox limits | Effect, TypeScript |
 | `packages/core` | Shared core: database, Effect services, system context, session runner, PTY, config, tools, agents, providers, plugins, permissions | TypeScript, Effect, Drizzle |
 | `packages/plugin` | Source for `@opencode-ai/plugin` (plugin SDK) | TypeScript |
 | `packages/sdk` (`packages/sdk/js`) | Generated TypeScript client SDK | TypeScript (generated) |

@@ -15,7 +15,7 @@ last_updated: "<YYYY-MM-DD>"
 ## Pipeline Status
 
 | Stage | Phase | Status |
-|---|---|---|---|---|
+|---|---|---|---|
 | Planning & Feasibility | create-issue | — |
 | Planning & Feasibility | review-issue | — |
 | Planning & Feasibility | qualify-issue | — |
@@ -54,8 +54,8 @@ Status values: `—` (not started), `done`, `skipped`, `blocked`, or the current
 ## Task Progress
 
 | ID | Title | Size | Status | Completed | Blocker |
-|---|---|---|---|---|---|---|
-| 0001 | <title> | S | pending | — | — |
+|---|---|---|---|---|---|
+| 1 | <title> | S | pending | — | — |
 
 **Completion:** 0 / 0 tasks (0%)
 

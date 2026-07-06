@@ -40,6 +40,7 @@
 | Generation Controls | Provider-neutral sampling/output controls partitioned from provider wire semantics. |
 | Model Request Options | Provider-semantic model settings resolved from the Catalog before LLM protocol encoding. |
 | PTY Environment | The host-supplied environment overlay applied when creating a PTY. |
+| CodeMode | A confined execution runtime that lets a model write small JavaScript programs calling only host-supplied tools, with no ambient filesystem, process, network, or application authority. |
 | Managed Tool Output File | A temporary file retaining complete tool output too large for session history. |
 | Snapshot | State snapshots mechanism for saving and restoring session state. |
 | Worktree | Git worktree management utilities for parallel branch contexts. |

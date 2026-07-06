@@ -25,6 +25,7 @@ Users interact with it through a terminal UI, a web/desktop app, a headless HTTP
 - An LLM provider layer with a model catalog, provider adapters, and a standalone LLM core package for provider-agnostic calls.
 - An agent and tool system with built-in tools, permissions, and skills.
 - A plugin system with namespaced hooks, plus a generated TypeScript SDK and editor integrations.
+- A CodeMode engine for confined, schema-described code execution over explicit tools.
 - An Agent Client Protocol (ACP) implementation for interoperable agent communication.
 - Enterprise self-hosting platform with team management, SST-deployed console and stats services.
 - Slack bot integration bridging sessions into Slack.
