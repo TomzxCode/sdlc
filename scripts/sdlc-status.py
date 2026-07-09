@@ -16,7 +16,6 @@ import logging
 import re
 import sys
 from pathlib import Path
-from typing import Optional
 
 import structlog
 
@@ -1198,46 +1197,28 @@ def build_footer() -> str:
     )
 
 
-def main() -> None:
-    structlog.configure(
-        processors=[
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.add_log_level,
-            structlog.dev.ConsoleRenderer(),
-        ],
-        wrapper_class=structlog.stdlib.BoundLogger,
-        context_class=dict,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        cache_logger_on_first_use=True,
-    )
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stderr)
+def render_dashboard_html(sdlc_dir: Path) -> str | None:
+    """Render the full dashboard HTML page for an ``.sdlc`` directory.
+
+    Returns the HTML string, or ``None`` when the directory is missing or has
+    no features. Shared by the standalone CLI and the site builder so the whole
+    site can be rendered in one process.
+    """
     log = structlog.get_logger()
 
-    parser = argparse.ArgumentParser(description="Render SDLC status dashboard from .sdlc/ directory")
-    parser.add_argument("sdlc_dir", nargs="?", default=".sdlc", help="Path to .sdlc directory (default: .sdlc)")
-    parser.add_argument("-o", "--output", default="-", help="Output HTML file path (default: stdout)")
-    parser.add_argument("-q", "--quiet", action="store_true", help="Suppress logging")
-    args = parser.parse_args()
+    if not sdlc_dir.exists():
+        log.error("sdlc_dir_not_found", path=str(sdlc_dir))
+        return None
+    log.info("reading_sdlc_dir", path=str(sdlc_dir))
 
-    if args.quiet:
-        logging.getLogger().setLevel(logging.WARNING)
-
-    sdlc_path = Path(args.sdlc_dir)
-    if not sdlc_path.exists():
-        log.error("sdlc_dir_not_found", path=str(sdlc_path))
-        print(f"Error: {sdlc_path} does not exist", file=sys.stderr)
-        sys.exit(1)
-    log.info("reading_sdlc_dir", path=str(sdlc_path))
-
-    features = collect_features(sdlc_path)
+    features = collect_features(sdlc_dir)
     if not features:
-        log.warning("no_features_found", path=str(sdlc_path / "features"))
-        print(f"No features found in {sdlc_path}/features/", file=sys.stderr)
-        sys.exit(1)
+        log.warning("no_features_found", path=str(sdlc_dir / "features"))
+        return None
     log.info("features_found", count=len(features), names=[f["id"] for f in features])
 
     # Read project-level vocabulary
-    vocab_path = sdlc_path / "context" / "vocabulary.md"
+    vocab_path = sdlc_dir / "context" / "vocabulary.md"
     vocab_content, vocab_refs = parse_vocabulary(vocab_path)
     if vocab_content:
         log.info("vocabulary_loaded", path=str(vocab_path), terms=len(vocab_refs))
@@ -1257,19 +1238,47 @@ def main() -> None:
     tz = now.strftime("%z")
     generated = now.strftime("%Y-%m-%d %H:%M:%S ") + tz[:3] + ":" + tz[3:]
 
-    tabs_html = ""
-    panels_html = ""
-    for i, feat in enumerate(features):
-        tabs_html += render_tab(feat, i == 0, i) + "\n"
-        panels_html += render_feature(feat, i == 0, i) + "\n"
-
-    html = (
+    return (
         HTML_TEMPLATE
         .replace("{{generated_date}}", generated)
         .replace("{{feature_tabs}}", tabs_html)
         .replace("{{feature_panels}}", panels_html)
         .replace("{{footer}}", build_footer())
     )
+
+
+def main() -> None:
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_log_level,
+            structlog.dev.ConsoleRenderer(),
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stderr)
+
+    parser = argparse.ArgumentParser(description="Render SDLC status dashboard from .sdlc/ directory")
+    parser.add_argument("sdlc_dir", nargs="?", default=".sdlc", help="Path to .sdlc directory (default: .sdlc)")
+    parser.add_argument("-o", "--output", default="-", help="Output HTML file path (default: stdout)")
+    parser.add_argument("-q", "--quiet", action="store_true", help="Suppress logging")
+    args = parser.parse_args()
+
+    if args.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
+
+    sdlc_path = Path(args.sdlc_dir)
+    if not sdlc_path.exists():
+        print(f"Error: {sdlc_path} does not exist", file=sys.stderr)
+        sys.exit(1)
+
+    html = render_dashboard_html(sdlc_path)
+    if html is None:
+        print(f"No features found in {sdlc_path}/features/", file=sys.stderr)
+        sys.exit(1)
 
     if args.output == "-":
         print(html)
