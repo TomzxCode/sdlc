@@ -6,6 +6,11 @@ name: SDLC Refresh
 # reusable workflow by the SDLC Refresh (all) orchestrator, with the target as
 # organization/repository.
 #
+# Doubles as the onboarding path: if the target is not yet present in this
+# workspace, an empty {owner}/{repository}/.sdlc skeleton is created so sync-sdlc
+# bootstraps it from scratch instead of failing. After a successful onboarding
+# the project is picked up by the SDLC Refresh (all) orchestrator automatically.
+#
 # This workspace is the SDLC_DIR mirror: its {owner}/{repository}/.sdlc tree
 # matches the layout the SDLC skills resolve through $SDLC_DIR, so the skill
 # reads/writes artifacts here while analyzing the upstream checkout.
@@ -58,10 +63,18 @@ jobs:
           repo="${repository##*/}"
           echo "owner=$owner" >> "$GITHUB_OUTPUT"
           echo "repo=$repo" >> "$GITHUB_OUTPUT"
-          if [ ! -d "$owner/$repo/.sdlc" ]; then
-            echo "::error::No '$owner/$repo/.sdlc' directory in this workspace"
-            exit 1
+          if [ -d "$owner/$repo/.sdlc" ]; then
+            mode="refresh"
+          else
+            # Onboard a new project: create the skeleton so the symlink step can
+            # bind the upstream checkout to it and sync-sdlc bootstraps from
+            # scratch. Must be a real (empty) dir, not a dangling path, or mkdir
+            # through the symlink fails.
+            mode="onboard"
+            mkdir -p "$owner/$repo/.sdlc"
+            echo "::notice::No '$owner/$repo/.sdlc' directory; onboarding new project $repository"
           fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
 
       - name: Clone upstream source
         env:
@@ -73,11 +86,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           gh repo clone '${{ inputs.repository }}' "$RUNNER_TEMP/source" -- --depth 1
 
-      - name: Surface existing SDLC artifacts in the upstream checkout
+      - name: Bind workspace .sdlc into the upstream checkout
         run: |
           # This workspace owns the .sdlc/ artifacts. Bind them into the upstream
-          # checkout so sync-sdlc reads and updates the existing artifacts via its
-          # default repo-first resolution, instead of initializing from scratch.
+          # checkout so sync-sdlc reads and writes here via its repo-first
+          # resolution: it updates existing artifacts on a refresh, or populates
+          # the empty skeleton on an onboard. The target is always a real dir at
+          # this point (refresh: existing; onboard: created by the resolve step).
           link="$RUNNER_TEMP/source/.sdlc"
           target="$GITHUB_WORKSPACE/${{ steps.proj.outputs.owner }}/${{ steps.proj.outputs.repo }}/.sdlc"
           if [ -e "$link" ] || [ -L "$link" ]; then
