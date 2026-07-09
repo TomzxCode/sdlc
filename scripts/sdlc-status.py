@@ -70,6 +70,7 @@ def resolve_git_info() -> tuple[str, str, str]:
 PHASE_ORDER: list[tuple[str, str, str | None]] = [
     ("Foundation", "requirements", "requirements.md"),
     ("Foundation", "existing-solutions", "existing-solutions.md"),
+    ("Foundation", "codebase-analysis", "codebase-analysis.md"),
     ("Foundation", "feasibility", "feasibility.md"),
     ("Foundation", "specification", "specification.md"),
     ("Foundation", "plan", "plan.md"),
@@ -640,9 +641,63 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .help-tip .legend-item { font-size: 0.75rem; gap: 0.45rem; display: flex; align-items: center; padding: 0.15rem 0; }
   .help-tip .legend-chip { font-size: 0.7rem; padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 500; }
 
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
   @media (max-width: 768px) {
-    body { padding: 1rem; }
-    .summary-cards { grid-template-columns: repeat(2, 1fr); }
+    body { padding: 0.75rem; font-size: 0.9rem; }
+    .header { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+    .header .date { font-size: 0.7rem; }
+
+    .layout { display: block; }
+    .sidebar {
+      flex: none;
+      width: 100%;
+      position: static;
+      top: auto;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .sidebar h3 { margin-bottom: 0.4rem; }
+    .feature-list {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 0.4rem;
+      padding-bottom: 0.25rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    .ftab {
+      flex: 0 0 auto;
+      width: auto;
+      min-height: 44px;
+      align-items: center;
+      white-space: nowrap;
+    }
+    .ftab .ftitle { max-width: 60vw; }
+
+    .summary-cards { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .card { padding: 0.75rem 0.85rem; }
+    .card .value { font-size: 1.15rem; }
+
+    .section { padding: 0.85rem; }
+
+    .pipeline-stages { flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 0.6rem; }
+    .pipeline-stages-row { display: flex; flex-direction: column; flex-wrap: nowrap; width: 100%; gap: 0.6rem; align-items: stretch; }
+    .pipeline-stages-row .cp-arrow { display: none; }
+    .pipeline-stage { width: 100%; }
+    .pipeline-phases { gap: 0.35rem; }
+    .chip { padding: 0.35rem 0.55rem; font-size: 0.75rem; }
+
+    .progress-meta { font-size: 0.72rem; }
+
+    .phase-detail { font-size: 0.82rem; padding: 0.65rem 0.75rem; overflow-wrap: break-word; word-break: break-word; }
+    .phase-detail pre { max-width: 100%; overflow-x: auto; }
+
+    .blocker-banner { padding: 0.55rem 0.7rem; }
+
+    .footer { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+
+    .session-log { max-height: 320px; }
   }
 </style>
 </head>
@@ -833,6 +888,17 @@ def render_markdown(text: str) -> str:
     return md.markdown(text, extensions=["extra", "pymdownx.tasklist"])
 
 
+def wrap_tables(html: str) -> str:
+    if not html:
+        return html
+    return re.sub(
+        r"(<table\b.*?</table>)",
+        r'<div class="table-wrap">\1</div>',
+        html,
+        flags=re.DOTALL,
+    )
+
+
 def annotate_refs(html: str, refs: dict[str, dict]) -> str:
     if not refs:
         return html
@@ -902,6 +968,7 @@ PHASE_FILE: dict[str, str | None] = {
     "feasibility": "feasibility.md",
     "requirements": "requirements.md",
     "existing-solutions": "existing-solutions.md",
+    "codebase-analysis": "codebase-analysis.md",
     "specification": "specification.md",
     "plan": "plan.md",
     "implementation": None,
@@ -971,8 +1038,9 @@ def render_tasks(tasks: list[dict]) -> str:
         )
     return (
         '<div class="section"><h3>Tasks</h3>'
+        '<div class="table-wrap">'
         '<table><thead><tr><th>ID</th><th>Title</th><th>Size</th><th>Status</th><th>Completed</th><th>Blocker</th></tr></thead>'
-        f"<tbody>{rows}</tbody></table></div>"
+        f"<tbody>{rows}</tbody></table></div></div>"
     )
 
 
@@ -1000,8 +1068,8 @@ def render_sessions(sessions: list[dict]) -> str:
         )
     return (
         '<div class="section"><h3>Session Log</h3><div class="session-log">'
-        '<table><thead><tr><th>Date</th><th>Summary</th><th>Next Step</th></tr></thead>'
-        f"<tbody>{rows}</tbody></table></div></div>"
+        '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Summary</th><th>Next Step</th></tr></thead>'
+        f"<tbody>{rows}</tbody></table></div></div></div>"
     )
 
 
@@ -1065,16 +1133,19 @@ def render_feature(feature: dict, is_first: bool, feat_idx: int = 0) -> str:
     phase_details = ""
     for phase, content in fc.items():
         rendered = annotate_vocab_refs(annotate_refs(render_markdown(badge_priorities_in_tables(content)), refs), vocab_refs)
+        rendered = wrap_tables(rendered)
         cls = "" if phase == first_active else "hidden"
         phase_details += f'<div id="pd-{feat_idx}-{phase}" class="phase-detail {cls}">{rendered}</div>'
 
     # Generate open questions detail
     oq_rendered = render_questions(open_questions) if open_questions else ""
+    oq_rendered = wrap_tables(oq_rendered)
     phase_details += f'<div id="pd-{feat_idx}-open-questions" class="phase-detail hidden">{oq_rendered}</div>'
 
     # Generate vocabulary detail
     if vocab_content:
         vocab_rendered = annotate_vocab_refs(render_markdown(vocab_content), vocab_refs)
+        vocab_rendered = wrap_tables(vocab_rendered)
         phase_details += f'<div id="pd-{feat_idx}-vocabulary" class="phase-detail hidden">{vocab_rendered}</div>'
 
     return (
@@ -1127,22 +1198,46 @@ def build_footer() -> str:
     )
 
 
-def render_dashboard_html(sdlc_dir: Path) -> Optional[str]:
-    """Render the full status dashboard HTML for a .sdlc directory.
-
-    Returns None when the directory has no features.
-    """
+def main() -> None:
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_log_level,
+            structlog.dev.ConsoleRenderer(),
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stderr)
     log = structlog.get_logger()
-    log.info("reading_sdlc_dir", path=str(sdlc_dir))
 
-    features = collect_features(sdlc_dir)
+    parser = argparse.ArgumentParser(description="Render SDLC status dashboard from .sdlc/ directory")
+    parser.add_argument("sdlc_dir", nargs="?", default=".sdlc", help="Path to .sdlc directory (default: .sdlc)")
+    parser.add_argument("-o", "--output", default="-", help="Output HTML file path (default: stdout)")
+    parser.add_argument("-q", "--quiet", action="store_true", help="Suppress logging")
+    args = parser.parse_args()
+
+    if args.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
+
+    sdlc_path = Path(args.sdlc_dir)
+    if not sdlc_path.exists():
+        log.error("sdlc_dir_not_found", path=str(sdlc_path))
+        print(f"Error: {sdlc_path} does not exist", file=sys.stderr)
+        sys.exit(1)
+    log.info("reading_sdlc_dir", path=str(sdlc_path))
+
+    features = collect_features(sdlc_path)
     if not features:
-        log.warning("no_features_found", path=str(sdlc_dir / "features"))
-        return None
+        log.warning("no_features_found", path=str(sdlc_path / "features"))
+        print(f"No features found in {sdlc_path}/features/", file=sys.stderr)
+        sys.exit(1)
     log.info("features_found", count=len(features), names=[f["id"] for f in features])
 
     # Read project-level vocabulary
-    vocab_path = sdlc_dir / "context" / "vocabulary.md"
+    vocab_path = sdlc_path / "context" / "vocabulary.md"
     vocab_content, vocab_refs = parse_vocabulary(vocab_path)
     if vocab_content:
         log.info("vocabulary_loaded", path=str(vocab_path), terms=len(vocab_refs))
@@ -1162,47 +1257,19 @@ def render_dashboard_html(sdlc_dir: Path) -> Optional[str]:
     tz = now.strftime("%z")
     generated = now.strftime("%Y-%m-%d %H:%M:%S ") + tz[:3] + ":" + tz[3:]
 
-    return (
+    tabs_html = ""
+    panels_html = ""
+    for i, feat in enumerate(features):
+        tabs_html += render_tab(feat, i == 0, i) + "\n"
+        panels_html += render_feature(feat, i == 0, i) + "\n"
+
+    html = (
         HTML_TEMPLATE
         .replace("{{generated_date}}", generated)
         .replace("{{feature_tabs}}", tabs_html)
         .replace("{{feature_panels}}", panels_html)
         .replace("{{footer}}", build_footer())
     )
-
-
-def main() -> None:
-    structlog.configure(
-        processors=[
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.add_log_level,
-            structlog.dev.ConsoleRenderer(),
-        ],
-        wrapper_class=structlog.stdlib.BoundLogger,
-        context_class=dict,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        cache_logger_on_first_use=True,
-    )
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stderr)
-
-    parser = argparse.ArgumentParser(description="Render SDLC status dashboard from .sdlc/ directory")
-    parser.add_argument("sdlc_dir", nargs="?", default=".sdlc", help="Path to .sdlc directory (default: .sdlc)")
-    parser.add_argument("-o", "--output", default="-", help="Output HTML file path (default: stdout)")
-    parser.add_argument("-q", "--quiet", action="store_true", help="Suppress logging")
-    args = parser.parse_args()
-
-    if args.quiet:
-        logging.getLogger().setLevel(logging.WARNING)
-
-    sdlc_path = Path(args.sdlc_dir)
-    if not sdlc_path.exists():
-        print(f"Error: {sdlc_path} does not exist", file=sys.stderr)
-        sys.exit(1)
-
-    html = render_dashboard_html(sdlc_path)
-    if html is None:
-        print(f"No features found in {sdlc_path}/features/", file=sys.stderr)
-        sys.exit(1)
 
     if args.output == "-":
         print(html)
