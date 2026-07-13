@@ -1,6 +1,6 @@
 ---
 title: "Inbox"
-status: draft
+status: done
 ---
 
 # Requirements: Inbox

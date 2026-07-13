@@ -1,6 +1,6 @@
 ---
 title: "Budget & Cost Control"
-status: draft
+status: done
 ---
 
 # Requirements: Budget & Cost Control

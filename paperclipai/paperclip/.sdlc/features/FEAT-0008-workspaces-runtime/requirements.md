@@ -1,6 +1,6 @@
 ---
 title: "Workspaces & Runtime"
-status: draft
+status: done
 ---
 
 # Requirements: Workspaces & Runtime

@@ -1,6 +1,6 @@
 ---
 title: "Heartbeat Execution & Adapters"
-status: draft
+status: done
 ---
 
 # Requirements: Heartbeat Execution & Adapters

@@ -1,6 +1,6 @@
 ---
 title: "Pipelines"
-status: draft
+status: done
 ---
 
 # Requirements: Pipelines

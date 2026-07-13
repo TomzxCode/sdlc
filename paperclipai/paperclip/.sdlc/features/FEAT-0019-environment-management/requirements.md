@@ -1,6 +1,6 @@
 ---
 title: "Environment Management"
-status: draft
+status: done
 ---
 
 # Requirements: Environment Management

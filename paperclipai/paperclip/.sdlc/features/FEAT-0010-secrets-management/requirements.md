@@ -1,6 +1,6 @@
 ---
 title: "Secrets Management"
-status: draft
+status: done
 ---
 
 # Requirements: Secrets Management

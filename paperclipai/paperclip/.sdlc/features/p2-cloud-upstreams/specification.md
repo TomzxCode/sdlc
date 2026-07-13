@@ -1,6 +1,6 @@
 ---
 title: "Cloud Upstreams"
-status: draft
+status: done
 ---
 
 # Specification: Cloud Upstreams

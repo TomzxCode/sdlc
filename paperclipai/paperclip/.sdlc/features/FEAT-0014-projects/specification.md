@@ -1,6 +1,6 @@
 ---
 title: "Projects"
-status: draft
+status: done
 ---
 
 # Specification: Projects

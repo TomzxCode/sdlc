@@ -1,6 +1,6 @@
 ---
 title: "Company Skills"
-status: draft
+status: done
 ---
 
 # Specification: Company Skills

@@ -1,6 +1,6 @@
 ---
 title: "Attachments & Work Products"
-status: draft
+status: done
 ---
 
 # Specification: Attachments & Work Products

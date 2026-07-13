@@ -1,6 +1,6 @@
 ---
 title: "Company Management & Multi-Tenancy"
-status: draft
+status: done
 ---
 
 # Specification: Company Management & Multi-Tenancy

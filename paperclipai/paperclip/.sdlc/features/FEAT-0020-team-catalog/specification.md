@@ -1,6 +1,6 @@
 ---
 title: "Team Catalog"
-status: draft
+status: done
 ---
 
 # Specification: Team Catalog

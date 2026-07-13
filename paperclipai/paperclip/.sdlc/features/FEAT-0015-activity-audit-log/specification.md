@@ -1,6 +1,6 @@
 ---
 title: "Activity Audit Log"
-status: draft
+status: done
 ---
 
 # Specification: Activity Audit Log

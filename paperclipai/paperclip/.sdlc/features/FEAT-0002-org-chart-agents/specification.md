@@ -1,6 +1,6 @@
 ---
 title: "Org Chart & Agents"
-status: draft
+status: done
 ---
 
 # Specification: Org Chart & Agents

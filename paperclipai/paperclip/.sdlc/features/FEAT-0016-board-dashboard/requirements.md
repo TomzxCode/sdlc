@@ -1,6 +1,6 @@
 ---
 title: "Board Dashboard"
-status: draft
+status: done
 ---
 
 # Requirements: Board Dashboard

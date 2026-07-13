@@ -1,6 +1,6 @@
 ---
 title: "Routines & Schedules"
-status: draft
+status: done
 ---
 
 # Specification: Routines & Schedules

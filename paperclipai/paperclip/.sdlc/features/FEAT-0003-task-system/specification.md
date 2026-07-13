@@ -1,6 +1,6 @@
 ---
 title: "Task System (Issues)"
-status: draft
+status: done
 ---
 
 # Specification: Task System (Issues)

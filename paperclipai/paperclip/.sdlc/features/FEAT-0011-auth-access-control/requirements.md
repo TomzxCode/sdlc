@@ -1,6 +1,6 @@
 ---
 title: "Auth & Access Control"
-status: draft
+status: done
 ---
 
 # Requirements: Auth & Access Control

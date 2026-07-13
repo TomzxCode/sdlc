@@ -1,6 +1,6 @@
 ---
 title: "Governance & Approvals"
-status: draft
+status: done
 ---
 
 # Specification: Governance & Approvals

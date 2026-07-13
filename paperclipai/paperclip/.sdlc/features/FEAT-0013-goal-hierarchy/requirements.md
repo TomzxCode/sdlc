@@ -1,6 +1,6 @@
 ---
 title: "Goal Hierarchy"
-status: draft
+status: done
 ---
 
 # Requirements: Goal Hierarchy
