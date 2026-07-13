@@ -1,6 +1,6 @@
 ---
 title: "Plugin System"
-status: draft
+status: done
 ---
 
 # Requirements: Plugin System

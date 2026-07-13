@@ -1,6 +1,6 @@
 ---
 title: "Enterprise & Cloud Platform"
-status: draft
+status: done
 ---
 
 # Specification: Enterprise & Cloud Platform

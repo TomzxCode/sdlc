@@ -1,6 +1,6 @@
 ---
 title: "Terminal UI"
-status: draft
+status: done
 ---
 
 # Requirements: Terminal UI

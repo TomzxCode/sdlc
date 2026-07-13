@@ -1,6 +1,6 @@
 ---
 title: "CodeMode"
-status: draft
+status: done
 ---
 
 # Requirements: CodeMode

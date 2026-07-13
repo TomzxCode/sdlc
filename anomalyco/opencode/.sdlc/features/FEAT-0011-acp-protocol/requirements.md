@@ -1,6 +1,6 @@
 ---
 title: "Agent Client Protocol (ACP)"
-status: draft
+status: done
 ---
 
 # Requirements: Agent Client Protocol (ACP)

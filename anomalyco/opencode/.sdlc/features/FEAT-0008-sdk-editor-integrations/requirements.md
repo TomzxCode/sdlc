@@ -1,6 +1,6 @@
 ---
 title: "SDK & Editor Integrations"
-status: draft
+status: done
 ---
 
 # Requirements: SDK & Editor Integrations

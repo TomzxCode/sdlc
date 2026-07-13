@@ -1,6 +1,6 @@
 ---
 title: "GitHub Actions Integration"
-status: draft
+status: done
 ---
 
 # Requirements: GitHub Actions Integration

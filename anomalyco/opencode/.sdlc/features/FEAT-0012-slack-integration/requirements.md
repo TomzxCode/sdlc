@@ -1,6 +1,6 @@
 ---
 title: "Slack Integration"
-status: draft
+status: done
 ---
 
 # Requirements: Slack Integration

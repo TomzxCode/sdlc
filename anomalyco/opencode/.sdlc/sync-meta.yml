@@ -1,6 +1,6 @@
 # SDLC Sync Metadata
 # Tracks which version of agents was used for the last sync.
 # Used by sync-sdlc to detect process/template changes and migrate existing files.
-agents_ref: 1.17.13
-agents_remote: https://github.com/anomalyco/opencode
-last_synced: 2026-07-06
+agents_ref: 544c16cb8037f6e4960b0385c5b1f26997ec0b78
+agents_remote: https://github.com/tomzx/agents
+last_synced: 2026-07-13

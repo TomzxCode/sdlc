@@ -1,6 +1,6 @@
 ---
 title: "HTTP API Server"
-status: draft
+status: done
 ---
 
 # Specification: HTTP API Server

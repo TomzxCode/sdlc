@@ -1,6 +1,6 @@
 ---
 title: "Web & Desktop Apps"
-status: draft
+status: done
 ---
 
 # Specification: Web & Desktop Apps

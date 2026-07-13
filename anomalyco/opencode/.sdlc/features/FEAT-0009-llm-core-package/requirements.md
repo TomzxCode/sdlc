@@ -1,6 +1,6 @@
 ---
 title: "LLM Core Package"
-status: draft
+status: done
 ---
 
 # Requirements: LLM Core Package

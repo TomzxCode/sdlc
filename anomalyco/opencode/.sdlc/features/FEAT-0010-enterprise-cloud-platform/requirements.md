@@ -1,6 +1,6 @@
 ---
 title: "Enterprise & Cloud Platform"
-status: draft
+status: done
 ---
 
 # Requirements: Enterprise & Cloud Platform

@@ -48,6 +48,9 @@ A core server process owns sessions, the tool registry, provider adapters, and s
 | `packages/enterprise` | Enterprise self-hosted web app (teams, projects) | SolidJS, Hono, SST |
 | `packages/protocol` | Public HTTP API contract: middleware, route groups, OpenAPI | Effect HttpApi |
 | `packages/schema` | Shared Effect Schema definitions | Effect |
+| `packages/session-ui` | Reusable session UI components (SolidJS: message rendering, diffs, markdown) | SolidJS |
+| `packages/sdk-next` | Next-gen SDK composing client + core + server | TypeScript |
+| `packages/stats` | Usage statistics collection and dashboard | Hono, SST |
 | `github/` | GitHub Actions composite action for running in CI | TypeScript |
 | `sdks/vscode` | VSCode editor extension | TypeScript |
 

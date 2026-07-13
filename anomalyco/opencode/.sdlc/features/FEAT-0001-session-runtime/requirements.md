@@ -1,6 +1,6 @@
 ---
 title: "Session Runtime"
-status: draft
+status: done
 ---
 
 # Requirements: Session Runtime

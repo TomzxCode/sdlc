@@ -1,6 +1,6 @@
 ---
 title: "Web & Desktop Apps"
-status: draft
+status: done
 ---
 
 # Requirements: Web & Desktop Apps
