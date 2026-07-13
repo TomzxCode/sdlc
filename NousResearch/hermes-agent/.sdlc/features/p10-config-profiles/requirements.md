@@ -1,6 +1,6 @@
 ---
 title: "Configuration and Multi-Profile System"
-status: draft
+status: done
 ---
 
 # Requirements: Configuration and Multi-Profile System

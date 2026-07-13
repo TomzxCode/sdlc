@@ -36,7 +36,7 @@ User ──┐
 | AIAgent (run_agent.py) | Core conversation loop — manages chat completions API calls, tool-calling iterations, interrupt handling, budget tracking, subagent spawning | Python, OpenAI SDK |
 | HermesCLI (cli.py) | Interactive CLI orchestrator with prompt_toolkit REPL, Rich panels, skin engine, slash command dispatch (~70 commands) | Python, prompt_toolkit, Rich |
 | Tool Registry (tools/registry.py) | Central registry for tool schemas and handlers; auto-discovers tools from tools/*.py via AST scan | Python |
-| Tool Implementations (tools/*.py) | ~96 tool modules — terminal, file, web, browser, vision, delegation, cron, kanban, etc. Each self-registers at import time | Python |
+| Tool Implementations (tools/*.py) | ~93 tool modules — terminal, file, web, browser, vision, delegation, cron, kanban, etc. Each self-registers at import time | Python |
 | Toolset Definitions (toolsets.py) | Composable tool groupings for platforms and scenarios (hermes-cli, hermes-telegram, web, browser, file, etc.) | Python |
 | Model Tools (model_tools.py) | Orchestration layer — tool discovery, schema collection, function call dispatch, gating, MCP integration, approval gates | Python |
 | Gateway Runner (gateway/run.py) | Async runtime for all messaging platforms — session lifecycle, stream dispatch, approval flow, slash command dispatch | Python, asyncio |

@@ -1,6 +1,6 @@
 ---
 title: "Memory and Cross-Session Knowledge"
-status: draft
+status: done
 ---
 
 # Specification: Memory and Cross-Session Knowledge

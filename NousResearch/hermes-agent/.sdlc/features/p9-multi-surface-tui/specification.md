@@ -1,6 +1,6 @@
 ---
 title: "Multi-Surface TUI and Desktop"
-status: draft
+status: done
 ---
 
 # Specification: Multi-Surface TUI and Desktop

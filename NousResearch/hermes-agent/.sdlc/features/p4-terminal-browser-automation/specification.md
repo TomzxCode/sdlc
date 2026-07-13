@@ -1,6 +1,6 @@
 ---
 title: "Terminal and Browser Automation"
-status: draft
+status: done
 ---
 
 # Specification: Terminal and Browser Automation

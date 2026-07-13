@@ -1,6 +1,6 @@
 ---
 title: "Skill System"
-status: draft
+status: done
 ---
 
 # Specification: Skill System

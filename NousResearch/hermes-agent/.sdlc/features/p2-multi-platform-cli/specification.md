@@ -1,6 +1,6 @@
 ---
 title: "Multi-Platform CLI"
-status: draft
+status: done
 ---
 
 # Specification: Multi-Platform CLI

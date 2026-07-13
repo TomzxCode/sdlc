@@ -1,6 +1,6 @@
 ---
 title: "Multi-Surface TUI and Desktop"
-status: draft
+status: done
 ---
 
 # Requirements: Multi-Surface TUI and Desktop

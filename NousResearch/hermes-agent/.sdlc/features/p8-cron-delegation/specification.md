@@ -1,6 +1,6 @@
 ---
 title: "Cron Scheduling and Subagent Delegation"
-status: draft
+status: done
 ---
 
 # Specification: Cron Scheduling and Subagent Delegation

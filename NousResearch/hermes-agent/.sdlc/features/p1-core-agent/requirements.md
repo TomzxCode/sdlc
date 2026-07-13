@@ -1,6 +1,6 @@
 ---
 title: "Core Agent Loop"
-status: draft
+status: done
 ---
 
 # Requirements: Core Agent Loop

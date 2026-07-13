@@ -1,6 +1,6 @@
 ---
 title: "Messaging Gateway"
-status: draft
+status: done
 ---
 
 # Specification: Messaging Gateway
