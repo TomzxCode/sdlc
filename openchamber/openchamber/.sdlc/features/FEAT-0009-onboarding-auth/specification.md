@@ -1,6 +1,6 @@
 ---
 title: "Onboarding & Auth"
-status: draft
+status: done
 ---
 
 # Specification: Onboarding & Auth

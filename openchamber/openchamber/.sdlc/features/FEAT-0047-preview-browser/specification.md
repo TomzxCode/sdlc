@@ -1,6 +1,6 @@
 ---
 title: "Preview & Embedded Browser"
-status: draft
+status: done
 ---
 
 # Specification: Preview & Embedded Browser

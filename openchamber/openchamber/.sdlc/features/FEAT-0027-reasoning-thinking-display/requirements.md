@@ -1,6 +1,6 @@
 ---
 title: "Reasoning / Thinking Display"
-status: draft
+status: done
 ---
 
 # Requirements: Reasoning / Thinking Display

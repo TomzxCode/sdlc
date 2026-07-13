@@ -1,6 +1,6 @@
 ---
 title: "Scheduled Tasks"
-status: draft
+status: done
 ---
 
 # Specification: Scheduled Tasks

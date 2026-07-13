@@ -1,6 +1,6 @@
 ---
 title: "Git & GitHub Integration"
-status: draft
+status: done
 ---
 
 # Specification: Git & GitHub Integration

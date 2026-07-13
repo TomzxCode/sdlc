@@ -1,6 +1,6 @@
 ---
 title: "Multi-Agent / Multi-Run Sessions"
-status: draft
+status: done
 ---
 
 # Specification: Multi-Agent / Multi-Run Sessions

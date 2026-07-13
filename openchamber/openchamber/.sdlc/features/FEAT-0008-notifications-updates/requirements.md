@@ -1,6 +1,6 @@
 ---
 title: "Notifications & Updates"
-status: draft
+status: done
 ---
 
 # Requirements: Notifications & Updates

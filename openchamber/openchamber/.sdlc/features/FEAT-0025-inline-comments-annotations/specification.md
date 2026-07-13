@@ -1,6 +1,6 @@
 ---
 title: "Inline Comments & Annotations"
-status: draft
+status: done
 ---
 
 # Specification: Inline Comments & Annotations

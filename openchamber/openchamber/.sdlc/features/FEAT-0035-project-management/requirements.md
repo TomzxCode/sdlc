@@ -1,6 +1,6 @@
 ---
 title: "Project Management (Multi-Project)"
-status: draft
+status: done
 ---
 
 # Requirements: Project Management

@@ -1,6 +1,6 @@
 ---
 title: "Electron Desktop App"
-status: draft
+status: done
 ---
 
 # Specification: Electron Desktop App

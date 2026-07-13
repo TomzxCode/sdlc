@@ -49,7 +49,7 @@
 |---|---|---|
 | `packages/ui` | Shared React components, hooks, stores, theme, and sync layer | React 19, TypeScript, Zustand, Tailwind v4, Base UI, CodeMirror |
 | `packages/web` | Express server, API routes, CLI, Vite frontend build | Express 5, Node.js >=22, Bun, Vite 7 |
-| `packages/web/server` | Backend runtime: OpenCode lifecycle, SSE event pipeline, Git, terminal, tunnels, auth, TTS, notifications, quota | Express, ws, simple-git, bun-pty/node-pty, Cloudflare tunnel |
+| `packages/web/server` | Backend runtime: OpenCode lifecycle, SSE event pipeline, Git, terminal, tunnels, relay, auth, TTS, dictation, notifications, quota, session goals, session assist, small model | Express, ws, simple-git, bun-pty/node-pty, Cloudflare tunnel, ngrok, sherpa-onnx |
 | `packages/electron` | Forward desktop shell; boots web server in-process, native integrations | Electron 41, electron-builder |
 | `packages/desktop` | Legacy Tauri desktop shell (maintenance-only) | Tauri v2, Rust |
 | `packages/mobile` | Capacitor mobile app wrapping the mobile web UI for iOS and Android | Capacitor, iOS (Swift), Android (Java/Kotlin) |
@@ -68,7 +68,15 @@
 
 4. **Terminal**: The UI opens a WebSocket to the Express server. The server creates a PTY session via `bun-pty` or `node-pty`. Input/output frames are relayed over WebSocket using the ghostty-web renderer in the UI.
 
-5. **Tunnel (remote access)**: The CLI or server spawns a Cloudflare tunnel process. Remote users connect through Cloudflare to the Express server. Authentication uses one-time tokens with QR code onboarding.
+5. **Tunnel (remote access)**: The CLI or server spawns a Cloudflare or ngrok tunnel process. Remote users connect through the tunnel to the Express server. Authentication uses one-time tokens with QR code onboarding. The private relay provides an alternative E2EE tunnel that requires no open ports or third-party infrastructure.
+
+6. **Relay (E2EE remote access)**: The relay subsystem (`packages/web/server/lib/relay/`) establishes an outbound WebSocket connection to OpenChamber-hosted relay infrastructure. Traffic is end-to-end encrypted using NaCl box (X25519-XSalsa20-Poly1305). Relay is the default remote access method when a device is paired over it. It turns on automatically when a paired device needs it and turns off when no paired device requires it.
+
+7. **Session goals**: The session goal subsystem (`packages/web/server/lib/session-goal/`) enables autonomous multi-turn execution. A goal is set on a session, and the system runs independent loops: the main agent works toward the objective while a small-model audit checks each turn for completeness. Goals persist across server restarts and work with the app closed. A goal strip shows progress with pause/resume.
+
+8. **Dictation (streaming speech-to-text)**: The dictation subsystem (`packages/web/server/lib/dictation/`) provides streaming speech recognition via WebSocket. Supports local sherpa-onnx models (Parakeet for 25 European languages, Whisper for multilingual) and OpenAI-compatible Whisper endpoints. A configurable keyboard shortcut toggles dictation.
+
+9. **Small model**: The small model subsystem (`packages/web/server/lib/small-model/`) provides direct LLM calls for utility AI tasks (summary generation, commit messages, PR descriptions, session recaps). Reuses the user's OpenCode provider configuration. Configurable in Settings as the Small Model setting.
 
 6. **Event pipeline (SSE)**: The server subscribes to OpenCode SSE events and rebroadcasts them to connected UI clients via its own SSE endpoint. The client-side event pipeline in `packages/ui/src/sync/event-pipeline.ts` handles reconnect with exponential backoff, coalescing, and state dispatch to Zustand stores.
 
@@ -173,5 +181,6 @@ React components (re-render only when selected leaf values change)
 - **Electron over Tauri for forward desktop**: Electron boots the web server in-process, eliminating the sidecar subprocess complexity. Tauri is kept only for existing users until auto-update migration completes. See `docs/TAURI_TO_ELECTRON_CUTOVER.md`.
 - **Shared UI across all runtimes**: `packages/ui` is consumed as a workspace dependency by web, desktop, and VS Code. Runtime-specific code uses the `__TAURI__` shim exposed by Electron preload so shared UI stays shell-agnostic.
 - **Zustand for state management**: Multiple split stores by change frequency and subscriber set. High-frequency streaming state lives in narrow stores to avoid render cascades.
-- **Express + SSE over WebSocket for primary data**: SSE for session events; WebSocket reserved for terminal PTY and binary use cases.
+- **Express + SSE over WebSocket for primary data**: SSE for session events; WebSocket reserved for terminal PTY, dictation, and binary use cases.
+- **Private relay for remote access**: Outbound-only E2EE WebSocket tunnel to OpenChamber-hosted relay infrastructure, eliminating dependency on third-party tunnel providers and open inbound ports.
 - **Theme token system**: All colors use CSS custom properties via theme tokens. No hardcoded values or Tailwind color classes in component code.

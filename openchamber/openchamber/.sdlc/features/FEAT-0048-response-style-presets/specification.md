@@ -1,6 +1,6 @@
 ---
 title: "Response Style Presets"
-status: draft
+status: done
 ---
 
 # Specification: Response Style Presets

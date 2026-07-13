@@ -1,6 +1,6 @@
 ---
 title: "Integrated Terminal"
-status: draft
+status: done
 ---
 
 # Specification: Integrated Terminal

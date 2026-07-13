@@ -1,6 +1,6 @@
 ---
 title: "Font Customization"
-status: draft
+status: done
 ---
 
 # Specification: Font Customization

@@ -1,6 +1,6 @@
 ---
 title: "Mobile UI & Touch Gestures"
-status: draft
+status: done
 ---
 
 # Requirements: Mobile UI & Touch Gestures

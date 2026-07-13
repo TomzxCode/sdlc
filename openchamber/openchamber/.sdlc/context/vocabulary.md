@@ -45,6 +45,13 @@
 | Session Assist | Server-side feature that generates a short recap of the agent's last reply and one suggested user follow-up using a small model after a session goes idle. |
 | Auto Review | Automated iterative review flow where a reviewer agent examines a session's output, generates findings, and passes them back to the original agent for revision. |
 | Capacitor | Cross-platform native runtime for building iOS and Android apps from web code; used by OpenChamber Mobile. |
+| Private Relay | End-to-end encrypted outbound-only tunnel to OpenChamber-hosted relay infrastructure for remote access without open ports or third-party tunnels. Uses NaCl box (X25519-XSalsa20-Poly1305) for encryption. |
+| Session Goal | Autonomous multi-turn execution loop where a session keeps working toward an objective with independent small-model audit. Goals persist across restarts and continue with the app closed. |
+| Dictation | Streaming speech-to-text subsystem supporting local models (sherpa-onnx Parakeet, Whisper) and OpenAI-compatible endpoints. |
+| Small Model | A configurable utility AI model used for background tasks: summary generation, commit messages, PR descriptions, session recaps, and read-aloud summarization. |
+| Session Assist | Server-side feature that generates a short recap of the agent's last reply and one suggested user follow-up using the Small Model after a session goes idle. |
+| Auto Review | Automated iterative review flow where a reviewer agent examines a session's output, generates findings, and passes them back to the original agent for revision. |
+| Client Auth / Pairing | Device pairing framework for connecting remote OpenChamber instances. Uses QR codes, one-time tokens, and connection candidate exchange over the relay. |
 | AI-Generated Commits/PR | Automatic git commit message generation and pull request creation from session changes, with human review before submission. |
 | Docker Self-Hosted | Docker deployment support with Dockerfile and docker-compose.yml for running OpenChamber on a server. |
 | MCP | Model Context Protocol integration for connecting AI agents to external tools and data sources through a standardized protocol. |
@@ -68,6 +75,9 @@
 | TTS | Text-to-Speech; converting text responses to audible speech output. |
 | STT | Speech-to-Text; converting voice input to text for prompts (local Whisper). |
 | CLI | Command-Line Interface; the terminal-based entry point for starting, stopping, and configuring the server. |
+| E2EE | End-to-End Encryption; used by the private relay for secure tunnel communication. |
+| APNs | Apple Push Notification service; used for push notifications on iOS. |
+| STT (Local) | Speech-to-Text using locally downloaded models (sherpa-onnx, Whisper) rather than cloud APIs. |
 | LRU | Least Recently Used; a cache eviction policy used for in-memory caches. |
 | TTL | Time-To-Live; a cache expiration policy used to prevent redundant fetches. |
 
@@ -97,4 +107,5 @@
 | @openchamber/electron | The Electron desktop shell package. Boots the web server in-process and provides native integrations (menu, dialog, notifications, updater, deep-links). |
 | @openchamber/vscode | The VS Code extension package with extension host logic and a sidebar webview. |
 | @openchamber/desktop | The legacy Tauri desktop shell (maintenance-only). Spawns the server as a sidecar binary. |
+| @openchamber/mobile | The Capacitor mobile app wrapping the mobile web UI for iOS and Android. Does not embed the web server; connects to remote instances. |
 | @openchamber/docs | The documentation website source using MDX. |

@@ -1,6 +1,6 @@
 ---
 title: "Custom Theming System"
-status: draft
+status: done
 ---
 
 # Specification: Custom Theming System

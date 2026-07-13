@@ -1,6 +1,6 @@
 ---
 title: "Snippets (Code Snippet Management)"
-status: draft
+status: done
 ---
 
 # Specification: Snippets

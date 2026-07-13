@@ -1,6 +1,6 @@
 ---
 title: "Custom Slash Commands"
-status: draft
+status: done
 ---
 
 # Requirements: Custom Slash Commands

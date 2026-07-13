@@ -1,6 +1,6 @@
 ---
 title: "Context Panel"
-status: draft
+status: done
 ---
 
 # Specification: Context Panel

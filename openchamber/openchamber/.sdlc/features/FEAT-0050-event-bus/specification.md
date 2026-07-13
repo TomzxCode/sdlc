@@ -1,6 +1,6 @@
 ---
 title: "Event Bus"
-status: draft
+status: done
 ---
 
 # Specification: Event Bus

@@ -3,8 +3,8 @@
 ## Purpose
 
 OpenChamber is a multi-runtime GUI client for [OpenCode](https://opencode.ai), an AI-powered coding assistant CLI.
-It provides desktop (Electron, macOS), web/PWA, and VS Code extension interfaces so developers can interact with OpenCode sessions from any device.
-The project solves the problem of OpenCode being terminal-only by adding rich visual workflows: branchable chat timelines, diff viewers, Git integration, integrated terminals, voice mode, multi-agent runs, and remote access via Cloudflare tunnels.
+It provides desktop (Electron, macOS/Windows/Linux), web/PWA, VS Code extension, and native mobile (iOS/Android) interfaces so developers can interact with OpenCode sessions from any device.
+The project solves the problem of OpenCode being terminal-only by adding rich visual workflows: branchable chat timelines, diff viewers, Git integration, integrated terminals, voice mode, session goals, multi-agent runs, and remote access via Cloudflare tunnels, ngrok, or a private E2EE relay.
 
 ## Key Stakeholders
 
@@ -21,8 +21,8 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 **In scope:**
 
 - Web/PWA frontend and Express server for hosting OpenCode sessions
-- Electron desktop app (macOS and Windows; Linux planned)
-- Tauri desktop app (legacy, maintenance-only for auto-update)
+- Electron desktop app (macOS, Windows, and Linux)
+- Native mobile apps (iOS and Android) via Capacitor with push notifications and QR pairing
 - Capacitor mobile app (iOS and Android) with native push notifications and QR pairing
 - VS Code extension with sidebar webview
 - Shared UI component library (`@openchamber/ui`)
@@ -35,13 +35,18 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 - Skills catalog and local skill management
 - Custom theming system with 18+ built-in themes
 - Usage quota tracking across multiple AI providers
+- Private relay for E2EE remote access without open ports or third-party tunnels
+- Session goals for autonomous AI-driven multi-turn execution with audit
+- Streaming dictation (local sherpa-onnx or OpenAI-compatible Whisper endpoints)
 - Docker deployment support
+- Desktop SSH remote host management with port forwarding
+- Startup service (systemd, launchd) integration
 - Localization/i18n (multiple languages including Polish, Chinese)
 
 **Out of scope:**
 
 - The OpenCode server itself (separate project at opencode.ai)
-- Windows and Linux desktop apps (Electron supports them but packaging/release not fully automated)
+- Tauri desktop app (legacy, maintenance-only for auto-update migration)
 - Linear integration (on roadmap)
 - Built-in browser for running dev apps (on roadmap, preview browser exists for local dev servers)
 
@@ -49,7 +54,8 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 
 - OpenCode CLI must be installed as a prerequisite; OpenChamber is a UI layer, not an AI engine
 - The Electron desktop boots the web server in-process; no sidecar subprocess
-- Tauri desktop is legacy and receives no new features; kept only for auto-update migration
+- Tauri desktop is legacy, receives no new features, and is kept for auto-update migration
+- Private relay is the default remote-access method when available; no open ports or third-party tunnels required
 - Shared UI code (`packages/ui`) must work across web, desktop (both shells), and VS Code webview
 - Node.js >= 22 required; Bun 1.3 is the package manager and runtime for builds
 - TypeScript strict mode enforced; no `any` without justification

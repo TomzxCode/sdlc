@@ -1,6 +1,6 @@
 ---
 title: "Session Assist (Recap and Suggestions)"
-status: draft
+status: done
 ---
 
 # Specification: Session Assist

@@ -1,6 +1,6 @@
 ---
 title: "PWA Support"
-status: draft
+status: done
 ---
 
 # Requirements: PWA Support

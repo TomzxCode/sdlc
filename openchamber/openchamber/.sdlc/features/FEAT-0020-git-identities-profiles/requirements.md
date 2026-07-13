@@ -1,6 +1,6 @@
 ---
 title: "Git Identities / Profiles"
-status: draft
+status: done
 ---
 
 # Requirements: Git Identities / Profiles

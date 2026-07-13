@@ -1,6 +1,6 @@
 ---
 title: "Session Pinning & Multi-Select"
-status: draft
+status: done
 ---
 
 # Specification: Session Pinning & Multi-Select

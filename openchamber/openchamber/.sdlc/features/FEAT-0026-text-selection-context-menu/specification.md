@@ -1,6 +1,6 @@
 ---
 title: "Text Selection Context Menu"
-status: draft
+status: done
 ---
 
 # Specification: Text Selection Context Menu

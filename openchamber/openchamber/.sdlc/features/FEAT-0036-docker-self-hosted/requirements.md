@@ -1,6 +1,6 @@
 ---
 title: "Docker / Self-Hosted Deployment"
-status: draft
+status: done
 ---
 
 # Requirements: Docker / Self-Hosted Deployment

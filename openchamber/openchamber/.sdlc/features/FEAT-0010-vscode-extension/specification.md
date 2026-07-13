@@ -1,6 +1,6 @@
 ---
 title: "VS Code Extension"
-status: draft
+status: done
 ---
 
 # Specification: VS Code Extension

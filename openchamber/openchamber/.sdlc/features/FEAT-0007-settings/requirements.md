@@ -1,6 +1,6 @@
 ---
 title: "Settings"
-status: draft
+status: done
 ---
 
 # Requirements: Settings

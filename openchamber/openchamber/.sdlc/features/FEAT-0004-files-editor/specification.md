@@ -1,6 +1,6 @@
 ---
 title: "Files & Editor"
-status: draft
+status: done
 ---
 
 # Specification: Files & Editor

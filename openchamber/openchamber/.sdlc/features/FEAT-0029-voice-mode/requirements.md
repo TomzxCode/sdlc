@@ -1,6 +1,6 @@
 ---
 title: "Voice Mode"
-status: draft
+status: done
 ---
 
 # Requirements: Voice Mode

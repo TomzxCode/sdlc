@@ -1,6 +1,6 @@
 ---
 title: "Git Worktree Management"
-status: draft
+status: done
 ---
 
 # Requirements: Git Worktree Management

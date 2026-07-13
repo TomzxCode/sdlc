@@ -1,6 +1,6 @@
 ---
 title: "Mini Chat (Electron)"
-status: draft
+status: done
 ---
 
 # Specification: Mini Chat (Electron)

@@ -1,6 +1,6 @@
 ---
 title: "Skills Catalog"
-status: draft
+status: done
 ---
 
 # Requirements: Skills Catalog

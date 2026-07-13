@@ -1,6 +1,6 @@
 ---
 title: "Notifications & Updates"
-status: draft
+status: done
 ---
 
 # Specification: Notifications & Updates

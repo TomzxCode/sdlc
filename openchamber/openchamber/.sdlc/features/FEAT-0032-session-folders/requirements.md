@@ -1,6 +1,6 @@
 ---
 title: "Session Folders"
-status: draft
+status: done
 ---
 
 # Requirements: Session Folders

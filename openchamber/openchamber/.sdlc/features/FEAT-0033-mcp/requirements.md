@@ -1,6 +1,6 @@
 ---
 title: "MCP (Model Context Protocol)"
-status: draft
+status: done
 ---
 
 # Requirements: MCP (Model Context Protocol)

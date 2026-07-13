@@ -1,6 +1,6 @@
 ---
 title: "Permission / Edit Mode"
-status: draft
+status: done
 ---
 
 # Specification: Permission / Edit Mode

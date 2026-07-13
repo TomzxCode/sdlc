@@ -1,6 +1,6 @@
 ---
 title: "Docker / Self-Hosted Deployment"
-status: draft
+status: done
 ---
 
 # Specification: Docker / Self-Hosted Deployment

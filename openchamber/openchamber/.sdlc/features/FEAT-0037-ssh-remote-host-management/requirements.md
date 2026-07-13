@@ -1,6 +1,6 @@
 ---
 title: "SSH Remote Host Management"
-status: draft
+status: done
 ---
 
 # Requirements: SSH Remote Host Management

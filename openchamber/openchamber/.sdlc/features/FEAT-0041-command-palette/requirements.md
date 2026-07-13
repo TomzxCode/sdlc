@@ -1,6 +1,6 @@
 ---
 title: "Command Palette"
-status: draft
+status: done
 ---
 
 # Requirements: Command Palette

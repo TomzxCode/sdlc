@@ -1,6 +1,6 @@
 ---
 title: "Chat & Session Management"
-status: draft
+status: done
 ---
 
 # Specification: Chat & Session Management

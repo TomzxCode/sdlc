@@ -1,6 +1,6 @@
 ---
 title: "Open In External Apps"
-status: draft
+status: done
 ---
 
 # Requirements: "Open In" External Apps

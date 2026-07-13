@@ -1,6 +1,6 @@
 ---
 title: "AI-Generated Commits & PR Descriptions"
-status: draft
+status: done
 ---
 
 # Specification: AI-Generated Commits & PR Descriptions

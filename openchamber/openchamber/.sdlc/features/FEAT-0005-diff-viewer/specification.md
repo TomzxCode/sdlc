@@ -1,6 +1,6 @@
 ---
 title: "Diff Viewer"
-status: draft
+status: done
 ---
 
 # Specification: Diff Viewer

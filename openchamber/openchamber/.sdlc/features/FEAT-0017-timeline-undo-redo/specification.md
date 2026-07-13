@@ -1,6 +1,6 @@
 ---
 title: "Timeline / Undo / Redo"
-status: draft
+status: done
 ---
 
 # Specification: Timeline / Undo / Redo

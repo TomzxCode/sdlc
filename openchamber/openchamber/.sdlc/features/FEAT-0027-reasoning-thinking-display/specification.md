@@ -1,6 +1,6 @@
 ---
 title: "Reasoning / Thinking Display"
-status: draft
+status: done
 ---
 
 # Specification: Reasoning / Thinking Display

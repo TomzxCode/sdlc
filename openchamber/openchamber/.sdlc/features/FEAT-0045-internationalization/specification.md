@@ -1,6 +1,6 @@
 ---
 title: "Internationalization (i18n)"
-status: draft
+status: done
 ---
 
 # Specification: Internationalization (i18n)

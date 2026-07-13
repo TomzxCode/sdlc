@@ -1,6 +1,6 @@
 ---
 title: "GitHub Issue / PR Starters"
-status: draft
+status: done
 ---
 
 # Requirements: GitHub Issue / PR Starters

@@ -1,6 +1,6 @@
 ---
 title: "Plan View"
-status: draft
+status: done
 ---
 
 # Specification: Plan View

@@ -1,6 +1,6 @@
 ---
 title: "Plugins (OpenCode Plugin Management)"
-status: draft
+status: done
 ---
 
 # Specification: Plugins

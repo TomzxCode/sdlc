@@ -1,6 +1,6 @@
 ---
 title: "Model Picker"
-status: draft
+status: done
 ---
 
 # Requirements: Model Picker

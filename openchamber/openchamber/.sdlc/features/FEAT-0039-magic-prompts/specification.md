@@ -1,6 +1,6 @@
 ---
 title: "Magic Prompts"
-status: draft
+status: done
 ---
 
 # Specification: Magic Prompts
