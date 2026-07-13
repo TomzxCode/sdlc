@@ -1,6 +1,6 @@
 ---
 title: "LLM Provider Abstraction"
-status: draft
+status: done
 ---
 
 # Specification: LLM Provider Abstraction

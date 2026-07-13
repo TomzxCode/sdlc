@@ -1,6 +1,6 @@
 ---
 title: "Interactive Coding Agent"
-status: draft
+status: done
 ---
 
 # Specification: Interactive Coding Agent

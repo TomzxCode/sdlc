@@ -1,6 +1,6 @@
 ---
 title: "Terminal UI Framework"
-status: draft
+status: done
 ---
 
 # Requirements: Terminal UI Framework

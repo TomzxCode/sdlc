@@ -1,6 +1,6 @@
 ---
 title: "Session Persistence and Branching"
-status: draft
+status: done
 ---
 
 # Specification: Session Persistence and Branching

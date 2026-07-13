@@ -1,6 +1,6 @@
 ---
 title: "Agent Runtime"
-status: draft
+status: done
 ---
 
 # Specification: Agent Runtime

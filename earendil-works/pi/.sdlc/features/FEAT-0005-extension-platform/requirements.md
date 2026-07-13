@@ -1,6 +1,6 @@
 ---
 title: "Extension and Skills Platform"
-status: draft
+status: done
 ---
 
 # Requirements: Extension and Skills Platform

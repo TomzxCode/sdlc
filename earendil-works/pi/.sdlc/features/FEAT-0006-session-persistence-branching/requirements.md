@@ -1,6 +1,6 @@
 ---
 title: "Session Persistence and Branching"
-status: draft
+status: done
 ---
 
 # Requirements: Session Persistence and Branching
