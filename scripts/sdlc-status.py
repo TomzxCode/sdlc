@@ -642,37 +642,62 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
+  /* sidebar drawer controls are mobile-only */
+  .topbar, .sidebar-backdrop, .sidebar-toggle, .sidebar-close { display: none; }
+
   @media (max-width: 768px) {
-    body { padding: 0.75rem; font-size: 0.9rem; }
+    body { padding: 3.2rem 0.75rem 0.75rem; font-size: 0.9rem; }
     .header { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
     .header .date { font-size: 0.7rem; }
 
     .layout { display: block; }
+
+    .topbar {
+      display: flex;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0.4rem 0.75rem;
+    }
+    .sidebar-toggle {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      background: var(--surface-alt); border: 1px solid var(--border); color: var(--text);
+      padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.8rem;
+      font-family: inherit; cursor: pointer;
+    }
+    .sidebar-toggle .bars { display: inline-flex; flex-direction: column; gap: 3px; }
+    .sidebar-toggle .bars span { display: block; width: 16px; height: 2px; background: currentColor; border-radius: 1px; }
+
+    .sidebar-backdrop {
+      display: block;
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,0.55);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
+
     .sidebar {
-      flex: none;
-      width: 100%;
-      position: static;
-      top: auto;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 200;
+      width: 80vw; max-width: 320px;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      border-radius: 0; margin-bottom: 0; padding: 1rem;
     }
-    .sidebar h3 { margin-bottom: 0.4rem; }
+    .sidebar.open { transform: translateX(0); box-shadow: 0 0 30px rgba(0,0,0,0.4); }
+    .sidebar-close {
+      display: block;
+      position: absolute; top: 0.4rem; right: 0.4rem;
+      background: transparent; border: none; color: var(--text-muted);
+      font-size: 1.6rem; line-height: 1; cursor: pointer; padding: 0.2rem 0.5rem;
+    }
+    .sidebar h3 { margin-bottom: 0.5rem; padding-right: 1.5rem; }
     .feature-list {
-      flex-direction: row;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      gap: 0.4rem;
-      padding-bottom: 0.25rem;
-      -webkit-overflow-scrolling: touch;
+      flex-direction: column; flex-wrap: nowrap;
+      overflow: visible; gap: 0.25rem; padding-bottom: 0;
     }
-    .ftab {
-      flex: 0 0 auto;
-      width: auto;
-      min-height: 44px;
-      align-items: center;
-      white-space: nowrap;
-    }
-    .ftab .ftitle { max-width: 60vw; }
+    .ftab { flex: 0 0 auto; width: 100%; min-height: 44px; align-items: center; white-space: nowrap; }
+    .ftab .ftitle { max-width: none; overflow: hidden; text-overflow: ellipsis; }
 
     .summary-cards { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
     .card { padding: 0.75rem 0.85rem; }
@@ -701,6 +726,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </style>
 </head>
 <body>
+<div class="topbar">
+  <button class="sidebar-toggle" type="button" onclick="toggleSidebar()" aria-label="Open features list">
+    <span class="bars" aria-hidden="true"><span></span><span></span><span></span></span>
+    <span>Features</span>
+  </button>
+</div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 <div class="header">
   <h1>SDLC Status Dashboard</h1>
   <span class="date">{{generated_date}}</span>
@@ -708,6 +740,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 <div class="layout">
   <div class="sidebar">
+    <button class="sidebar-close" type="button" onclick="closeSidebar()" aria-label="Close features list">&times;</button>
     <h3>Features</h3>
     <div class="feature-list">
       {{feature_tabs}}
@@ -719,6 +752,43 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </div>
 
 <script>
+function isMobile() { return window.matchMedia('(max-width: 768px)').matches; }
+function openSidebar() {
+  if (!isMobile()) return;
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebarBackdrop').classList.add('open');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('open');
+}
+function toggleSidebar() {
+  if (document.querySelector('.sidebar').classList.contains('open')) closeSidebar();
+  else openSidebar();
+}
+(function() {
+  var startX = 0, startY = 0, mode = null, EDGE = 24, THRESHOLD = 50;
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) { mode = null; return; }
+    var t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+    var open = document.querySelector('.sidebar').classList.contains('open');
+    if (!open && startX <= EDGE) { mode = 'open'; }
+    else if (open) { mode = 'close'; }
+    else { mode = null; }
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (!mode) return;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - startX, dy = t.clientY - startY;
+    var m = mode; mode = null;
+    if (Math.abs(dx) < THRESHOLD || Math.abs(dy) > Math.abs(dx)) return;
+    if (m === 'open' && dx > 0) openSidebar();
+    else if (m === 'close' && dx < 0) closeSidebar();
+  }, { passive: true });
+})();
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSidebar(); });
+
 function selectFeature(idx) {
   document.querySelectorAll('.ftab').forEach(function(t, i) { t.classList.toggle('active', i === idx); });
   document.querySelectorAll('.fpanel').forEach(function(p, i) { p.classList.toggle('hidden', i !== idx); });
@@ -729,6 +799,7 @@ function selectFeature(idx) {
     else { d.classList.add('hidden'); }
   });
   localStorage.setItem('sdlc_feature', idx);
+  if (isMobile()) closeSidebar();
 }
 function showPhase(featIdx, phase) {
   var el = document.getElementById('pd-' + featIdx + '-' + phase);
