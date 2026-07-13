@@ -1,6 +1,6 @@
 ---
 title: "Configuration System"
-status: draft
+status: done
 ---
 
 # Requirements: Configuration System

@@ -38,6 +38,8 @@
 | Kysely | The SQLite query builder used for database access |
 | Zod | The schema validation library used for configuration validation |
 | Lit | The web component library used for the Control UI |
+| A2UI | Agent-to-UI protocol for dynamic agent-driven interfaces |
+| Canvas | Agent-driven visual workspace rendered in the Control UI |
 
 ## Acronyms and Abbreviations
 

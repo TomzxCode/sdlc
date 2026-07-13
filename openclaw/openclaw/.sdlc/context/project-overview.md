@@ -36,7 +36,7 @@ The Gateway is the control plane — the product is the assistant itself, not ju
 
 ## Key Constraints
 
-- Node 22.19+ runtime (Node 24 recommended), with Bun compatibility
+- Node 22.22.3+ runtime (Node 24 recommended), with Bun compatibility
 - Single-user architecture by design; no multi-tenant isolation
 - Plugin isolation via explicit import boundaries and capability gating
 - Configuration is single-source-of-truth via `openclaw.json`; no silent config compat

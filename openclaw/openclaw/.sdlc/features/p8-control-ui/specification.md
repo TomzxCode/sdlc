@@ -1,6 +1,6 @@
 ---
 title: "Control UI"
-status: draft
+status: done
 ---
 
 # Specification: Control UI

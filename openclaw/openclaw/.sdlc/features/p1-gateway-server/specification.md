@@ -1,6 +1,6 @@
 ---
 title: "Gateway Server"
-status: draft
+status: done
 ---
 
 # Specification: Gateway Server

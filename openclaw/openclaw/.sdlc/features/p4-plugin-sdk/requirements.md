@@ -1,6 +1,6 @@
 ---
 title: "Plugin SDK and Extension System"
-status: draft
+status: done
 ---
 
 # Requirements: Plugin SDK and Extension System

@@ -60,7 +60,7 @@
 
 | Area | Technology |
 |---|---|
-| Runtime | Node.js 22.19+ (24 recommended), Bun compatible |
+| Runtime | Node.js 22.22.3+ (24 recommended), Bun compatible |
 | State storage | SQLite via Kysely query builder |
 | Configuration | JSON files with zod schema validation |
 | CI/CD | GitHub Actions, Blacksmith Testbox |

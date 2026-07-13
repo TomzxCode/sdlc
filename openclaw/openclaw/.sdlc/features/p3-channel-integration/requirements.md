@@ -1,6 +1,6 @@
 ---
 title: "Channel Integration"
-status: draft
+status: done
 ---
 
 # Requirements: Channel Integration

@@ -1,6 +1,6 @@
 ---
 title: "Gateway Server"
-status: draft
+status: done
 ---
 
 # Requirements: Gateway Server

@@ -1,6 +1,6 @@
 ---
 title: "Command-Line Interface"
-status: draft
+status: done
 ---
 
 # Specification: Command-Line Interface

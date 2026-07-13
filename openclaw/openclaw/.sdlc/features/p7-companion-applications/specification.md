@@ -1,6 +1,6 @@
 ---
 title: "Companion Applications"
-status: draft
+status: done
 ---
 
 # Specification: Companion Applications
