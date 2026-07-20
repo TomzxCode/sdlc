@@ -40,6 +40,8 @@ Paperclip is a single-process Node.js control plane that orchestrates externally
 | `packages/plugins/` | Plugin system: SDK, create-paperclip-plugin, sandbox providers, example plugins | TypeScript |
 | `packages/mcp-server/` | MCP server package | TypeScript |
 | `packages/skills-catalog/`, `packages/teams-catalog/` | Skills and teams catalogs | TypeScript |
+| `server/src/realtime/` | WebSocket real-time events (live dashboards, terminal sessions) | TypeScript, WebSocket |
+| `server/src/services/tool-access.ts`, `tool-gateway.ts` | Third-party tool/connection integration (OAuth, MCP/SSE gateways, access policies, runtime slots) | TypeScript |
 | `server/src/secrets/` | Secrets provider implementations (local-encrypted, AWS, GCP, Vault) and provider registry | TypeScript |
 | `server/src/auth/` | Auth middleware (bearer token, session, board/agent resolution) | TypeScript |
 | `server/src/services/pipelines.ts` | Pipeline management (stages, cases, automation, transitions, events) | TypeScript |
