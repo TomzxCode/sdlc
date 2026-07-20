@@ -1,6 +1,6 @@
 ---
 title: "REST API & Web Frontend"
-status: draft
+status: done
 ---
 
 # Requirements: REST API & Web Frontend

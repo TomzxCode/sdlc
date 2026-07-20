@@ -1,6 +1,6 @@
 ---
 title: "Session Sync & Management"
-status: draft
+status: done
 ---
 
 # Requirements: Session Sync & Management

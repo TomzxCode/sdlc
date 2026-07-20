@@ -1,6 +1,6 @@
 ---
 title: "DuckDB Mirror"
-status: draft
+status: done
 ---
 
 # Requirements: DuckDB Mirror

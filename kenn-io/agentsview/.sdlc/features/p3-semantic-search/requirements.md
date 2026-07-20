@@ -1,6 +1,6 @@
 ---
 title: "Semantic Search"
-status: draft
+status: done
 ---
 
 # Requirements: Semantic Search

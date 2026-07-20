@@ -10,13 +10,18 @@
 | agent | An AI coding tool that produces session files (Claude, Codex, Cursor, etc.) |
 | parser | Code that reads an agent-specific session file format and extracts structured data |
 | project | A named group of sessions, typically corresponding to a code repository |
+| project identity | The git remote + worktree mapping used to disambiguate projects |
 | sync | The process of discovering new/changed session files and updating the database |
+| parse diff | The difference between two parser runs, used to detect incremental changes |
 | FTS5 | SQLite Full-Text Search version 5, used for message content search |
 | embedding | A vector representation of text used for semantic search |
 | generation | A version of the semantic search embedding index (a set of embeddings with a specific model and dimensions) |
 | signal | A health or outcome indicator computed from session content (success/failure, tool health, context pressure) |
 | insight | An AI-generated summary or analysis of session data |
 | pull quote | A notable excerpt extracted from session messages, used in reports |
+| recall entry | A distilled, reusable fact extracted from session history with evidence links |
+| secret finding | Detected credentials or secrets in session content, stored with redacted matches |
+| usage event | A record of token consumption during a session or portion of a session |
 | remote sync | Syncing sessions from other machines via SSH or HTTP |
 | Quack | DuckDB's remote protocol for network access to DuckDB files |
 
@@ -39,6 +44,12 @@
 | Tauri | Desktop application framework wrapping web UIs |
 | golangci-lint | Go linter aggregator |
 | NilAway | Go nil pointer analysis tool |
+| LiteLLM | Open-source LLM pricing catalog used for cost estimation |
+| Paraglide | i18n framework used in the Svelte frontend for message catalogs |
+| kit-ui | Shared UI component library (@kenn-io/kit-ui) used in the frontend |
+| TOML | Tom's Obvious Minimal Language, used for configuration files |
+| CGO | Go's mechanism for calling C code, required for the sqlite3 driver |
+| CWD | Current Working Directory, used for sync path filtering |
 
 ## Acronyms and Abbreviations
 
@@ -68,3 +79,6 @@
 | WAL | Write-Ahead Logging |
 | ADR | Architecture Decision Record |
 | LOTR | LLM Organized Tree of Retrievals (from internal/insight) |
+| OTel | OpenTelemetry |
+| CGO | C Go interoperability |
+| DSN | Data Source Name |

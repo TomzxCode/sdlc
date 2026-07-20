@@ -1,6 +1,6 @@
 ---
 title: "Admin & Operations"
-status: draft
+status: done
 ---
 
 # Specification: Admin & Operations
