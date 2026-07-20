@@ -37,7 +37,10 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 - Company skills catalog and team templates
 - Pipelines with stage-based workflow management, cases, automation, and full event audit trail
 - Cloud upstreams for cross-instance company synchronization (experimental, gated behind feature flag)
+- Real-time events and live updates via WebSocket (live dashboards, terminal sessions)
 - Auditable activity log for all mutating actions
+- Tools, connections, and third-party app integration (OAuth connections, MCP/SSE tool gateways, tool access policies, runtime slots, app gallery)
+- Smoke lab for integration testing of configured connections
 - Board web UI (dashboard, org chart, tasks, agents, approvals, costs, activity, secrets, skills, inbox, pipelines)
 
 **Out of scope (V1):**

@@ -75,3 +75,31 @@
 | System prompt | The per-agent instruction set that defines behavior (stored in agent_config_revisions) |
 | Run continuation | Mechanism for agents to resume interrupted heartbeat runs with preserved context |
 | Work product | A typed deliverable attached to an issue, backed by an artifact or referencing a workspace file |
+| Tool connection | An OAuth-authenticated integration with a third-party service (GitHub, Slack, etc.) for agent tool access |
+| Tool gateway | An MCP/SSE bridge that proxies tool calls from agents to external services |
+| Tool access policy | A rule set governing which agents can use which tools under what conditions |
+| Tool runtime profile | A configured tool execution environment with capacity, timeout, and security parameters |
+| Tool profile binding | An association between a tool profile and an agent or project for runtime resolution |
+| App connection | A pre-configured tool connection with associated profile and policy for use by agents |
+| Smoke lab | An integration testing facility for validating connection health and behavior |
+| Runtime slot | A leased execution slot for tool runtime processes with concurrency management |
+| Content guard | A filter that prevents sensitive data from being transmitted through tools |
+| Tools ecosystem | The full lifecycle of discovering, installing, configuring, and using third-party tools |
+| Live event | A real-time event delivered over WebSocket for live UI updates (run progress, cost events, terminal output) |
+| Setup session | An interactive terminal session for configuring a custom environment image |
+| Custom image | A user-defined Docker image used as an agent execution environment |
+| Environment lease | A time-limited claim on an environment execution slot |
+| Tool connection | An OAuth-authenticated integration with a third-party service (GitHub, Slack, etc.) for agent tool access |
+| Tool gateway | An MCP/SSE bridge that proxies tool calls from agents to external services |
+| Tool access policy | A rule set governing which agents can use which tools under what conditions |
+| Tool runtime profile | A configured tool execution environment with capacity, timeout, and security parameters |
+| Tool profile binding | An association between a tool profile and an agent or project for runtime resolution |
+| App connection | A pre-configured tool connection with associated profile and policy for use by agents |
+| Smoke lab | An integration testing facility for validating connection health and behavior |
+| Runtime slot | A leased execution slot for tool runtime processes with concurrency management |
+| Content guard | A filter that prevents sensitive data from being transmitted through tools |
+| Tools ecosystem | The full lifecycle of discovering, installing, configuring, and using third-party tools |
+| Live event | A real-time event delivered over WebSocket for live UI updates (run progress, cost events, terminal output) |
+| Setup session | An interactive terminal session for configuring a custom environment image |
+| Custom image | A user-defined Docker image used as an agent execution environment |
+| Environment lease | A time-limited claim on an environment execution slot |
