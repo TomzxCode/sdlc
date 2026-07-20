@@ -1,6 +1,6 @@
 ---
 title: "MCP Server"
-status: draft
+status: done
 ---
 
 # Specification: MCP Server

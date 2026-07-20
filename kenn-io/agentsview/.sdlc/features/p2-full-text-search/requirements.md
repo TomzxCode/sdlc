@@ -1,6 +1,6 @@
 ---
 title: "Full-Text Search"
-status: draft
+status: done
 ---
 
 # Requirements: Full-Text Search

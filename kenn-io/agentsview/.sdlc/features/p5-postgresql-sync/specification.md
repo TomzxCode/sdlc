@@ -1,6 +1,6 @@
 ---
 title: "PostgreSQL Sync"
-status: draft
+status: done
 ---
 
 # Specification: PostgreSQL Sync

@@ -1,6 +1,6 @@
 ---
 title: "Analytics & Cost Tracking"
-status: draft
+status: done
 ---
 
 # Requirements: Analytics & Cost Tracking
