@@ -9,7 +9,7 @@
 - **Constants:** `camelCase` for locals, `UPPER_SNAKE_CASE` for module-level constants (e.g. `CURRENT_SESSION_VERSION`, `DEFAULT_EDITOR_KEYBINDINGS`).
 - **Types:** Interfaces generally unprefixed; type aliases for unions and utility types. `T`-prefixed TypeBox schema types (e.g. `TSchema`, `TObject`).
 - **Enum-like:** No `enum` (erasable-TS rule); use union string literal types or `as const` objects.
-- **IDs:** Feature `FEAT-NNNN`, requirement `FR-NN`, task `NNNN`, etc. (see SDLC ID formats).
+- **IDs:** Feature `FEAT-N`, requirement `FR-N`, task `N`, etc. See SDLC ID format: never zero-padded (e.g. `FEAT-42`, not `FEAT-0042`). The `p` prefix marks pending features (`FEAT-p1`).
 
 ## Directory Structure
 
