@@ -41,6 +41,18 @@
 | A2UI | Agent-to-UI protocol for dynamic agent-driven interfaces |
 | Canvas | Agent-driven visual workspace rendered in the Control UI |
 
+| Term | Definition |
+|---|---|---|
+| ACP | Agent Client Protocol — a protocol for agent-to-agent and agent-to-gateway communication |
+| Canvas | Agent-driven visual workspace rendered in the Control UI for rich interactive content |
+| ClawSweeper | Automated issue/PR triage and maintenance bot for the OpenClaw repository |
+| DM Policy | Direct Message pairing policy controlling who can message the assistant |
+| MCP | Model Context Protocol — a standard for tool and resource provisioning to AI models |
+| QA Lab | Internal testing framework using YAML-based scenario packs for regression and behavior testing |
+| Sandbox | Execution isolation mode for agent tools (configurable as main, non-main, or off) |
+| Talk | Voice conversation runtime supporting full-duplex audio sessions |
+| Trajectory | Session recording capturing agent actions for replay and debugging |
+
 ## Acronyms and Abbreviations
 
 | Abbreviation | Expansion |
