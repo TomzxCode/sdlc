@@ -40,6 +40,7 @@ last_updated: "<YYYY-MM-DD>"
 | Development & Testing | review-implementation | — |
 | Development & Testing | create-documentation | — |
 | Development & Testing | review-documentation | — |
+| Development & Testing | validate-implementation | — |
 | Development & Testing | create-pr | — |
 | Development & Testing | review-pr | — |
 | Development & Testing | handle-pr-ci | — |
@@ -54,8 +55,8 @@ Status values: `—` (not started), `done`, `skipped`, `blocked`, or the current
 ## Task Progress
 
 | ID | Title | Size | Status | Completed | Blocker |
-|---|---|---|---|---|---|---|
-| 0001 | <title> | S | pending | — | — |
+|---|---|---|---|---|---|
+| 1 | <title> | S | pending | — | — |
 
 **Completion:** 0 / 0 tasks (0%)
 
