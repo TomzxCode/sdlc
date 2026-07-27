@@ -51,6 +51,8 @@ A core server process owns sessions, the tool registry, provider adapters, and s
 | `packages/session-ui` | Reusable session UI components (SolidJS: message rendering, diffs, markdown) | SolidJS |
 | `packages/sdk-next` | Next-gen SDK composing client + core + server | TypeScript |
 | `packages/stats` | Usage statistics collection and dashboard | Hono, SST |
+| `packages/console` | Admin web console for managing teams, projects, and billing | SolidJS, SST |
+| `packages/client` | Generated TypeScript SDK client (Promise and Effect APIs) | TypeScript (generated) |
 | `github/` | GitHub Actions composite action for running in CI | TypeScript |
 | `sdks/vscode` | VSCode editor extension | TypeScript |
 
