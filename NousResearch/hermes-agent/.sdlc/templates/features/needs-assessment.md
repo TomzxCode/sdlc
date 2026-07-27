@@ -12,13 +12,13 @@ status: draft
 ## Stakeholders
 
 | Stakeholder | Role | How they experience the problem |
-|---|---|---|---|
+|---|---|---|
 | <who> | <user / admin / developer / business> | <what they encounter today> |
 
 ## Evidence of Need
 
 | Source | What it shows | Strength |
-|---|---|---|---|
+|---|---|---|
 | <user requests / support tickets / usage data / competitive analysis / assumption> | <summary of evidence> | Strong / Moderate / Weak |
 
 **Evidence rating:** Strong / Moderate / Weak / None
@@ -41,7 +41,7 @@ A Weak or None rating means the status quo is tolerable.
 ## Alternative Paths
 
 | Alternative | How it addresses the need | Trade-offs |
-|---|---|---|---|
+|---|---|---|
 | <existing feature / configuration / documentation / process change / third-party tool> | <what it covers> | <what it does not cover, or costs> |
 
 **Could the need be met without new code?** Yes / Partially / No
@@ -52,7 +52,7 @@ If Yes, explain why new code is still justified (if at all).
 
 | Criterion | Assessment |
 |---|---|
-| Aligns with project goals (goals.md) | <Yes, which objective / Partially / No> |
+| Aligns with project goals (`goals.md`) | <Yes, which objective / Partially / No> |
 | Serves core or edge use case | <Core / Edge / Outlier> |
 | Dependency enabler | <Unblocks how many other features> |
 

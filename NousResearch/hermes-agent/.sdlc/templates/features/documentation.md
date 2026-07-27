@@ -34,7 +34,7 @@ status: draft
 ### Configuration
 
 | Option | Type | Default | Description |
-|---|---|---|---|---|
+|---|---|---|---|
 
 ### API
 

@@ -12,7 +12,7 @@ status: draft
 ## Screen Inventory
 
 | Screen | Purpose | Entry From | Exits To |
-|---|---|---|---|---|
+|---|---|---|---|
 | <name> | <what the user does here> | <where they came from> | <where they can go> |
 
 ## Wireframes
@@ -34,7 +34,7 @@ status: draft
 **Regions**
 
 | Region | Content | Data source (spec ref) |
-|---|---|---|---|
+|---|---|---|
 | <region name> | <what it shows> | <specification.md section or API endpoint> |
 
 **Primary action:** <the single most important action on this screen>
@@ -46,7 +46,7 @@ status: draft
 ## Component Breakdown
 
 | Component | Status | Notes |
-|---|---|---|---|
+|---|---|---|
 | <name> | Reuse / Extend / New | <where it lives or what it needs> |
 
 ## Interaction States

@@ -15,7 +15,7 @@ last_updated: "<YYYY-MM-DD>"
 ## Pipeline Status
 
 | Stage | Phase | Status |
-|---|---|---|---|
+|---|---|---|
 | Planning & Feasibility | create-issue | — |
 | Planning & Feasibility | review-issue | — |
 | Planning & Feasibility | qualify-issue | — |
@@ -40,6 +40,7 @@ last_updated: "<YYYY-MM-DD>"
 | Development & Testing | review-implementation | — |
 | Development & Testing | create-documentation | — |
 | Development & Testing | review-documentation | — |
+| Development & Testing | validate-implementation | — |
 | Development & Testing | create-pr | — |
 | Development & Testing | review-pr | — |
 | Development & Testing | handle-pr-ci | — |
