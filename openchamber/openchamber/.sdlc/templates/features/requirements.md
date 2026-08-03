@@ -20,7 +20,7 @@ status: draft
 Order rows by priority: Must first, then Should, then May.
 
 | ID | Priority | Requirement |
-|---|---|---|---|
+|---|---|---|
 | FR-1 | Must / Should / May | The system shall ... |
 
 ## Non-Functional Requirements

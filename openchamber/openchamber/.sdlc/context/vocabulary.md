@@ -44,13 +44,16 @@
 | Plugins | OpenCode plugin scripts (JS/TS) that extend agent behavior, installable as npm packages or local files with configurable options. |
 | Session Assist | Server-side feature that generates a short recap of the agent's last reply and one suggested user follow-up using a small model after a session goes idle. |
 | Auto Review | Automated iterative review flow where a reviewer agent examines a session's output, generates findings, and passes them back to the original agent for revision. |
+| Changes Walkthrough | An AI-guided tour of a diff: the small model groups related hunks into stops and chapters and explains each group, and the UI renders them interleaved with the code. Generation is always user-initiated. |
+| Hunk | A stable content-addressed unit of a unified diff (id is a hash of the hunk header and body plus scope and path). Hunk ids let walkthrough stops prove staleness when the code they describe changes. |
+| Diagram Editor | An embedded DrawIO-based editor for viewing and editing `.drawio`/`.xml` diagram files inside a session. |
+| Agent Manager | UI for organizing agent groups and launching multi-runs from named groups. |
+| Agent Group | A named collection of agents managed in the Agent Manager, used as a target for launching multi-run sessions. |
+| Control Plane | The typed action contract (`openchamber control` CLI and the managed `openchamber` agent tool) for scripting fixed project, model, session, and scheduled-task operations against a running OpenChamber instance. |
+| Agent Tool | The native OpenCode custom tool named `openchamber`, injected only when OpenChamber launches and owns the OpenCode process, that exposes control-plane actions to agents. |
+| Passkeys | Passwordless authentication for the OpenChamber UI using platform passkeys (WebAuthn) instead of a password. |
+| Context Obligatory | Server-side re-injection of pinned context messages into the session after compaction so important context survives summarization. |
 | Capacitor | Cross-platform native runtime for building iOS and Android apps from web code; used by OpenChamber Mobile. |
-| Private Relay | End-to-end encrypted outbound-only tunnel to OpenChamber-hosted relay infrastructure for remote access without open ports or third-party tunnels. Uses NaCl box (X25519-XSalsa20-Poly1305) for encryption. |
-| Session Goal | Autonomous multi-turn execution loop where a session keeps working toward an objective with independent small-model audit. Goals persist across restarts and continue with the app closed. |
-| Dictation | Streaming speech-to-text subsystem supporting local models (sherpa-onnx Parakeet, Whisper) and OpenAI-compatible endpoints. |
-| Small Model | A configurable utility AI model used for background tasks: summary generation, commit messages, PR descriptions, session recaps, and read-aloud summarization. |
-| Session Assist | Server-side feature that generates a short recap of the agent's last reply and one suggested user follow-up using the Small Model after a session goes idle. |
-| Auto Review | Automated iterative review flow where a reviewer agent examines a session's output, generates findings, and passes them back to the original agent for revision. |
 | Client Auth / Pairing | Device pairing framework for connecting remote OpenChamber instances. Uses QR codes, one-time tokens, and connection candidate exchange over the relay. |
 | AI-Generated Commits/PR | Automatic git commit message generation and pull request creation from session changes, with human review before submission. |
 | Docker Self-Hosted | Docker deployment support with Dockerfile and docker-compose.yml for running OpenChamber on a server. |

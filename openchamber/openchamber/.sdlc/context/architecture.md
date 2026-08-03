@@ -17,9 +17,9 @@
               +--------------------+--------------------+
               |                    |                    |
      +--------v--------+  +-------v--------+  +--------v--------+
-     |   Electron App  |  |   Web / PWA    |  | Tauri (legacy)  |
-     | (main.mjs boots |  | (Vite SPA via  |  | (sidecar spawns |
-     |  server in-proc)|  |  Express)      |  |  server binary) |
+     |   Electron App  |  |   Web / PWA    |  |  VS Code Ext    |
+     | (main.mjs boots |  | (Vite SPA via  |  | (webview loads  |
+     |  server in-proc)|  |  Express)      |  |  shared UI)     |
      +--------+--------+  +-------+--------+  +--------+--------+
               |                    |                    |
               +--------------------+--------------------+
@@ -51,12 +51,13 @@
 | `packages/web` | Express server, API routes, CLI, Vite frontend build | Express 5, Node.js >=22, Bun, Vite 7 |
 | `packages/web/server` | Backend runtime: OpenCode lifecycle, SSE event pipeline, Git, terminal, tunnels, relay, auth, TTS, dictation, notifications, quota, session goals, session assist, small model | Express, ws, simple-git, bun-pty/node-pty, Cloudflare tunnel, ngrok, sherpa-onnx |
 | `packages/electron` | Forward desktop shell; boots web server in-process, native integrations | Electron 41, electron-builder |
-| `packages/desktop` | Legacy Tauri desktop shell (maintenance-only) | Tauri v2, Rust |
 | `packages/mobile` | Capacitor mobile app wrapping the mobile web UI for iOS and Android | Capacitor, iOS (Swift), Android (Java/Kotlin) |
 | `packages/vscode` | VS Code extension with sidebar webview | VS Code Extension API, esbuild |
 | `packages/docs` | Documentation website source | MDX |
 | `packages/electron/ssh-manager.mjs` | SSH connection management for remote OpenChamber instances (Electron only) | Node SSH2, Electron IPC |
 | `packages/web/server/lib/preview/` | Preview browser proxy for locally running dev web apps | http-proxy-middleware |
+| `packages/web/server/lib/walkthrough/` | AI-guided changes walkthrough: groups diff hunks into ordered stops and chapters using the small model | Express, hunk hashing, small-model calls |
+| `packages/web/server/lib/openchamber-control/` + `agent-tool/` | Control plane: typed action allowlist (project, model, session, scheduled tasks) shared by the CLI and the managed `openchamber` agent tool | Express, native OpenCode tool plugin |
 
 ## Data Flow
 
@@ -76,9 +77,13 @@
 
 8. **Dictation (streaming speech-to-text)**: The dictation subsystem (`packages/web/server/lib/dictation/`) provides streaming speech recognition via WebSocket. Supports local sherpa-onnx models (Parakeet for 25 European languages, Whisper for multilingual) and OpenAI-compatible Whisper endpoints. A configurable keyboard shortcut toggles dictation.
 
-9. **Small model**: The small model subsystem (`packages/web/server/lib/small-model/`) provides direct LLM calls for utility AI tasks (summary generation, commit messages, PR descriptions, session recaps). Reuses the user's OpenCode provider configuration. Configurable in Settings as the Small Model setting.
+9. **Small model**: The small model subsystem (`packages/web/server/lib/small-model/`) provides direct LLM calls for utility AI tasks (summary generation, commit messages, PR descriptions, session recaps, walkthrough generation). Reuses the user's OpenCode provider configuration. Configurable in Settings as the Small Model setting.
 
-6. **Event pipeline (SSE)**: The server subscribes to OpenCode SSE events and rebroadcasts them to connected UI clients via its own SSE endpoint. The client-side event pipeline in `packages/ui/src/sync/event-pipeline.ts` handles reconnect with exponential backoff, coalescing, and state dispatch to Zustand stores.
+10. **Walkthrough (changes walkthrough)**: The user asks for a walkthrough. The server parses the requested diff source (working tree, branch, or PR) into hunks with stable content-addressed ids, the small model groups related hunks into stops and chapters, and the UI renders them interleaved with the code. Generation is always user-initiated; results are cached by content hash.
+
+11. **Control plane / agent tool**: The CLI (`openchamber control`) and the managed `openchamber` OpenCode tool both delegate to `createOpenChamberControlService()`, which validates and executes a fixed action allowlist (projects, models, sessions, scheduled tasks). The agent tool is injected into the OpenCode environment only when OpenChamber launches and owns the OpenCode process, and calls back over `POST /api/openchamber/agent-tool`.
+
+12. **Event pipeline (SSE)**: The server subscribes to OpenCode SSE events and rebroadcasts them to connected UI clients via its own SSE endpoint. The client-side event pipeline in `packages/ui/src/sync/event-pipeline.ts` handles reconnect with exponential backoff, coalescing, and state dispatch to Zustand stores.
 
 ## Infrastructure
 
@@ -178,7 +183,7 @@ React components (re-render only when selected leaf values change)
 
 ## Architecture Decisions
 
-- **Electron over Tauri for forward desktop**: Electron boots the web server in-process, eliminating the sidecar subprocess complexity. Tauri is kept only for existing users until auto-update migration completes. See `docs/TAURI_TO_ELECTRON_CUTOVER.md`.
+- **Electron as the desktop shell**: Electron boots the web server in-process, eliminating the sidecar subprocess complexity. The legacy Tauri shell has been removed.
 - **Shared UI across all runtimes**: `packages/ui` is consumed as a workspace dependency by web, desktop, and VS Code. Runtime-specific code uses the `__TAURI__` shim exposed by Electron preload so shared UI stays shell-agnostic.
 - **Zustand for state management**: Multiple split stores by change frequency and subscriber set. High-frequency streaming state lives in narrow stores to avoid render cascades.
 - **Express + SSE over WebSocket for primary data**: SSE for session events; WebSocket reserved for terminal PTY, dictation, and binary use cases.

@@ -30,8 +30,6 @@ packages/
   electron/       Electron desktop app (forward)
     main.mjs        Electron main process
     preload.mjs     Preload script with __TAURI__ IPC shim
-  desktop/        Tauri desktop app (legacy, maintenance-only)
-    src-tauri/      Rust source for Tauri shell
   vscode/         VS Code extension
     src/            Extension host (extension.ts)
     webview/        Webview frontend (main.tsx)
