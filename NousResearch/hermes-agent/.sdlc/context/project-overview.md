@@ -25,6 +25,7 @@ The agent autonomously creates and improves skills from its own experience, pers
 - Real terminal and browser automation with multiple backend options
 - Scheduled cron jobs that deliver results to any messaging platform
 - Isolated subagent delegation for parallel work
+- Multi-agent task boards (kanban) for distributed work queues
 - Plugin system for extensions (tools, memory providers, model providers, platform adapters)
 - Model Context Protocol (MCP) client for external tool servers
 - Multi-profile support for fully isolated agent instances

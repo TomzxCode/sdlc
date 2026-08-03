@@ -16,11 +16,11 @@ The project organizes code into purpose-driven directories at the repo root:
 - `agent/` — Agent internals: provider adapters, memory manager, context compressor, prompt builder, curator
 - `hermes_cli/` — CLI subsystem: commands, config, plugins, skins, setup, profile management, web server, curses UI
 - `tools/` — Tool implementations, auto-discovered via tools/registry.py. Subdirectory `environments/` for terminal backends.
-- `gateway/` — Messaging gateway: run.py, session.py, plus platforms/ for per-platform adapters and builtin_hooks/
-- `plugins/` — Plugin system: memory/ (8 providers), model-providers/ (~30 backends), kanban/, image_gen/, context_engine/, observability/, plus individual plugins
+- `gateway/` — Messaging gateway: run.py, session.py, plus platforms/ for the base adapter and support modules; canonical per-platform adapters migrated to plugins/platforms/ (22 adapters, back-compat re-exports retained)
+- `plugins/` — Plugin system: memory/ (8 providers), model-providers/ (33 backends), platforms/ (22 adapters), kanban/, image_gen/, context_engine/, observability/, plus individual plugins
 - `cron/` — Scheduler: jobs.py, scheduler.py, lifecycle_guard.py
-- `skills/` — Built-in skills organized by category directory (18 categories)
-- `optional-skills/` — Heavier/niche skills shipped but inactive by default (20 categories)
+- `skills/` — Built-in skills organized by category directory (14 categories)
+- `optional-skills/` — Heavier/niche skills shipped but inactive by default (21 categories)
 - `ui-tui/` — Ink (React) terminal UI frontend (TypeScript)
 - `tui_gateway/` — Python JSON-RPC backend for the TUI
 - `apps/desktop/` — Electron desktop app

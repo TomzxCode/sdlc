@@ -13,6 +13,8 @@
 | Session | A single conversation history stored in SQLite with FTS5 search |
 | Skill lifecycle | The curator system that tracks agent-created skill usage and auto-archives stale skills |
 | Prompt cache | A cached system prompt reused across conversation turns — invalidating it mid-conversation is costly |
+| Kanban | A durable multi-agent work queue (SQLite-backed board) for distributing tasks across profiles/workers |
+| Board | The hard isolation boundary of the kanban system — workers are spawned with a pinned board and cannot see others |
 
 ## Technical Terms
 
@@ -28,6 +30,8 @@
 | Footprint Ladder | The ranked hierarchy for where to add new capability: extend code > CLI + skill > service-gated tool > plugin > MCP server > new core tool (last resort) |
 | check_fn | A callable on a tool registration that gates tool availability based on prerequisites (e.g., API key presence) |
 | HERMES_HOME | The base directory for an agent instance's config, state, skills, logs, etc. (profile-aware) |
+| Observer hooks | Backend-neutral telemetry callbacks (pre/post API request, tool call) reconstructing execution without changing runtime behavior |
+| NeMo Relay / Langfuse | Observability backends consuming the observer-hook contract for traces and metrics |
 
 ## Acronyms and Abbreviations
 

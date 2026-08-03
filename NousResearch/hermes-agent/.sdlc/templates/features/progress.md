@@ -15,7 +15,7 @@ last_updated: "<YYYY-MM-DD>"
 ## Pipeline Status
 
 | Stage | Phase | Status |
-|---|---|---|
+|---|---|---|---|
 | Planning & Feasibility | create-issue | — |
 | Planning & Feasibility | review-issue | — |
 | Planning & Feasibility | qualify-issue | — |
