@@ -4,7 +4,7 @@
 
 Pi is a minimal, self-extensible terminal coding agent harness.
 The core is deliberately small (four built-in tools, no sub-agents, no plan mode, no MCP, no permission popups) and is designed to be aggressively extended via TypeScript extensions, skills, prompt templates, themes, and pi packages.
-The monorepo ships four libraries: a unified multi-provider LLM API (`pi-ai`), a stateful agent runtime (`pi-agent-core`), a custom terminal UI framework with differential rendering (`pi-tui`), and the interactive coding agent CLI built on top of all three (`pi-coding-agent`).
+The monorepo ships a unified multi-provider LLM API (`pi-ai`), a stateful agent runtime (`pi-agent-core`), a custom terminal UI framework with differential rendering (`pi-tui`), the interactive coding agent CLI built on top of the others (`pi-coding-agent`), and the foundations for remote sessions: a transport-neutral CBOR protocol (`pi-protocol`), a transport-neutral remote session client (`pi-client`), an experimental session server (`pi-server`), a SQLite session storage backend (`pi-storage-sqlite-node`), and a model-backed evals harness (`pi-evals`).
 
 ## Key Stakeholders
 
@@ -20,11 +20,13 @@ The monorepo ships four libraries: a unified multi-provider LLM API (`pi-ai`), a
 
 **In scope:**
 
-- Four workspace packages: `pi-ai`, `pi-agent-core`, `pi-tui`, `pi-coding-agent`.
+- Nine workspace packages: `pi-ai`, `pi-agent-core`, `pi-tui`, `pi-coding-agent`, `pi-protocol`, `pi-client`, `pi-server`, `pi-storage-sqlite-node`, `pi-evals`.
 - A terminal coding agent with read, bash, edit, and write tools plus session management.
 - An extension platform (custom tools, commands, events, UI, providers) that keeps the core minimal.
 - Multi-provider LLM access across 30+ providers with automatic auth resolution, token/cost tracking, tool-calling, and streaming.
 - An embeddable SDK and multiple run modes (interactive TUI, print, JSON, RPC).
+- Remote sessions: a CBOR wire protocol, a transport-neutral client, an experimental token-authenticated session server, and a SQLite session backend.
+- Behavioral, model-backed evals for measuring end-to-end workflow behavior.
 - Supply-chain hardening: pinned deps, lockfile governance, generated npm shrinkwrap, release smoke tests.
 
 **Out of scope:**

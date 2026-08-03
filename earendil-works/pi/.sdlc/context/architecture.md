@@ -5,6 +5,8 @@
 Pi is a layered TypeScript monorepo.
 Three leaf libraries (`pi-ai`, `pi-agent-core`, `pi-tui`) compose into the `pi-coding-agent` CLI product.
 `pi-ai` is the LLM boundary, `pi-agent-core` is the agent loop boundary, `pi-tui` is the rendering boundary, and the coding agent wires them together with sessions, extensions, tools, and a TUI.
+A second stack enables remote sessions: `pi-protocol` defines the wire protocol and framing, `pi-client` is the transport-neutral client used by the coding agent to attach to remote servers, `pi-server` hosts `PiServer` session servers, and `pi-storage-sqlite-node` provides an optional SQLite backend for agent sessions.
+`pi-evals` adapts a real `AgentSession` to `vitest-evals` for model-backed behavioral checks.
 
 ```
                        +---------------------------------+
@@ -34,6 +36,16 @@ Three leaf libraries (`pi-ai`, `pi-agent-core`, `pi-tui`) compose into the `pi-c
               | TUI, Component,   |
               | diff rendering    |
               +-------------------+
+
+  Remote-session stack (experimental):
+  +-------------------+   CBOR    +-------------------+   bytes    +----------------------+
+  | pi-coding-agent   |<--------->|    pi-client      |<---------->|      pi-server       |
+  | (remote mode,     |  framed   | PiClient, leases, |  transports| PiServer, sessions, |
+  |  src/client)      |  messages | session-handles   |           | snapshots, unix      |
+  +-------------------+           +-------------------+           +----------------------+
+        pi-protocol (schemas, CBOR encode/decode, framing) shared by both sides
+        pi-storage-sqlite-node (optional SQLite session repository for pi-agent-core)
+        pi-evals (behavioral model-backed checks, runs via vitest-evals)
 ```
 
 ## Key Components
@@ -53,6 +65,12 @@ Three leaf libraries (`pi-ai`, `pi-agent-core`, `pi-tui`) compose into the `pi-c
 | Built-in tools | `read`, `bash`, `edit`, `write` (default) and `grep`, `find`, `ls` (read-only set) | TypeScript |
 | `InteractiveMode` | Full TUI: editor, message list, footer/header, slash-command UIs, widgets, overlays | pi-tui |
 | Run modes | Interactive (default), print (`-p`), JSON (`--mode json`), RPC (`--mode rpc`), SDK | TypeScript |
+| `pi-protocol` | Runtime-neutral schemas, types, CBOR encoding, and byte-stream framing for the pi protocol (length-prefixed framed messages, `hello`/request-response envelopes) | TypeScript, typebox |
+| `PiClient` (pi-client) | Transport-neutral remote session client: `ByteTransport` interface, `SessionLease` ownership (exclusive/shared), `acquireSession`/`attachSession`/`createSession`, snapshot subscription | TypeScript, built on pi-protocol |
+| `PiServer` (pi-server) | Experimental token-authenticated session server: listeners, `LiveSessionManager`, session/snapshot publication, `createUnixServer` preset, `testing` harness | TypeScript, built on pi-protocol |
+| Server `legacy` (pi-server) | Renamed orchestrator: child-process supervisor (`server` CLI), Unix socket IPC, Radius presence, RPC stream bridge | TypeScript |
+| `pi-storage-sqlite-node` | `node:sqlite` adapter (`SqliteDatabase`), SQLite session repository, migrations, materialized views, optional FTS search for pi-agent-core sessions | TypeScript, node:sqlite |
+| `pi-evals` | Behavioral model-backed evals: adapts a real `AgentSession` to `vitest-evals`, isolated temp project/agent dirs, native pi session artifacts | TypeScript, vitest-evals |
 
 ## Data Flow
 
@@ -68,6 +86,7 @@ A user prompt flows through the system as follows:
 8. After the agent stops, `AgentSession` loops: handles retryable errors, compaction triggers, and queued steering/follow-up messages via `agent.continue()` until queues drain.
 9. Throughout, `AgentSession` appends entries (messages, model changes, compaction summaries, branch summaries) to the `SessionManager` JSONL file.
 10. Each mode renders the streamed events: `InteractiveMode` renders incrementally via pi-tui; print writes final text or one JSON object per event; RPC forwards `AgentSessionEvent`s as JSONL on stdout.
+11. In remote-session mode, the coding agent attaches a `PiClient` to a `PiServer` over a `ByteTransport` (e.g. Unix socket): the client authenticates via `hello` token, acquires exclusive/shared `SessionLease`s, sends framed CBOR request/response envelopes, and renders authoritative server/session snapshots (progress events are transient and never mutated optimistically).
 
 ## Infrastructure
 
@@ -77,7 +96,7 @@ A user prompt flows through the system as follows:
 - **Pre-commit:** Husky pre-commit blocks accidental lockfile commits unless `PI_ALLOW_LOCKFILE_CHANGE=1`.
 - **Releases:** `npm run release:patch|minor` bumps all packages (lockstep), updates CHANGELOGs, runs check, commits, tags, pushes; CI publishes via npm trusted publishing (no local `npm publish`). Releases are smoke-tested first via `npm run release:local`.
 - **Update/telemetry endpoints:** `https://pi.dev/api/latest-version` (version check) and `https://pi.dev/api/report-install` (install telemetry); both disable with `PI_SKIP_VERSION_CHECK=1` / `PI_TELEMETRY=0` / `--offline`.
-- **Docs:** Per-package `docs/` (coding-agent has 28 markdown docs); RFCs for larger changes live at `rfc.earendil.com`.
+- **Docs:** Per-package `docs/` (coding-agent has 30 markdown docs); RFCs for larger changes live at `rfc.earendil.com`.
 
 ## Architecture Decisions
 
@@ -87,6 +106,9 @@ A user prompt flows through the system as follows:
 - **Transport-agnostic agent:** `pi-agent-core` calls an injectable `StreamFn`, enabling direct (`streamSimple`), proxy (`streamProxy`), or custom backends.
 - **Custom TUI:** `pi-tui` is hand-written (imperative component model + differential renderer), not React/Ink.
 - **Failures encoded, not thrown:** LLM stream failures are encoded as final events with `stopReason: "error"|"aborted"`; agent run failures become synthetic failure assistant messages.
+- **Transport-neutral remote sessions:** `pi-client` never imports Node-specific code; all byte movement goes through a small `ByteTransport` interface, so WebSocket, Unix socket, or custom transports all work. `pi-protocol` decoders accept arbitrary fragmentation/coalescing for the same reason.
+- **Authoritative snapshots:** in the pi protocol, server and session snapshots are authoritative; progress events are transient UI hints and are never reduced into authoritative state.
+- **Session lease ownership:** exclusive/shared `SessionLease`s gate who may mutate or observe a remote session (exclusive acquisition fails while any lease exists).
 - **Lockstep versioning:** All packages share one version; `patch` = fixes + additions, `minor` = breaking changes, no major releases.
 
 Formal ADRs live under `.sdlc/knowledge/decisions/`.

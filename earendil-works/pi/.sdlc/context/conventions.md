@@ -18,9 +18,14 @@ packages/
   ai/             # pi-ai: src/, test/, scripts/ (model generators), providers/, api/, auth/
   agent/          # pi-agent-core: src/ (core), src/harness/, test/
   tui/            # pi-tui: src/, src/components/, test/, native/
-  coding-agent/   # pi-coding-agent: src/core/, src/modes/, src/utils/, src/cli/,
+  coding-agent/   # pi-coding-agent: src/core/, src/modes/, src/utils/, src/cli/, src/client/,
                   #   docs/, test/ (flat suite + suite/ + suite/regressions/),
                   #   examples/ (sdk/, extensions/)
+  protocol/       # pi-protocol: src/cbor/, src/, test/
+  client/         # pi-client: src/, test/
+  server/         # pi-server: src/, src/legacy/ (renamed orchestrator), src/transports/, src/testing/, test/
+  storage/        # pi-storage-sqlite-node: sqlite-node/src/sqlite/ (storage/, migrations/), no own tests
+  evals/          # pi-evals: src/, src/vitest-evals/, test/, scripts/
 scripts/          # repo-level: release, shrinkwrap, version-sync, pinned-dep/TS-import checks
 .github/workflows/  # CI
 ```
@@ -46,8 +51,8 @@ All `.sdlc/` artifacts live at the repo root under `.sdlc/`.
 
 Conventional Commits with package scopes.
 
-- Format: `{feat,fix,docs,chore}[(ai,agent,tui,coding-agent)]: <concise informative message>` (optionally multi-line).
-- Scopes are the short package names: `ai`, `agent`, `tui`, `coding-agent`.
+- Format: `{feat,fix,docs,chore}[(ai,agent,tui,coding-agent,protocol,client,server,storage,evals)]: <concise informative message>` (optionally multi-line).
+- Scopes are the short package names: `ai`, `agent`, `tui`, `coding-agent`, `protocol`, `client`, `server`, `storage`, `evals`.
 - No emojis in commits, issues, PR comments, or code.
 - `fixes #<n>` / `closes #<n>` repeat the keyword per issue for auto-close (`closes #1, closes #2`, not `closes #1, #2`).
 - Release commits: `Release vX.Y.Z` and `Add [Unreleased] section for next cycle` are produced by the release script.
@@ -72,7 +77,7 @@ Conventional Commits with package scopes.
 
 ## Testing Standards
 
-- **Frameworks:** Vitest for `ai`, `agent`, `coding-agent`; Node's built-in `node --test` for `tui`.
+- **Frameworks:** Vitest for `ai`, `agent`, `coding-agent`, `protocol`, `client`, `server`, `evals`; Node's built-in `node --test` for `tui`; `pi-storage-sqlite-node` is tested through `packages/agent/test/harness/` (no tests live in the package).
 - **Never run the full vitest suite directly** (it includes e2e tests activated by endpoint/auth env vars). Run non-e2e tests via `./test.sh`, or specific files: `node ../../node_modules/vitest/dist/cli.js --run test/specific.test.ts`.
 - **coding-agent tests** use `test/suite/harness.ts` + the faux provider. No real provider APIs, keys, or paid tokens.
 - **Issue regressions** go under `packages/coding-agent/test/suite/regressions/` named `<issue-number>-<short-slug>.test.ts`.
