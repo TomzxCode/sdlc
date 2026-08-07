@@ -16,10 +16,16 @@ Keeping the specification work for multiple projects in a single workspace makes
 
 | Directory | Project | Description |
 |---|---|---|
-| [`openchamber/openchamber`](openchamber/openchamber/.sdlc) | [OpenChamber](https://github.com/openchamber/openchamber) | Multi-runtime GUI client for OpenCode (Electron, web/PWA, VS Code) |
+| [`1jehuang/jcode`](1jehuang/jcode/.sdlc) | [J-Code](https://github.com/1jehuang/jcode) | Terminal AI coding agent harness (fork of sst/opencode) with an always-on daemon, RAM-efficient TUI, multi-provider auth, and agent memory |
 | [`anomalyco/opencode`](anomalyco/opencode/.sdlc) | [OpenCode](https://github.com/anomalyco/opencode) | Open source AI coding agent with a durable session runtime, terminal/web/desktop UIs, and a headless API |
-| [`paperclipai/paperclip`](paperclipai/paperclip/.sdlc) | [Paperclip](https://github.com/paperclipai/paperclip) | Open-source control plane for autonomous AI-agent companies |
 | [`earendil-works/pi`](earendil-works/pi/.sdlc) | [Pi](https://github.com/earendil-works/pi) | Minimal, self-extensible terminal coding agent harness (`pi-ai`, `pi-agent-core`, `pi-tui`, `pi-coding-agent`) |
+| [`kenn-io/agentsview`](kenn-io/agentsview/.sdlc) | [agentsview](https://github.com/kenn-io/agentsview) | Local web viewer for AI agent sessions with FTS5 search, cost tracking, analytics, and live SSE updates |
+| [`NousResearch/hermes-agent`](NousResearch/hermes-agent/.sdlc) | [Hermes Agent](https://github.com/NousResearch/hermes-agent) | Persistent, self-improving personal AI agent running one core across CLI, TUI, messaging gateways, desktop, and API |
+| [`openchamber/openchamber`](openchamber/openchamber/.sdlc) | [OpenChamber](https://github.com/openchamber/openchamber) | Multi-runtime GUI client for OpenCode (Electron, web/PWA, VS Code) |
+| [`openclaw/openclaw`](openclaw/openclaw/.sdlc) | [OpenClaw](https://github.com/openclaw/openclaw) | Personal AI assistant on user-owned devices across 30+ messaging channels with a Control UI and plugin SDK |
+| [`paperclipai/paperclip`](paperclipai/paperclip/.sdlc) | [Paperclip](https://github.com/paperclipai/paperclip) | Open-source control plane for autonomous AI-agent companies |
+| [`Runfusion/Fusion`](Runfusion/Fusion/.sdlc) | [Fusion](https://github.com/Runfusion/Fusion) | Model-agnostic multi-agent orchestrator that drives a task board through plan/build/review/merge behind a human approval gate |
+| [`superdesigndev/loopany-platform`](superdesigndev/loopany-platform/.sdlc) | [Loopany](https://github.com/superdesigndev/loopany-platform) | Multi-user scheduled-loop manager where a zero-exec server schedules and notifies, with bring-your-own-agent execution on each user's machine |
 
 ## Getting Started
 
