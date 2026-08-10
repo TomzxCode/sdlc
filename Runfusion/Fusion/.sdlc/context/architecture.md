@@ -31,6 +31,58 @@ Fusion is a monorepo of TypeScript packages where a React dashboard SPA (with an
       └─────────────────┘      └─────────────────────┘
 ```
 
+## Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    tasks ||--o{ task_documents : "has"
+    tasks ||--o{ artifacts : "has"
+    tasks ||--o{ activity_log : "triggers"
+    tasks ||--o{ agents : "bound_to"
+    tasks ||--o{ merge_queue : "queued_in"
+    tasks ||--o{ merge_requests : "merges_via"
+    tasks ||--o{ workflow_work_items : "instantiates"
+    tasks ||--o{ workflow_run_branches : "lands_in"
+    tasks ||--o{ workflow_run_step_instances : "runs"
+    tasks ||--o{ ai_sessions : "drives"
+    tasks ||--o{ cli_sessions : "drives"
+    tasks ||--o{ task_commit_associations : "linked_to_commits"
+    tasks ||--o{ usage_events : "records_usage"
+    tasks ||--o{ pull_requests : "opens"
+    tasks ||--o{ chat_sessions : "discussed_in"
+    tasks ||--o{ approval_requests : "requests_approval"
+    tasks ||--o{ run_audit_events : "audits"
+    tasks ||--o{ mission_features : "implements"
+    agents ||--o{ agent_heartbeats : "emits"
+    agents ||--o{ agent_runs : "executes"
+    agents ||--o{ agent_task_sessions : "sessions"
+    agents ||--o{ agent_ratings : "rated_by"
+    agents ||--o{ chat_sessions : "chats"
+    agents ||--o{ chat_room_members : "joins"
+    missions ||--o{ milestones : "contains"
+    milestones ||--o{ slices : "contains"
+    slices ||--o{ mission_features : "contains"
+    missions ||--o{ mission_goals : "linked_to"
+    goals ||--o{ mission_goals : "linked_from"
+    missions ||--o{ mission_contract_assertions : "validates"
+    mission_features ||--o{ mission_validator_runs : "validated_by"
+    research_runs ||--o{ research_exports : "exports"
+    research_runs ||--o{ research_run_events : "logs"
+    eval_runs ||--o{ eval_task_results : "scores"
+    eval_runs ||--o{ eval_run_events : "logs"
+    experiment_sessions ||--o{ experiment_session_records : "records"
+    chat_sessions ||--o{ chat_messages : "contains"
+    chat_sessions ||--o{ chat_token_usage : "accounts_for"
+    chat_rooms ||--o{ chat_room_members : "members"
+    chat_rooms ||--o{ chat_room_messages : "messages"
+    pull_requests ||--o{ pull_request_thread_state : "review_threads"
+    project_insight_runs ||--o{ project_insight_run_events : "logs"
+    mission_validator_runs ||--o{ mission_validator_failures : "produces"
+    branch_groups ||--o{ pull_requests : "opens"
+    todo_lists ||--o{ todo_items : "contains"
+    approval_requests ||--o{ approval_request_audit_events : "audits"
+```
+
 ## Key Components
 
 | Component | Responsibility | Technology |
