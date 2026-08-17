@@ -29,9 +29,13 @@ last_updated: "<YYYY-MM-DD>"
 | Planning & Feasibility | review-feasibility | — |
 | Design | create-specifications | — |
 | Design | review-specifications | — |
+| Design | create-lifecycle | — |
+| Design | review-lifecycle | — |
 | Design | create-plan | — |
 | Design | review-plan | — |
 | Design | publish-plan | — |
+| Design | validate-assumptions | — |
+| Design | review-assumption-validation | — |
 | Design | create-tasks-decomposition | — |
 | Design | review-tasks-decomposition | — |
 | Development & Testing | create-tests | — |

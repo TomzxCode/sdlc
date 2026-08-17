@@ -2,46 +2,131 @@
 
 ## System Overview
 
+```mermaid
+flowchart TD
+    VSC[VS Code Ext<br/>webview + host] --> UI[@openchamber/ui<br/>shared React]
+    UI --> ELE[Electron App<br/>main.mjs boots server in-proc]
+    UI --> WEB[Web / PWA<br/>Vite SPA via Express]
+    UI --> VSE[VS Code Ext<br/>webview loads shared UI]
+    ELE --> SVR[Express Server<br/>packages/web/server/index.js]
+    WEB --> SVR
+    VSE --> SVR
+    SVR --> SDK[OpenCode SDK<br/>SSE + HTTP]
+    SVR --> FSG[FS / Git]
+    SVR --> TRM[Terminal<br/>WS + PTY]
+    SDK --> OCC[OpenCode CLI<br/>external]
 ```
-                          +-----------------+
-                          |   VS Code Ext   |
-                          | (webview + host)|
-                          +--------+--------+
-                                   |
-                          +--------v--------+
-                          |  @openchamber/  |
-                          |       ui        |
-                          | (shared React)  |
-                          +--------+--------+
-                                   |
-              +--------------------+--------------------+
-              |                    |                    |
-     +--------v--------+  +-------v--------+  +--------v--------+
-     |   Electron App  |  |   Web / PWA    |  |  VS Code Ext    |
-     | (main.mjs boots |  | (Vite SPA via  |  | (webview loads  |
-     |  server in-proc)|  |  Express)      |  |  shared UI)     |
-     +--------+--------+  +-------+--------+  +--------+--------+
-              |                    |                    |
-              +--------------------+--------------------+
-                                   |
-                          +--------v--------+
-                          |  Express Server |
-                          | (packages/web/  |
-                          |  server/index.js|
-                          +--------+--------+
-                                   |
-                    +--------------+--------------+
-                    |              |              |
-           +-------vv------+ +---v----+ +-------v------+
-           | OpenCode SDK  | |  FS /  | |  Terminal     |
-           | (SSE + HTTP)  | |  Git   | | (WS + PTY)    |
-           +-------+-------+ +--------+ +--------------+
-                   |
-           +-------v-------+
-           |  OpenCode CLI |
-           | (external)    |
-           +---------------+
+
+## Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    SESSION ||--o{ MESSAGE : contains
+    SESSION ||--o{ TOOL_PART : executes
+    SESSION ||--o{ PERMISSION : requests
+    SESSION ||--o{ QUESTION : asks
+    SESSION }o--|| DIRECTORY : scoped_to
+    SESSION ||--o{ SESSION_FOLDER : assigned_to
+    SESSION ||--o{ WORKTREE : runs_in
+    AGENT ||--o{ SESSION : drives
+    AGENT }o--o{ SKILL : uses
+    AGENT }o--o{ PLUGIN : uses
+    PROJECT ||--o{ SESSION : owns
+    PROJECT ||--o{ SCHEDULED_TASK : schedules
+    PROVIDER ||--o{ QUOTA_USAGE : reports
+    DIRECTORY ||--o{ PROJECT : maps_to
+
+    SESSION {
+        string id PK
+        string directory FK
+        string title
+        string status
+        string model
+        string agent_id FK
+    }
+    MESSAGE {
+        string id PK
+        string session_id FK
+        string role
+        string content
+        number timestamp
+    }
+    TOOL_PART {
+        string id PK
+        string message_id FK
+        string type
+        string state
+    }
+    PERMISSION {
+        string id PK
+        string session_id FK
+        string type
+        string status
+    }
+    QUESTION {
+        string id PK
+        string session_id FK
+        string text
+        string status
+    }
+    DIRECTORY {
+        string path PK
+        string project_id FK
+    }
+    SESSION_FOLDER {
+        string id PK
+        string name
+        string parent_id FK
+    }
+    WORKTREE {
+        string id PK
+        string session_id FK
+        string branch
+        string path
+    }
+    AGENT {
+        string id PK
+        string name
+        string model
+        string provider
+    }
+    SKILL {
+        string id PK
+        string name
+        string version
+    }
+    PLUGIN {
+        string id PK
+        string name
+        string source
+    }
+    PROJECT {
+        string id PK
+        string name
+        string path
+    }
+    SCHEDULED_TASK {
+        string id PK
+        string project_id FK
+        string schedule
+        string action
+    }
+    PROVIDER {
+        string id PK
+        string name
+        string type
+    }
+    QUOTA_USAGE {
+        string provider_id FK
+        string period
+        number tokens
+        number cost
+    }
 ```
+
+These entities are derived from the codebase's domain abstractions (sessions, messages, agents, projects, config entities), not a relational database.
+OpenChamber uses no persistent database; all state is stored in files (JSON, markdown, OpenCode's own state under `~/.local/share/opencode/`) or held in memory.
+The `schema.dbml` companion is therefore not applicable.
 
 ## Key Components
 
@@ -87,6 +172,7 @@
 
 ## Infrastructure
 
+Hosting and deployment topology:
 - **CI/CD**: GitHub Actions (`.github/workflows/`)
   - `release.yml`: Builds Electron DMG/zip (macOS arm64), Tauri bundles, and VS Code VSIX on tag push or manual dispatch
   - `build-macos-arm64-dmg.yml`: macOS Electron build
@@ -94,10 +180,10 @@
   - `docs-source.yml`: Documentation site build
   - `oc-integration.yml`, `oc-review.yml`: Integration and review workflows
 - **Deployment**: Docker (Dockerfile + docker-compose.yml), systemd user service, npm package for CLI
-- **Package manager**: Bun (bun.lock)
-- **Build tooling**: Vite 7 for frontend, esbuild for VS Code extension, electron-builder for Electron
 - **Hosting**: Self-hosted; users run locally or on their own servers. Cloudflare tunnels for remote access.
 - **Reverse proxy**: Caddy config provided (Caddyfile) for HTTPS termination
+
+The detailed technology stack, development tooling, CI/CD pipelines, environments, deployment procedures, and rollback live in `infrastructure.md`.
 
 ## Event Bus: Backend-to-Frontend Communication
 
