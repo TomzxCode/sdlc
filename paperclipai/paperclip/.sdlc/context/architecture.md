@@ -2,29 +2,210 @@
 
 ## System Overview
 
-Paperclip is a single-process Node.js control plane that orchestrates externally-running AI agents. The server hosts the REST API, serves the React UI in dev middleware mode, runs a lightweight in-process scheduler/worker, and talks to PostgreSQL (embedded PGlite in dev). Agents never run inside Paperclip; they phone home over the API using bearer keys, and adapters translate heartbeats into whatever runtime each agent lives in.
+Paperclip is a single-process Node.js control plane that orchestrates externally-running AI agents.
+The server hosts the REST API, serves the React UI in dev middleware mode, runs a lightweight in-process scheduler/worker, and talks to PostgreSQL (embedded PGlite in dev).
+Agents never run inside Paperclip; they phone home over the API using bearer keys, and adapters translate heartbeats into whatever runtime each agent lives in.
 
+```mermaid
+block-beta
+  columns 5
+  claude["Claude Code adapter"]:1
+  codex["Codex adapter"]:1
+  cliagents["CLI agents\nCursor / Gemini / pi / opencode / Kimi"]:1
+  httpbots["HTTP / webhook bots"]:1
+  claw["OpenClaw gateway"]:1
+  plugins["External adapter plugins (loaded via ~/.paperclip/adapter-plugins.json)"]:5
+  server["PAPERCLIP SERVER\nExpress REST API (/api) + React UI (Vite, dev middleware)\nAuth: board sessions + agent API keys + run JWTs\nIn-process scheduler/worker (heartbeat triggers, stuck-run detection, budgets)"]:5
+  db["PostgreSQL (embedded PGlite in dev)\nDrizzle ORM — companies, agents, issues, runs, costs..."]:5
+  claude --> server
+  codex --> server
+  cliagents --> server
+  httpbots --> server
+  claw --> server
+  plugins --> server
+  server --> db
 ```
-                      ┌──────────────── PAPERCLIP SERVER ────────────────┐
-                      │  Express REST API (/api)   React UI (Vite, dev)    │
-                      │  Auth (board sessions + agent API keys + run JWTs) │
-                      │  Lightweight in-process scheduler/worker           │
-                      │  (heartbeat triggers, stuck-run detection, budgets)│
-                      └───────────────┬───────────────────────────────────┘
-                                      │ Drizzle ORM
-                          ┌───────────┴────────────┐
-                          │ PostgreSQL             │  embedded PGlite in dev
-                          │ (companies, agents,    │  (data/pglite)
-                          │  issues, runs, costs…)  │
-                          └────────────────────────┘
-                                      ▲ bearer API keys / run JWTs
-   ┌──────────┐  ┌──────────┐  ┌──────┴───────┐  ┌────────────┐  ┌────────────┐
-   │ Claude   │  │  Codex   │  │  CLI agents │  │  HTTP/web  │  │ OpenClaw   │
-   │  Code    │  │ adapter  │  │ Cursor/Gem/ │  │  webhook   │  │ gateway    │
-   │ adapter  │  │          │  │ pi/opencode │  │  bots      │  │            │
-   └──────────┘  └──────────┘  └─────────────┘  └────────────┘  └────────────┘
-        process / local CLI adapters        http adapter       gateway adapter
-   ── external adapter plugins loaded via ~/.paperclip/adapter-plugins.json ──
+
+## Entity Relationship Diagram
+
+The full detailed database schema (types, constraints, indexes) lives in `.sdlc/context/schema.dbml`.
+The diagram below shows the core domain entities and their relationships only.
+
+```mermaid
+erDiagram
+  companies {
+    uuid id
+    string name
+    string status
+    int budget_monthly_cents
+    int spent_monthly_cents
+  }
+  agents {
+    uuid id
+    uuid company_id
+    string name
+    string status
+    uuid reports_to
+    string adapter_type
+    int budget_monthly_cents
+    int spent_monthly_cents
+  }
+  goals {
+    uuid id
+    uuid company_id
+    string title
+    string level
+    string status
+    uuid parent_id
+    uuid owner_agent_id
+  }
+  projects {
+    uuid id
+    uuid company_id
+    uuid goal_id
+    string name
+    string status
+    uuid lead_agent_id
+  }
+  issues {
+    uuid id
+    uuid company_id
+    uuid project_id
+    uuid goal_id
+    uuid parent_id
+    string status
+    uuid assignee_agent_id
+    uuid checkout_run_id
+    uuid execution_run_id
+    int request_depth
+  }
+  heartbeat_runs {
+    uuid id
+    uuid company_id
+    uuid agent_id
+    string status
+    string invocation_source
+  }
+  heartbeat_run_events {
+    uuid id
+    uuid run_id
+    int seq
+    string kind
+  }
+  cost_events {
+    uuid id
+    uuid company_id
+    uuid agent_id
+    uuid issue_id
+    uuid heartbeat_run_id
+    string provider
+    string model
+    int cost_cents
+  }
+  budget_policies {
+    uuid id
+    uuid company_id
+    string scope_type
+    uuid scope_id
+    int amount
+    boolean hard_stop_enabled
+  }
+  pipelines {
+    uuid id
+    uuid company_id
+    uuid project_id
+    string key
+    string name
+  }
+  pipeline_stages {
+    uuid id
+    uuid pipeline_id
+    string key
+    string kind
+    int position
+  }
+  pipeline_cases {
+    uuid id
+    uuid company_id
+    uuid pipeline_id
+    uuid stage_id
+    string case_key
+    uuid parent_case_id
+  }
+  cases {
+    uuid id
+    uuid company_id
+    uuid project_id
+    string identifier
+    string case_type
+    string status
+    uuid parent_case_id
+  }
+  approvals {
+    uuid id
+    uuid company_id
+    string type
+    string status
+    uuid requested_by_agent_id
+  }
+  company_secrets {
+    uuid id
+    uuid company_id
+    string key
+    string provider
+    string status
+    int latest_version
+  }
+  agent_api_keys {
+    uuid id
+    uuid company_id
+    uuid agent_id
+    string key_hash
+  }
+  activity_log {
+    uuid id
+    uuid company_id
+    string actor_type
+    string action
+    string entity_type
+    string entity_id
+    uuid run_id
+  }
+  companies ||--o{ agents : "employs"
+  agents ||--o{ agents : "reports_to (strict tree)"
+  companies ||--o{ goals : "defines"
+  goals ||--o{ goals : "parent/child"
+  agents ||--o{ goals : "owns"
+  companies ||--o{ projects : "has"
+  goals ||--o{ projects : "groups"
+  agents ||--o{ projects : "leads"
+  companies ||--o{ issues : "tracks"
+  projects ||--o{ issues : "contains"
+  goals ||--o{ issues : "advances"
+  issues ||--o{ issues : "parent/child"
+  agents ||--o{ issues : "assigned (single assignee)"
+  agents ||--o{ heartbeat_runs : "executes"
+  heartbeat_runs ||--o{ heartbeat_run_events : "logs"
+  issues ||--o{ heartbeat_runs : "checked out by"
+  agents ||--o{ cost_events : "incurs"
+  issues ||--o{ cost_events : "attributes"
+  heartbeat_runs ||--o{ cost_events : "reports"
+  companies ||--o{ budget_policies : "enforces"
+  companies ||--o{ pipelines : "owns"
+  projects ||--o{ pipelines : "scopes"
+  pipelines ||--o{ pipeline_stages : "has"
+  pipelines ||--o{ pipeline_cases : "tracks"
+  pipeline_stages ||--o{ pipeline_cases : "holds"
+  pipeline_cases ||--o{ pipeline_cases : "parent/child"
+  companies ||--o{ cases : "owns"
+  cases ||--o{ cases : "parent/child"
+  companies ||--o{ approvals : "gates"
+  agents ||--o{ approvals : "requests"
+  companies ||--o{ company_secrets : "vaults"
+  agents ||--o{ agent_api_keys : "authenticates"
+  companies ||--o{ agent_api_keys : "scopes"
+  companies ||--o{ activity_log : "audits"
+  heartbeat_runs ||--o{ activity_log : "attributes"
 ```
 
 ## Key Components
@@ -35,17 +216,18 @@ Paperclip is a single-process Node.js control plane that orchestrates externally
 | `ui/` | Board operator interface (dashboard, org chart, tasks, approvals, costs) | React, Vite, TypeScript |
 | `packages/db/` | Drizzle schema, migrations, DB clients (Postgres + embedded PGlite) | Drizzle ORM, PostgreSQL, PGlite |
 | `packages/shared/` | Shared API types, constants, validators, API path constants | TypeScript |
-| `packages/adapters/` | Adapter package implementations (claude-local, codex-local, cursor-local, gemini-local, opencode-local, pi-local, openclaw-gateway, cursor-cloud, grok-local, acpx-local) | TypeScript |
+| `packages/adapters/` | Adapter package implementations (claude-local, codex-local, cursor-local, cursor-cloud, gemini-local, grok-local, kimi-local, opencode-local, pi-local, hermes, hermes-gateway, openclaw-gateway; shared ACPX engine lives in `packages/adapter-utils/`) | TypeScript |
 | `packages/adapter-utils/` | Shared adapter utilities | TypeScript |
 | `packages/plugins/` | Plugin system: SDK, create-paperclip-plugin, sandbox providers, example plugins | TypeScript |
 | `packages/mcp-server/` | MCP server package | TypeScript |
 | `packages/skills-catalog/`, `packages/teams-catalog/` | Skills and teams catalogs | TypeScript |
+| `skills/` | Paperclip runtime/operational skills (not part of the app catalog) | Markdown, scripts |
 | `server/src/realtime/` | WebSocket real-time events (live dashboards, terminal sessions) | TypeScript, WebSocket |
 | `server/src/services/tool-access.ts`, `tool-gateway.ts` | Third-party tool/connection integration (OAuth, MCP/SSE gateways, access policies, runtime slots) | TypeScript |
 | `server/src/secrets/` | Secrets provider implementations (local-encrypted, AWS, GCP, Vault) and provider registry | TypeScript |
 | `server/src/auth/` | Auth middleware (bearer token, session, board/agent resolution) | TypeScript |
 | `server/src/services/pipelines.ts` | Pipeline management (stages, cases, automation, transitions, events) | TypeScript |
-| `server/src/services/cloud-upstreams.ts` | Cross-instance company sync via OAuth (experimental) | TypeScript |
+| `server/src/services/company-transfer-runs.ts`, `company-import-transfers.ts`, `cloud-instance.ts`, `paperclip-cloud-connector.ts` | Cross-instance company transfer/sync and Paperclip Cloud connector | TypeScript |
 | `cli/` | `paperclipai` CLI (onboard, configure, plugin install) | TypeScript (tsx) |
 | `doc/` | Operational and product docs (SPEC, GOAL, PRODUCT, DATABASE, DEVELOPING) | Markdown |
 
@@ -62,14 +244,10 @@ Paperclip is a single-process Node.js control plane that orchestrates externally
 
 ## Infrastructure
 
-- **Runtime:** Node.js 20+, pnpm 9.15+ workspace monorepo (`pnpm-workspace.yaml` covers `packages/*`, `packages/adapters/*`, `packages/plugins/*`, `server`, `ui`, `cli`).
-- **Database:** PostgreSQL in production; embedded PGlite at `~/.paperclip/instances/default/db` when `DATABASE_URL` is unset (dev default). Drizzle migrations are source of truth and auto-applied on dev startup.
-- **File/object storage:** local disk default (`~/.paperclip/instances/default/data/storage`); S3-compatible object storage optional.
-- **Deployment modes:** `local_trusted` (implicit board, loopback) or `authenticated` (session-based) with `private`/`public` exposure policy (see `doc/DEPLOYMENT-MODES.md`).
-- **CI/CD:** GitHub Actions; `pnpm test` (Vitest) is the cheap default; `pnpm test:e2e` and `pnpm test:release-smoke` are opt-in Playwright suites.
-- **Observability:** opt-in OpenTelemetry auto-instrumentation (traces) when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`@opentelemetry/*` are optional peer deps); structured JSON logs in production with per-request IDs.
-- **Secrets:** Pluggable provider vault (default: local encrypted file); AWS Secrets Manager, GCP, and Vault optional; every secret access audited via `secret_access_events` table.
-- **Releasing:** `scripts/release.sh` (canary/stable), npm package publishing via `scripts/build-npm.sh`, GitHub releases via `scripts/create-github-release.sh`.
+- Hosting: single-process Node.js control plane backed by PostgreSQL, with embedded PGlite as the dev default when `DATABASE_URL` is unset.
+- Deployment topology: `local_trusted` (implicit board on loopback) or `authenticated` (session-based) modes with `private`/`public` exposure policy; file/object storage defaults to local disk with S3-compatible storage optional.
+- Detailed technology stack, development tooling, CI/CD pipelines, environments, deployment procedures, and rollback live in `infrastructure.md`.
+- Monitoring stack, alerting, and dashboards live in `observability.md`.
 
 ## Architecture Decisions
 

@@ -1,0 +1,285 @@
+# OpenAPI 3 contract for In-app announcements.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "In-app announcements API"
+  version: 1.0.0
+  description: >
+    Board-only announcement surface fed by a versioned remote manifest.
+    Additive-only within a major version; unknown fields are rejected by strict schemas.
+paths:
+  /api/announcements/current:
+    get:
+      summary: Return the eligible undismissed announcement or null
+      operationId: getCurrentAnnouncement
+      security:
+        - boardAuth: []
+      responses:
+        "200":
+          description: Current announcement or null when absent, ineligible, or dismissed
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnnouncementOrNull"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/announcements/{id}/image:
+    get:
+      summary: Proxy the current announcement's digest-verified image bytes
+      operationId: getAnnouncementImage
+      security:
+        - boardAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/AnnouncementId"
+      responses:
+        "200":
+          description: Image bytes with nosniff header
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Stale ID or unavailable image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/announcements/{id}/animation:
+    get:
+      summary: Serve the sanitized animation document under sandbox CSP
+      operationId: getAnnouncementAnimation
+      security:
+        - boardAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/AnnouncementId"
+      responses:
+        "200":
+          description: Sanitized visual HTML document
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+            Content-Security-Policy:
+              schema:
+                type: string
+                example: sandbox; default-src 'none'; style-src 'unsafe-inline'; form-action 'none'; base-uri 'none'
+            Referrer-Policy:
+              schema:
+                type: string
+                example: no-referrer
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Stale ID or unavailable animation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/announcements/{id}/dismiss:
+    post:
+      summary: Persist the caller's dismissal with company audit context
+      operationId: dismissAnnouncement
+      security:
+        - boardAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/AnnouncementId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DismissAnnouncementRequest"
+      responses:
+        "204":
+          description: Dismissed (idempotent)
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Invented announcement ID or unknown/inaccessible company
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  securitySchemes:
+    boardAuth:
+      type: http
+      scheme: bearer
+      description: Board session with userId; agent and anonymous callers are denied.
+  schemas:
+    AnnouncementId:
+      type: string
+      pattern: "^[a-z0-9][a-z0-9-]{0,95}$"
+      example: new-projects
+    AnnouncementAction:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [kind, label, url]
+          properties:
+            kind:
+              type: string
+              enum: [external]
+            label:
+              type: string
+              maxLength: 48
+            url:
+              type: string
+              format: uri
+              maxLength: 2048
+        - type: object
+          additionalProperties: false
+          required: [kind, label, path]
+          properties:
+            kind:
+              type: string
+              enum: [route]
+            label:
+              type: string
+              maxLength: 48
+            path:
+              type: string
+              enum: [/dashboard, /issues, /projects, /agents, /skills, /apps, /routines, /artifacts, /company/settings]
+    AnnouncementMedia:
+      type: object
+      additionalProperties: false
+      required: [path, alt]
+      properties:
+        path:
+          type: string
+          description: Content-addressed asset path with embedded SHA-256 digest.
+          example: assets/0000000000000000000000000000000000000000000000000000000000000000.png
+        alt:
+          type: string
+          maxLength: 200
+    Announcement:
+      type: object
+      additionalProperties: false
+      required: [id, eyebrow, title, description, primaryAction]
+      properties:
+        id:
+          $ref: "#/components/schemas/AnnouncementId"
+        eyebrow:
+          type: string
+          maxLength: 48
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 400
+        image:
+          $ref: "#/components/schemas/AnnouncementMedia"
+        animation:
+          $ref: "#/components/schemas/AnnouncementMedia"
+        secondaryLink:
+          $ref: "#/components/schemas/AnnouncementAction"
+        primaryAction:
+          $ref: "#/components/schemas/AnnouncementAction"
+        expiresAt:
+          type: string
+          format: date-time
+        minimumPaperclipVersion:
+          type: string
+          pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    AnnouncementOrNull:
+      oneOf:
+        - $ref: "#/components/schemas/Announcement"
+        - type: "null"
+    DismissAnnouncementRequest:
+      type: object
+      additionalProperties: false
+      required: [companyId]
+      properties:
+        companyId:
+          type: string
+          format: uuid
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+  responses:
+    InvalidInput:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing board authentication
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Non-board actor or missing board user context
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

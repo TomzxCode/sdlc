@@ -56,50 +56,36 @@
 
 | Abbreviation | Expansion |
 |---|---|
-| SDLC | Software Development Lifecycle (the `.sdlc/` artifact pipeline) |
+| ACL | Access Control List (Pro/Enterprise work-object privacy, deferred for V1) |
+| App connection | A pre-configured tool connection with associated profile and policy for use by agents |
+| Cloud upstream | An OAuth-based connection from a local Paperclip instance to a remote instance for company sync |
+| Content guard | A filter that prevents sensitive data from being transmitted through tools |
+| CSP | Content Security Policy |
+| Custom image | A user-defined Docker image used as an agent execution environment |
+| Environment lease | A time-limited claim on an environment execution slot |
+| JWT | JSON Web Token (short-lived run tokens) |
+| Lease | Time-limited ownership claim on a pipeline case preventing concurrent work |
+| Live event | A real-time event delivered over WebSocket for live UI updates (run progress, cost events, terminal output) |
 | MCP | Model Context Protocol (served by `packages/mcp-server`) |
 | OTEL | OpenTelemetry (opt-in tracing instrumentation) |
-| SLI / SLO | Service Level Indicator / Service Level Objective |
-| SSE | Server-Sent Events (deferred realtime transport) |
-| ACL | Access Control List (Pro/Enterprise work-object privacy, deferred for V1) |
-| RICE | Reach, Impact, Confidence, Effort (issue prioritization scoring) |
-| JWT | JSON Web Token (short-lived run tokens) |
 | PGlite | Embedded PostgreSQL (see Technical Terms) |
-| CSP | Content Security Policy |
 | Pipeline | A stage-based workflow definition with ordered stages and allowed transitions |
 | Pipeline case | A work item flowing through a pipeline with structured fields, workspace references, and lease ownership |
 | Pipeline stage | A named step in a pipeline (working, review, done, cancelled) with position and config |
 | Pipeline transition | A defined allowed move from one pipeline stage to another |
-| Cloud upstream | An OAuth-based connection from a local Paperclip instance to a remote instance for company sync |
-| Lease | Time-limited ownership claim on a pipeline case preventing concurrent work |
-| System prompt | The per-agent instruction set that defines behavior (stored in agent_config_revisions) |
+| RICE | Reach, Impact, Confidence, Effort (issue prioritization scoring) |
 | Run continuation | Mechanism for agents to resume interrupted heartbeat runs with preserved context |
+| Runtime slot | A leased execution slot for tool runtime processes with concurrency management |
+| SDLC | Software Development Lifecycle (the `.sdlc/` artifact pipeline) |
+| Setup session | An interactive terminal session for configuring a custom environment image |
+| SLI / SLO | Service Level Indicator / Service Level Objective |
+| Smoke lab | An integration testing facility for validating connection health and behavior |
+| SSE | Server-Sent Events (deferred realtime transport) |
+| System prompt | The per-agent instruction set that defines behavior (stored in agent_config_revisions) |
+| Tool access policy | A rule set governing which agents can use which tools under what conditions |
+| Tool connection | An OAuth-authenticated integration with a third-party service (GitHub, Slack, etc.) for agent tool access |
+| Tool gateway | An MCP/SSE bridge that proxies tool calls from agents to external services |
+| Tool profile binding | An association between a tool profile and an agent or project for runtime resolution |
+| Tool runtime profile | A configured tool execution environment with capacity, timeout, and security parameters |
+| Tools ecosystem | The full lifecycle of discovering, installing, configuring, and using third-party tools |
 | Work product | A typed deliverable attached to an issue, backed by an artifact or referencing a workspace file |
-| Tool connection | An OAuth-authenticated integration with a third-party service (GitHub, Slack, etc.) for agent tool access |
-| Tool gateway | An MCP/SSE bridge that proxies tool calls from agents to external services |
-| Tool access policy | A rule set governing which agents can use which tools under what conditions |
-| Tool runtime profile | A configured tool execution environment with capacity, timeout, and security parameters |
-| Tool profile binding | An association between a tool profile and an agent or project for runtime resolution |
-| App connection | A pre-configured tool connection with associated profile and policy for use by agents |
-| Smoke lab | An integration testing facility for validating connection health and behavior |
-| Runtime slot | A leased execution slot for tool runtime processes with concurrency management |
-| Content guard | A filter that prevents sensitive data from being transmitted through tools |
-| Tools ecosystem | The full lifecycle of discovering, installing, configuring, and using third-party tools |
-| Live event | A real-time event delivered over WebSocket for live UI updates (run progress, cost events, terminal output) |
-| Setup session | An interactive terminal session for configuring a custom environment image |
-| Custom image | A user-defined Docker image used as an agent execution environment |
-| Environment lease | A time-limited claim on an environment execution slot |
-| Tool connection | An OAuth-authenticated integration with a third-party service (GitHub, Slack, etc.) for agent tool access |
-| Tool gateway | An MCP/SSE bridge that proxies tool calls from agents to external services |
-| Tool access policy | A rule set governing which agents can use which tools under what conditions |
-| Tool runtime profile | A configured tool execution environment with capacity, timeout, and security parameters |
-| Tool profile binding | An association between a tool profile and an agent or project for runtime resolution |
-| App connection | A pre-configured tool connection with associated profile and policy for use by agents |
-| Smoke lab | An integration testing facility for validating connection health and behavior |
-| Runtime slot | A leased execution slot for tool runtime processes with concurrency management |
-| Content guard | A filter that prevents sensitive data from being transmitted through tools |
-| Tools ecosystem | The full lifecycle of discovering, installing, configuring, and using third-party tools |
-| Live event | A real-time event delivered over WebSocket for live UI updates (run progress, cost events, terminal output) |
-| Setup session | An interactive terminal session for configuring a custom environment image |
-| Custom image | A user-defined Docker image used as an agent execution environment |
-| Environment lease | A time-limited claim on an environment execution slot |

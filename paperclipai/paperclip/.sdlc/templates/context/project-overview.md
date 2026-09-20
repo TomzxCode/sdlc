@@ -1,24 +1,24 @@
+<!-- session_link: <filled by skill> -->
 # Project Overview
 
 ## Purpose
 
-<One paragraph: what does this project do and what problem does it solve?>
+<One paragraph describing what this project does and the problem it solves.>
 
 ## Key Stakeholders
 
 | Stakeholder | Role | Interest |
 |---|---|---|
+| <name / role> | <title> | <what they care about> |
 
 ## Scope
 
-**In scope (<version>):**
+**In scope:**
+- <Feature or capability>
 
-<Bullet list of in-scope capabilities>
-
-**Out of scope (<version>):**
-
-<Bullet list of explicitly out-of-scope items>
+**Out of scope:**
+- <Explicitly excluded>
 
 ## Key Constraints
 
-<Bullet list of technical, business, and operational constraints>
+- <Technical, business, or regulatory constraint>

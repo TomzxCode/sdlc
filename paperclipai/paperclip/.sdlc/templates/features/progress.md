@@ -29,9 +29,13 @@ last_updated: "<YYYY-MM-DD>"
 | Planning & Feasibility | review-feasibility | — |
 | Design | create-specifications | — |
 | Design | review-specifications | — |
+| Design | create-lifecycle | — |
+| Design | review-lifecycle | — |
 | Design | create-plan | — |
 | Design | review-plan | — |
 | Design | publish-plan | — |
+| Design | validate-assumptions | — |
+| Design | review-assumption-validation | — |
 | Design | create-tasks-decomposition | — |
 | Design | review-tasks-decomposition | — |
 | Development & Testing | create-tests | — |
@@ -40,10 +44,11 @@ last_updated: "<YYYY-MM-DD>"
 | Development & Testing | review-implementation | — |
 | Development & Testing | create-documentation | — |
 | Development & Testing | review-documentation | — |
+| Development & Testing | validate-implementation | — |
 | Development & Testing | create-pr | — |
 | Development & Testing | review-pr | — |
 | Development & Testing | handle-pr-ci | — |
-| Development & Testing | handle-pr-feedback | — |
+| Development & Testing | handle-pr-reviewer-feedback | — |
 | Development & Testing | merge-pr | — |
 | Deployment | deploy-pr | — |
 | Learnings | create-learnings | — |

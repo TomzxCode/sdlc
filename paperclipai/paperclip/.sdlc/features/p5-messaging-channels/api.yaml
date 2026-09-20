@@ -1,0 +1,897 @@
+# OpenAPI 3 contract for Messaging channels.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Messaging channels API"
+  version: 0.1.0
+  description: >
+    Conversational task pipelines across chat providers, task-bound email,
+    and the Board Concierge relay. Additive-only within a major version.
+paths:
+  /api/companies/{companyId}/chat-endpoints:
+    get:
+      summary: List company chat endpoints
+      operationId: listChatEndpoints
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Endpoint list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatEndpoint"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      summary: Create a chat endpoint
+      operationId: createChatEndpoint
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChatEndpointRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatEndpoint"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}:
+    get:
+      summary: Get endpoint detail
+      operationId: getChatEndpoint
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      responses:
+        "200":
+          description: Endpoint detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatEndpoint"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update endpoint settings
+      operationId: updateChatEndpoint
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Updated endpoint
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatEndpoint"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/chat-endpoints/{endpointId}/setup:
+    post:
+      summary: Run provider setup step
+      operationId: configureChatEndpoint
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Setup result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}/test:
+    post:
+      summary: Run endpoint health test
+      operationId: testChatEndpoint
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      responses:
+        "200":
+          description: Health result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}/resources:
+    get:
+      summary: List selectable provider resources
+      operationId: listChatResources
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      responses:
+        "200":
+          description: Resource list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Replace enabled resources
+      operationId: replaceChatResources
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              required: [resources]
+              properties:
+                resources:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+      responses:
+        "200":
+          description: Updated resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}/principals:
+    get:
+      summary: List external principals
+      operationId: listChatPrincipals
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      responses:
+        "200":
+          description: Principal list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatPrincipal"
+  /api/chat-endpoints/{endpointId}/principals/{principalId}/link-intent:
+    post:
+      summary: Create identity link intent
+      operationId: createChatLinkIntent
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: principalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                expiresInSeconds:
+                  type: integer
+      responses:
+        "201":
+          description: Link intent created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatIdentityLink"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}/principals/{principalId}/link:
+    delete:
+      summary: Revoke identity link
+      operationId: revokeChatLink
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: principalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Link revoked
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-identity-links/confirm:
+    post:
+      summary: Confirm identity link by token
+      operationId: confirmChatIdentityLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Link confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatIdentityLink"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+  /api/chat-endpoints/{endpointId}/conversations:
+    get:
+      summary: List endpoint conversations
+      operationId: listChatConversations
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      responses:
+        "200":
+          description: Conversation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatConversation"
+  /api/chat-endpoints/{endpointId}/activity:
+    get:
+      summary: List endpoint activity with pagination
+      operationId: listChatActivity
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Activity page or list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+  /api/chat-endpoints/{endpointId}/deliveries/{deliveryId}/replay:
+    post:
+      summary: Replay a delivery
+      operationId: replayChatDelivery
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: deliveryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Replay accepted
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}/publications/{publicationId}/replay:
+    post:
+      summary: Replay a publication
+      operationId: replayChatPublication
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: publicationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Replay accepted
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}/publications/{publicationId}/resolve:
+    post:
+      summary: Board-resolve a pending publication
+      operationId: resolveChatPublication
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: publicationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              required: [action]
+              properties:
+                action:
+                  type: string
+      responses:
+        "204":
+          description: Publication resolved
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}/actions/{actionId}/resolve:
+    post:
+      summary: Board-resolve a pending action
+      operationId: resolveChatAction
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: actionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              required: [action]
+              properties:
+                action:
+                  type: string
+      responses:
+        "204":
+          description: Action resolved
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/chat-endpoints/{endpointId}/conversations/{conversationId}/publications:
+    post:
+      summary: Publish a board message or comment
+      operationId: publishChatMessage
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Publication created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatPublication"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+  /api/chat-endpoints/{endpointId}/conversations/{conversationId}/publications/{publicationId}/status:
+    get:
+      summary: Get publication batch status
+      operationId: getPublicationBatchStatus
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: publicationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Batch status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+  /api/issues/{issueId}/chat-binding:
+    get:
+      summary: Get task chat binding summary
+      operationId: getIssueChatBinding
+      parameters:
+        - name: issueId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Binding summary or null
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                nullable: true
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+  /api/chat-webhooks/{publicId}/{provider}:
+    post:
+      summary: Provider-authenticated inbound webhook
+      operationId: handleChatWebhook
+      parameters:
+        - name: publicId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [slack, github, discord, microsoft-teams, telegram, imessage-photon]
+      responses:
+        "200":
+          description: Webhook accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /api/companies/{companyId}/email/connections:
+    post:
+      summary: Connect an AgentMail credential
+      operationId: connectEmail
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Connection created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/email/inboxes:
+    get:
+      summary: List email inboxes
+      operationId: listEmailInboxes
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Inbox list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailInbox"
+    post:
+      summary: Set up an email inbox
+      operationId: setupEmailInbox
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Inbox created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailInbox"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/email/inboxes/{endpointId}/control:
+    post:
+      summary: Pause, resume, or remove an inbox
+      operationId: controlEmailInbox
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [pause, resume, remove]
+      responses:
+        "200":
+          description: Control result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/email/inboxes/{endpointId}/reconnect:
+    post:
+      summary: Reconnect with a new key and mode
+      operationId: reconnectEmailInbox
+      parameters:
+        - $ref: "#/components/parameters/EndpointId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              required: [apiKey, receiveMode]
+              properties:
+                apiKey:
+                  type: string
+                receiveMode:
+                  type: string
+                  enum: [websocket, webhook]
+      responses:
+        "200":
+          description: Reconnect result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/email/send:
+    post:
+      summary: Queue an email send intent
+      operationId: queueEmailSend
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailSendRequest"
+      responses:
+        "202":
+          description: Send intent queued
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/companies/{companyId}/email/tasks/{issueId}:
+    get:
+      summary: Get the email thread for a task
+      operationId: getEmailThread
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: issueId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Email thread
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                nullable: true
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/email/deliveries/{publicationId}:
+    get:
+      summary: Get an email delivery
+      operationId: getEmailDelivery
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: publicationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Delivery detail
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/chat-webhooks/agentmail/{publicId}:
+    post:
+      summary: AgentMail Svix-signed inbound webhook
+      operationId: handleAgentMailWebhook
+      parameters:
+        - name: publicId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Webhook accepted
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/board/chat/stream:
+    post:
+      summary: Stream a Board Concierge turn over SSE
+      operationId: streamBoardChat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardChatRequest"
+      responses:
+        "200":
+          description: SSE stream of start, status, chunk, done, or error events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+components:
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EndpointId:
+      name: endpointId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    InvalidInput:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Idempotency conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: Rate limited
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    ChatEndpoint:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum: [slack, github, discord, microsoft-teams, telegram, agentmail, imessage-photon]
+        status:
+          type: string
+        publicationMode:
+          type: string
+          enum: [automatic, explicit]
+    CreateChatEndpointRequest:
+      type: object
+      additionalProperties: true
+      required: [provider, assignedAgentId]
+      properties:
+        provider:
+          type: string
+        assignedAgentId:
+          type: string
+          format: uuid
+    ChatPrincipal:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        externalId:
+          type: string
+        displayName:
+          type: string
+    ChatIdentityLink:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+    ChatConversation:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        state:
+          type: string
+    ChatPublication:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        state:
+          type: string
+        providerMessageId:
+          type: string
+          nullable: true
+    EmailInbox:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        address:
+          type: string
+        status:
+          type: string
+        receiveMode:
+          type: string
+          enum: [websocket, webhook]
+    EmailSendRequest:
+      type: object
+      additionalProperties: true
+      required: [endpointId, idempotencyKey]
+      properties:
+        endpointId:
+          type: string
+          format: uuid
+        idempotencyKey:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+    BoardChatRequest:
+      type: object
+      additionalProperties: true
+      required: [companyId, message]
+      properties:
+        companyId:
+          type: string
+          format: uuid
+        message:
+          type: string
+        taskId:
+          type: string
+          format: uuid
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_INPUT
+        message:
+          type: string
