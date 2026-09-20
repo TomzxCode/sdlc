@@ -1,21 +1,41 @@
+<!-- session_link: <filled by skill> -->
 # Conventions
 
 ## Naming
 
-<File naming, variable naming, function naming, class naming, DB naming, etc.>
+- **Files:** <convention, e.g. kebab-case>
+- **Variables:** <convention>
+- **Functions / Methods:** <convention>
+- **Classes:** <convention>
+- **Constants:** <convention>
 
 ## Directory Structure
 
-<How the project is organized.>
+<Describe the project's directory layout and where different types of files live.>
 
 ## Coding Standards
 
-<Language-specific standards, patterns to follow, anti-patterns to avoid.>
+- <Rule or pattern to follow>
+- <Anti-pattern to avoid>
 
 ## Commit Messages
 
-<Conventional commits, scope patterns, etc.>
+<Commit message convention, e.g. Conventional Commits.>
 
 ## Branching
 
-<Branch naming, workflow.>
+<Branch naming strategy, e.g. `feature/`, `fix/`, `chore/` prefixes.>
+
+## SDLC Documentation Style
+
+<!--
+Rules for how SDLC artifacts (requirements, specs, plans, etc.) should be written.
+Agents read this file before producing any artifact and apply these rules to their output.
+
+Example rules:
+- One sentence per line in markdown files for easier diff/review.
+- Use sentence case for headings, not title case.
+- Prefer bullet lists over prose paragraphs.
+-->
+
+<Describe artifact writing conventions here, or remove this section if none apply.>

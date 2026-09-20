@@ -39,7 +39,10 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 - Cloud upstreams for cross-instance company synchronization (experimental, gated behind feature flag)
 - Real-time events and live updates via WebSocket (live dashboards, terminal sessions)
 - Auditable activity log for all mutating actions
-- Tools, connections, and third-party app integration (OAuth connections, MCP/SSE tool gateways, tool access policies, runtime slots, app gallery)
+- Tools, connections, and third-party app integration (OAuth connections, MCP/SSE tool gateways, tool access policies, runtime slots, app gallery, smoke lab for integration testing)
+- In-app announcements (versioned remote manifest, per-user dismissals)
+- External messaging channels and board chat (Discord, Slack, Teams, Telegram, GitHub, Photon iMessage, task-bound email, board concierge relay)
+- Company/task search (cross-entity search, extract endpoint, rate limiting, Search UI)
 - Smoke lab for integration testing of configured connections
 - Board web UI (dashboard, org chart, tasks, agents, approvals, costs, activity, secrets, skills, inbox, pipelines)
 

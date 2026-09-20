@@ -1,0 +1,282 @@
+# OpenAPI 3 contract for Company/task search.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Company/task search API"
+  version: 0.1.0
+  description: >
+    Company-scoped cross-entity search and focused extract over current rows.
+    Additive-only within a major version.
+paths:
+  /api/companies/{companyId}/search:
+    get:
+      summary: Cross-entity ranked search
+      operationId: searchCompany
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: scope
+          in: query
+          schema:
+            $ref: "#/components/schemas/CompanySearchScope"
+        - name: sort
+          in: query
+          schema:
+            $ref: "#/components/schemas/CompanySearchSort"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: priority
+          in: query
+          schema:
+            type: string
+        - name: assigneeAgentId
+          in: query
+          schema:
+            type: string
+        - name: assigneeUserId
+          in: query
+          schema:
+            type: string
+        - name: projectId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: labelId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: updatedWithin
+          in: query
+          schema:
+            type: string
+            enum: [24h, 7d, 30d, 90d]
+        - name: updatedAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Ranked results with counts, facets, recovery, and pagination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanySearchResponse"
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+  /api/companies/{companyId}/search/extract:
+    get:
+      summary: Focused match extraction
+      operationId: extractCompanySearchMatches
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: contains
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: kind
+          in: query
+          schema:
+            $ref: "#/components/schemas/CompanySearchExtractKind"
+        - name: scope
+          in: query
+          schema:
+            $ref: "#/components/schemas/CompanySearchExtractScope"
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+        - name: matchesPerIssue
+          in: query
+          schema:
+            type: integer
+        - name: updatedWithin
+          in: query
+          schema:
+            type: string
+        - name: updatedAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Per-issue matches with excerpts and source references
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanySearchExtractResponse"
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+components:
+  schemas:
+    CompanySearchScope:
+      type: string
+      enum: [all, issues, comments, documents, artifacts, agents, projects]
+    CompanySearchSort:
+      type: string
+      enum: [relevance, updated, created, priority]
+    CompanySearchExtractScope:
+      type: string
+      enum: [all, issues, comments, documents]
+    CompanySearchExtractKind:
+      type: string
+      enum: [literal, url]
+    CompanySearchResponse:
+      type: object
+      additionalProperties: true
+      required: [query, normalizedQuery, scope, sort, limit, offset, results, countsByType, filterOptionCounts, zeroResults, hasMore]
+      properties:
+        query:
+          type: string
+        normalizedQuery:
+          type: string
+        scope:
+          $ref: "#/components/schemas/CompanySearchScope"
+        sort:
+          $ref: "#/components/schemas/CompanySearchSort"
+        limit:
+          type: integer
+        offset:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        countsByType:
+          type: object
+          additionalProperties: true
+        filterOptionCounts:
+          type: object
+          additionalProperties: true
+        zeroResults:
+          type: ["object", "null"]
+          additionalProperties: true
+        hasMore:
+          type: boolean
+    CompanySearchExtractResponse:
+      type: object
+      additionalProperties: true
+      required: [contains, kind, scope, limit, offset, matchesPerIssue, results, hasMore, truncated]
+      properties:
+        contains:
+          type: string
+        kind:
+          $ref: "#/components/schemas/CompanySearchExtractKind"
+        scope:
+          $ref: "#/components/schemas/CompanySearchExtractScope"
+        limit:
+          type: integer
+        offset:
+          type: integer
+        matchesPerIssue:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        hasMore:
+          type: boolean
+        truncated:
+          type: boolean
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_INPUT
+        message:
+          type: string
