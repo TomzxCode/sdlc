@@ -6,7 +6,7 @@ This file inventories the project's existing observability infrastructure: metri
 
 | Pillar | System | Status |
 |---|---|---|
-| Metrics | Usage/credits tracking rows (`usage_events`), chat token accounting (`chat_token_usage`), reliability metrics (`/api/health/reliability`), project health (`central.project_health`) | In use (in-app/SQL, no external metrics backend) |
+| Metrics | Usage/credits tracking rows (`usage_events`), chat token accounting (`chat_token_usage`), reliability metrics (`/api/health/reliability`), project health (`central.project_health`), Prometheus-text scrape endpoint (`GET /metrics`, RUFU-081), opt-in OTLP/HTTP JSON metrics export (`FUSION_OTEL_METRICS_ENDPOINT`, off by default) | In use (in-app/SQL plus in-house Prometheus-text and OTLP export; no third-party metrics SDK) |
 | Logging | Structured in-app logger in `@fusion/engine` (`logger.ts`), diagnostic logging conventions (`docs/diagnostics.md`) | In use |
 | Tracing | None (no distributed tracing backend) | Not configured |
 | Profiling | None | Not configured |
@@ -21,6 +21,8 @@ This file inventories the project's existing observability infrastructure: metri
 | run-audit event rows | Audit | Append-only `project.run_audit_events` with ids/timestamps/outcomes-only metadata; never prose or secrets |
 | `/api/health/reliability` metrics | Metrics | Reliability indicator aggregation (`packages/dashboard/src/reliability-metrics.ts`) |
 | Signal connectors | External ingest | HMAC-signed webhook receivers for Sentry/Datadog/PagerDuty/webhooks; see `docs/signals-connectors.md` |
+| `/metrics` sampler + serializer | Metrics | In-house Prometheus-text serializer and runtime/domain samplers with no third-party client library; app-level public `GET /metrics` served synchronously from a pre-read snapshot (`packages/dashboard/src/metrics/`, mounted in `packages/dashboard/src/server.ts`) |
+| OTLP metrics exporter | Metrics | Opt-in minimal OTLP/HTTP JSON POST of Command Center analytics to a configured collector, off by default and requiring `https:` in production, with no `@opentelemetry/*` SDK dependency (`packages/dashboard/src/otel-exporter.ts`, mapping in `packages/core/src/process/otel-metrics.ts`) |
 | `agent_activity_events` | Activity | Inspectable per-agent activity event stream with cursor/retention contract (`docs/agent-activity-contract.md`) |
 | Notification providers | Outbound alerting | Webhook and ntfy providers (`packages/core/src/notification/`), OAuth expiry monitors, task-wedge notifications, remote/webhook alerting to Command Center |
 

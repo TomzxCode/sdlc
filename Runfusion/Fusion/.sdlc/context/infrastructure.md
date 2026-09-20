@@ -61,6 +61,7 @@ Testing commands (from AGENTS.md and `package.json`):
 | `release.yml` | tag `v*`, dispatch | Builds platform binaries and creates GitHub Release |
 | `version.yml` | workflow_dispatch | npm publishing via changesets + npm OIDC trusted publishing (stable-channel only) |
 | `test-release.yml` | workflow_dispatch | Test binary builds without creating a real release |
+| `threatcrush-scan.yml` | PR | Security scan for credentials and vulnerable patterns |
 
 ## Deployment
 

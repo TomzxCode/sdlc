@@ -34,6 +34,8 @@ last_updated: "<YYYY-MM-DD>"
 | Design | create-plan | — |
 | Design | review-plan | — |
 | Design | publish-plan | — |
+| Design | validate-assumptions | — |
+| Design | review-assumption-validation | — |
 | Design | create-tasks-decomposition | — |
 | Design | review-tasks-decomposition | — |
 | Development & Testing | create-tests | — |
@@ -46,7 +48,7 @@ last_updated: "<YYYY-MM-DD>"
 | Development & Testing | create-pr | — |
 | Development & Testing | review-pr | — |
 | Development & Testing | handle-pr-ci | — |
-| Development & Testing | handle-pr-feedback | — |
+| Development & Testing | handle-pr-reviewer-feedback | — |
 | Development & Testing | merge-pr | — |
 | Deployment | deploy-pr | — |
 | Learnings | create-learnings | — |
