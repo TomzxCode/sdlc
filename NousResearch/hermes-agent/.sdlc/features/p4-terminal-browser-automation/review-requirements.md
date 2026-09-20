@@ -14,3 +14,13 @@ Drift detected during `/sync-sdlc` reconciliation against the current codebase:
 2. **Overview says "six backends".** The Overview paragraph enumerates "local, Docker, SSH, Modal, Daytona, Singularity" — one short of the implemented set.
 
 Resync `requirements.md` to reflect the seven-backend set, then re-review.
+
+## Sync drift: 2026-09-20
+
+Drift detected during `/sync-sdlc` reconciliation against the current codebase.
+The 2026-08-03 items above still stand (`tools/environments/vercel_sandbox.py` verified present).
+New items:
+
+1. **FR-8 (Should) hold-click and alternative click methods have no implementation.** Zero matches for `hold_click`, `hold-click`, or `click_method` under `tools/`. Either implement or demote FR-8 to a May/out-of-scope note.
+
+Resync `requirements.md` for FR-8, then re-review.
