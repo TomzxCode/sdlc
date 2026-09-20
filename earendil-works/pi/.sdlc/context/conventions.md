@@ -23,8 +23,11 @@ packages/
                   #   examples/ (sdk/, extensions/)
   protocol/       # pi-protocol: src/cbor/, src/, test/
   client/         # pi-client: src/, test/
-  server/         # pi-server: src/, src/legacy/ (renamed orchestrator), src/transports/, src/testing/, test/
-  storage/        # pi-storage-sqlite-node: sqlite-node/src/sqlite/ (storage/, migrations/), no own tests
+  server/         # pi-server: src/, src/transports/, src/testing/, test/
+  session-backends/ # pi-session-backend-sqlite-node: sqlite-node/src/sqlite/ (storage/, migrations/), sqlite-node/test/
+  chord/          # @earendil-works/chord: src/ (context/, delta/, facets/, node/), test/
+  durable/        # pi-durable: src/, test/
+  telemetry/      # pi-telemetry: src/, src/testing/, test/
   evals/          # pi-evals: src/, src/vitest-evals/, test/, scripts/
 scripts/          # repo-level: release, shrinkwrap, version-sync, pinned-dep/TS-import checks
 .github/workflows/  # CI
@@ -53,6 +56,7 @@ Conventional Commits with package scopes.
 
 - Format: `{feat,fix,docs,chore}[(ai,agent,tui,coding-agent,protocol,client,server,storage,evals)]: <concise informative message>` (optionally multi-line).
 - Scopes are the short package names: `ai`, `agent`, `tui`, `coding-agent`, `protocol`, `client`, `server`, `storage`, `evals`.
+- No agreed scope token exists yet for the new packages `chord`, `durable`, `telemetry`, and `session-backends`; confirm before using one in a commit message.
 - No emojis in commits, issues, PR comments, or code.
 - `fixes #<n>` / `closes #<n>` repeat the keyword per issue for auto-close (`closes #1, closes #2`, not `closes #1, #2`).
 - Release commits: `Release vX.Y.Z` and `Add [Unreleased] section for next cycle` are produced by the release script.
@@ -77,7 +81,8 @@ Conventional Commits with package scopes.
 
 ## Testing Standards
 
-- **Frameworks:** Vitest for `ai`, `agent`, `coding-agent`, `protocol`, `client`, `server`, `evals`; Node's built-in `node --test` for `tui`; `pi-storage-sqlite-node` is tested through `packages/agent/test/harness/` (no tests live in the package).
+- **Frameworks:** Vitest for `ai`, `agent`, `coding-agent`, `protocol`, `client`, `server`, `evals`, `chord`, `durable`, `telemetry`, and `session-backends/sqlite-node`; Node's built-in `node --test` for `tui`.
+- The former `pi-storage-sqlite-node` package no longer exists at `packages/storage`; its successor `pi-session-backend-sqlite-node` lives at `packages/session-backends/sqlite-node` and owns its tests under `sqlite-node/test/`.
 - **Never run the full vitest suite directly** (it includes e2e tests activated by endpoint/auth env vars). Run non-e2e tests via `./test.sh`, or specific files: `node ../../node_modules/vitest/dist/cli.js --run test/specific.test.ts`.
 - **coding-agent tests** use `test/suite/harness.ts` + the faux provider. No real provider APIs, keys, or paid tokens.
 - **Issue regressions** go under `packages/coding-agent/test/suite/regressions/` named `<issue-number>-<short-slug>.test.ts`.
