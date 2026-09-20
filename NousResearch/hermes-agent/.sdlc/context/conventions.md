@@ -17,16 +17,15 @@ The project organizes code into purpose-driven directories at the repo root:
 - `hermes_cli/` — CLI subsystem: commands, config, plugins, skins, setup, profile management, web server, curses UI
 - `tools/` — Tool implementations, auto-discovered via tools/registry.py. Subdirectory `environments/` for terminal backends.
 - `gateway/` — Messaging gateway: run.py, session.py, plus platforms/ for the base adapter and support modules; canonical per-platform adapters migrated to plugins/platforms/ (22 adapters, back-compat re-exports retained)
-- `plugins/` — Plugin system: memory/ (8 providers), model-providers/ (33 backends), platforms/ (22 adapters), kanban/, image_gen/, context_engine/, observability/, plus individual plugins
+- `plugins/` — Plugin system: memory/ (8 providers), model-providers/ (38 backends), platforms/ (22 adapters), kanban/, image_gen/, context_engine/, observability/, plus individual plugins
 - `cron/` — Scheduler: jobs.py, scheduler.py, lifecycle_guard.py
-- `skills/` — Built-in skills organized by category directory (14 categories)
-- `optional-skills/` — Heavier/niche skills shipped but inactive by default (21 categories)
+- `skills/` — Built-in skills organized by category directory (13 categories)
+- `optional-skills/` — Heavier/niche skills shipped but inactive by default (23 categories)
 - `ui-tui/` — Ink (React) terminal UI frontend (TypeScript)
 - `tui_gateway/` — Python JSON-RPC backend for the TUI
 - `apps/desktop/` — Electron desktop app
 - `apps/shared/` — Shared JSON-RPC client package
 - `acp_adapter/` — ACP server for IDE integration
-- `acp_registry/` — ACP registry
 - `web/` — Dashboard SPA (xterm.js + PTY bridge)
 - `website/` — Docusaurus documentation site
 - `tests/` — Pytest test suite mirroring source structure
@@ -37,8 +36,9 @@ The project organizes code into purpose-driven directories at the repo root:
 ## Coding Standards
 
 - **Use type hints** on all function signatures and class attributes
+- **Use `get_hermes_home()`** from hermes_constants for all HERMES_HOME paths, `display_hermes_home()` for user-facing text, never hardcode `~/.hermes`, with the sole exception that profile operations stay HOME-anchored (`_get_profiles_root()` under `Path.home()/.hermes/profiles`) by design
 - **Explicit encoding** on all file operations: use `encoding=` in open(), read_text(), write_text() calls (enforced by ruff rule PLW1514)
-- **Use `get_hermes_home()`** from hermes_constants for all HERMES_HOME paths — never hardcode `~/.hermes` or `Path.home() / ".hermes"`
+- **No blocking calls in `async def`** (sync HTTP, subprocess, `time.sleep`): use `await asyncio.to_thread(...)`, `asyncio.create_subprocess_exec`, or `await asyncio.sleep` (enforced by ruff rules ASYNC210/220/221/251)
 - **Every model tool schema is sent on every API call** — new core tools are the last resort for new capability
 - **All tool handlers must return JSON strings**
 - **Prefer service-gated tools** (with `check_fn`) over always-available tools when the capability depends on external credentials
@@ -46,6 +46,9 @@ The project organizes code into purpose-driven directories at the repo root:
 - **No `simple_term_menu`** — new interactive menus must use the curses UI module
 - **No `\033[K`** (ANSI erase-to-EOL) in spinner/display code — use space-padding instead
 - **Do not write change-detector tests** — tests should assert invariants (how data must relate), not freeze current values (model lists, version numbers, enumeration counts)
+- **Run tests via `scripts/run_tests.sh`, never bare `pytest`** (it enforces CI parity: credential vars unset, `TZ=UTC`, temp `HERMES_HOME`, per-file subprocess isolation)
+- **Pin dependencies exactly** (`==X.Y.Z` plus regenerated `uv.lock`): version ranges are rejected, so every version change arrives as an intentional reviewed pin bump
+- **Former god files are facades plus `<stem>_<topic>.py` siblings** (e.g. `hermes_state*.py`, `gateway/run_*.py`): new behavior goes in a topical sibling, never appended to a facade
 - **Plugins must NOT modify core files** — expand the generic plugin surface (new hook, new ctx method) instead
 
 ## Commit Messages
