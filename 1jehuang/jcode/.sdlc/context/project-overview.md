@@ -30,7 +30,7 @@ Distinguishing features are RAM efficiency, multi-model support, multi-agent ("s
 - Telemetry collection and an opt-out model
 - Auto-update, installers, and multi-platform release tooling
 - Harness API bridge with Rust and TypeScript SDKs
-- Companion iOS app and greenfield desktop app (desktop2)
+- Companion iOS app (ios/) and desktop panels via the model-facing panel tool
 
 **Out of scope:**
 - A hosted/managed cloud agent service (the local daemon is the product)
@@ -43,7 +43,7 @@ Distinguishing features are RAM efficiency, multi-model support, multi-agent ("s
 - Rust workspace, edition 2024, with strict quality budgets enforced in CI (`clippy -D warnings`, warning/panic/code-size/swallowed-error/wildcard-reexport/dependency-boundary budgets).
 - Single-server, multi-client daemon architecture: first `jcode` run spawns the server, later runs connect over a Unix socket.
 - Terminal-first with an emphasis on low RAM and fast first frame; heavy dependency stacks are pinned to `opt-level = 3` in dev profiles.
-- Providers are reached through the user's existing subscriptions where possible; auth must support Claude Max OAuth, OpenAI/Codex OAuth, Gemini OAuth, Azure Entra ID, and OpenAI-compatible API keys.
+- Providers are reached through the user's existing subscriptions where possible; auth must support Claude Max OAuth, OpenAI/Codex OAuth, Gemini OAuth, GitHub Copilot device flow, Azure Entra ID, and OpenAI-compatible API keys.
 - Local-first storage: sessions, config, auth, and memory live under `~/.jcode/`.
 - Privacy-conscious telemetry with explicit opt-out (`JCODE_NO_TELEMETRY=1`, `DO_NOT_TRACK=1`, or a file marker); collection is documented in `TELEMETRY.md`.
 - Cross-platform: Linux (x86_64/aarch64), macOS (aarch64, x86_64), Windows (x86_64/aarch64), with FreeBSD smoke coverage.
