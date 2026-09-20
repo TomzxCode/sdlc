@@ -24,40 +24,34 @@
 
 | Term | Definition |
 |---|---|
-| Provider | An AI model provider (OpenAI, Anthropic, Google, etc.) |
-| Model Catalog | The registry of available AI models and their capabilities |
-| Auth Profile | A named set of credentials for a provider (API keys, OAuth tokens) |
-| Plugin SDK | The `@openclaw/plugin-sdk` package for building extensions |
-| Gateway Protocol | Custom WebSocket/HTTP RPC protocol for gateway-to-node communication |
-| Facilitator | A pattern for delegating work to subagents |
-| MCP | Model Context Protocol — a standard for tool and resource provisioning |
-| LSP | Language Server Protocol — used for code-aware agent interactions |
-| Transcript | The persisted record of a conversation, including tool calls and results |
-| Trajectory | A session recording that captures agent actions for replay/debugging |
-| Env Vars | Environment variables used for configuration (OPENAI_API_KEY, etc.) |
-| Kysely | The SQLite query builder used for database access |
-| Zod | The schema validation library used for configuration validation |
-| Lit | The web component library used for the Control UI |
 | A2UI | Agent-to-UI protocol for dynamic agent-driven interfaces |
-| Canvas | Agent-driven visual workspace rendered in the Control UI |
-
-| Term | Definition |
-|---|---|---|
 | ACP | Agent Client Protocol — a protocol for agent-to-agent and agent-to-gateway communication |
+| Auth Profile | A named set of credentials for a provider (API keys, OAuth tokens) |
 | Canvas | Agent-driven visual workspace rendered in the Control UI for rich interactive content |
 | ClawSweeper | Automated issue/PR triage and maintenance bot for the OpenClaw repository |
 | DM Policy | Direct Message pairing policy controlling who can message the assistant |
+| Env Vars | Environment variables used for configuration (OPENAI_API_KEY, etc.) |
+| Facilitator | A pattern for delegating work to subagents |
+| Gateway Protocol | Custom WebSocket/HTTP RPC protocol for gateway-to-node communication |
+| Kysely | The SQLite query builder used for database access |
+| Lit | The web component library used for the Control UI |
+| LSP | Language Server Protocol — used for code-aware agent interactions |
 | MCP | Model Context Protocol — a standard for tool and resource provisioning to AI models |
+| Model Catalog | The registry of available AI models and their capabilities |
+| Plugin SDK | The `@openclaw/plugin-sdk` package for building extensions |
+| Provider | An AI model provider (OpenAI, Anthropic, Google, etc.) |
 | QA Lab | Internal testing framework using YAML-based scenario packs for regression and behavior testing |
 | Sandbox | Execution isolation mode for agent tools (configurable as main, non-main, or off) |
 | Talk | Voice conversation runtime supporting full-duplex audio sessions |
 | Trajectory | Session recording capturing agent actions for replay and debugging |
+| Transcript | The persisted record of a conversation, including tool calls and results |
+| Zod | The schema validation library used for configuration validation |
 
 ## Acronyms and Abbreviations
 
 | Abbreviation | Expansion |
 |---|---|
-| ACP | Agent Content Protocol |
+| ACP | Agent Client Protocol |
 | ADR | Architecture Decision Record |
 | CI | Continuous Integration |
 | CLI | Command-Line Interface |
