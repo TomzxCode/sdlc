@@ -12,7 +12,7 @@ Update this file when tooling, environments, or deployment procedures change.
 | Component | Technology | Version |
 |---|---|---|
 | Language | TypeScript (strict mode) | ~5.9.0 |
-| Runtime | Node.js (>= 22), Bun for builds/scripts | node >=22, bun 1.3.14 |
+| Runtime | Node.js (>= 22), Bun for builds/scripts | node >=22, bun 1.4.2 |
 | Framework (frontend) | React 19, Vite 7, Zustand, Tailwind CSS v4, Base UI, CodeMirror | React ^19.1.1, Vite ^7.1.2 |
 | Framework (backend) | Express 5 | ^5.1.0 |
 | Desktop shell | Electron (boots the web server in-process) | Electron 41 |
@@ -56,6 +56,9 @@ There is no hosted staging or preview environment; deployments are self-hosted a
 | oc-integration.yml | PR/comment driven | Integration checks via `opencode` bot |
 | oc-review.yml | pull_request | PR checks (lint/type-check/tests per repo guidance) |
 | opencode.yml | issue/PR comments | Runs `/oc`, `/opencode` commands via bot |
+| sdk-preview.yml | manual dispatch | SDK preview build |
+| issue-intake.yml | issues | Issue intake automation |
+| label-merge-conflict.yml | pull requests | Merge-conflict labeling |
 | pr-review.yml, reproduce-issue.yml, triage.yml, stale.yml, bot-help.yml, bot-summarize.yml | various | Issue triage, review automation, bot helpers |
 | release-desktop-smoke.yml, opencode-smoke.yml | manual dispatch | Release build smoke tests |
 
@@ -79,7 +82,7 @@ Deployment is self-hosted and user-driven. Supported paths:
 
 | Endpoint | Expected response | Checked by |
 |---|---|---|
-| `/api/health` | 200 OK | Docker healthcheck (docker-compose.yml), monitoring |
+| `/health` | 200 OK | Monitoring |
 
 ## Smoke Tests
 
