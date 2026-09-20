@@ -12,7 +12,7 @@ on:
         description: "opencode model id (provider/model); defaults to opencode/muse-spark-1.3-contributor-free"
         required: false
         type: string
-        default: ""
+        default: "opencode/muse-spark-1.3-contributor-free"
   schedule:
     - cron: "0 9 * * 1" # Mondays 09:00 UTC
 
@@ -48,7 +48,7 @@ jobs:
     uses: ./.github/workflows/sdlc-refresh.yml
     with:
       repository: ${{ matrix.repository }}
-      model: ${{ inputs.model || 'opencode/deepseek-v4-flash-free' }}
+      model: ${{ inputs.model }}
 
   dashboards:
     needs: [refresh]
