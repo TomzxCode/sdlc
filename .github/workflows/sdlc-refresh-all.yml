@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       model:
-        description: "opencode model id (provider/model); defaults to DeepSeek V4 Flash Free"
+        description: "opencode model id (provider/model); defaults to opencode/muse-spark-1.3-contributor-free"
         required: false
         type: string
         default: ""
