@@ -37,7 +37,7 @@ on:
         description: "opencode model id (provider/model)"
         type: string
         required: false
-        default: "opencode/deepseek-v4-flash-free"
+        default: "opencode/muse-spark-1.3-contributor-free"
 
 permissions:
   contents: write
