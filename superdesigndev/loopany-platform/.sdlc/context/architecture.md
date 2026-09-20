@@ -1,6 +1,6 @@
 # Architecture
 
-## System Overview
+## System overview
 
 Loopany is a pnpm monorepo with two packages: the server (`@loopany/server`) and the daemon (`@crewlet/loopany`). The server is a TanStack Start application that runs the UI, the in-process scheduler, the machine gateway routes, auth, and artifact storage. The daemon is one binary with two roles: a poll-loop daemon that runs on each user's machine, and the in-run `loopany` callback that the coding agent invokes during a run.
 
@@ -49,7 +49,122 @@ Loopany is a pnpm monorepo with two packages: the server (`@loopany/server`) and
                         +--------------------------+
 ```
 
-## Key Components
+## Entity relationship diagram
+
+Core domain entities and their relationships, mirrored from `packages/server/src/db/schema.ts` (business tables) plus the Better Auth `user` table.
+The full detailed database schema (types, constraints, indexes) lives in `schema.dbml`.
+
+```mermaid
+erDiagram
+    user ||--o{ machines : owns
+    user ||--o{ loops : creates
+    user ||--o{ runs : owns
+    user ||--o{ team_members : "joins via"
+    user ||--o{ connect_keys : mints
+    teams ||--o{ team_members : has
+    teams ||--o{ team_invites : issues
+    teams ||--o{ machines : scopes
+    teams ||--o{ loops : scopes
+    teams ||--o{ notification_channels : has
+    machines ||--o{ loops : executes
+    machines ||--o{ runs : "runs on"
+    loops ||--o{ runs : produces
+    notification_channels ||--o{ loops : routes
+    loops ||--o{ artifact_files : syncs
+    loops ||--o{ run_snapshots : captures
+    loops ||--o{ run_leases : scopes
+    runs ||--o| run_snapshots : "finalizes as"
+    runs ||--o| run_leases : mints
+    blobs ||--o{ artifact_files : "content for"
+    connect_keys ||--|| machines : registers
+    connect_keys }o--o| teams : "binds to"
+
+    user {
+        string id PK
+        string email
+        string name
+    }
+    teams {
+        string id PK
+        string name
+        string ownerUserId FK
+    }
+    team_members {
+        string id PK
+        string teamId FK
+        string userId FK
+        string role
+    }
+    team_invites {
+        string token PK
+        string teamId FK
+        string role
+        string invitedByUserId FK
+    }
+    machines {
+        string id PK
+        string userId FK
+        string teamId FK
+        string name
+        string tokenHash
+        boolean online
+    }
+    loops {
+        string id PK
+        string userId FK
+        string teamId FK
+        string machineId FK
+        string channelId FK
+        string cron
+        string goal
+        boolean enabled
+    }
+    runs {
+        string id PK
+        string loopId FK
+        string machineId FK
+        string phase
+        string role
+        string outcome
+    }
+    run_leases {
+        string tokenHash PK
+        string runId FK
+        string loopId FK
+        string machineId FK
+        string state
+    }
+    connect_keys {
+        string machineId PK
+        string userId FK
+        string teamId FK
+    }
+    notification_channels {
+        string id PK
+        string teamId FK
+        string type
+        string name
+    }
+    blobs {
+        string hash PK
+        int size
+        boolean binary
+    }
+    artifact_files {
+        string id PK
+        string loopId FK
+        string path
+        string hash FK
+        boolean deleted
+    }
+    run_snapshots {
+        string runId PK
+        string loopId FK
+        json manifest
+    }
+```
+
+## Key components
 
 | Component | Responsibility | Technology |
 |---|---|---|
@@ -65,7 +180,7 @@ Loopany is a pnpm monorepo with two packages: the server (`@loopany/server`) and
 | Daemon (`packages/daemon/src/`) | Poll-loop daemon + in-run callback; spawns the coding agent; syncs loop folders; CLI router; skill/hook installers; bin shim | Node ESM, chokidar, mcporter |
 | Prompt/skill module (`src/skill/`) | All prompt/skill prose compiled into the bundle via `?raw`; public skill, templates, bundles | Markdown, `?raw` imports |
 
-## Data Flow
+## Data flow
 
 1. **Run lifecycle.** A scheduler tick (cron fire, one-shot `nextRunAt`, or run-now) creates a pending run row and dispatches to the loop's machine. The daemon's HTTP poll claims it (an idle daemon opts into a server-held long-poll `wait:true` ~20s hold; with a run in flight it stays the classic ~3s short poll so the progress heartbeat flows). The daemon spawns the coding agent; the agent talks back via run-token verbs (`loopany report/show/set-*/reschedule/finish`, `/agent-api/loop`); the final `report()` persists transcript/metrics/artifacts and retires the run lease. A pending run on an unreachable machine is deferred (never failed); the next cron fire supersedes a still-waiting one as `skipped`.
 2. **Machine polling.** The daemon POSTs `/api/machine/poll` with its `dk_` device token, which re-stamps `machines.lastSeen`, returns pending runs to claim, the watch set (loop folders to sync), and optional server-chosen config.
@@ -75,6 +190,9 @@ Loopany is a pnpm monorepo with two packages: the server (`@loopany/server`) and
 
 ## Infrastructure
 
+Detailed technology stack, development tooling, CI/CD pipelines, environments, deployment procedures, and rollback live in `infrastructure.md`.
+Monitoring stack, alerting, and dashboards live in `observability.md`.
+
 - Hosting: Fly.io. Staging `loopany-testing` deploys on push to `main`; production `loopany-prod` (loopany.ai) auto-promotes only after a green staging deploy (single-machine, single-scheduler invariant).
 - Database: Postgres via a tiered driver. Embedded pglite when `DATABASE_URL` is unset (local/dev/tests); postgres-js on Supabase when set (pooler `:6543` for app traffic, direct `:5432` for migrations).
 - Object storage: Cloudflare R2 (`LOOPANY_R2_*`) for artifact bytes; in-memory store when unset.
@@ -82,7 +200,7 @@ Loopany is a pnpm monorepo with two packages: the server (`@loopany/server`) and
 - Observability: pino structured logging; `/api/health` returns `{ok, sha, builtAt}` baked from build args; post-deploy smoke asserts the served SHA.
 - Auth: Better Auth with a GitHub OAuth gate (`LOOPANY_AUTH_SECRET` required when gated); open mode (no auth) when the gate is off.
 
-## Architecture Decisions
+## Architecture decisions
 
 - Zero-exec invariant: the server never runs an LLM and never executes user code; it only stores/reads bytes and computes pure functions.
 - Machine connectivity is stateless HTTP polling with an opt-in server-held long-poll, not WebSocket.
