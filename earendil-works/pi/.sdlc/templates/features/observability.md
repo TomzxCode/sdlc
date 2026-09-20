@@ -1,6 +1,7 @@
 ---
 title: "<Feature Name>"
 status: draft
+session_link: "<filled by skill>"
 ---
 
 # Observability: <Feature Name>
@@ -43,6 +44,9 @@ status: draft
 | <name> | Liveness / Readiness | <path or method> | <what determines healthy> |
 
 ## Alerts
+
+When the monitoring stack is Prometheus-compatible, the normative alert definitions live in [`alerts.yaml`](alerts.yaml) (Prometheus rule format), written alongside this document.
+This section remains the human-readable summary; the runbook and notification details stay here.
 
 ### <Alert Name>
 

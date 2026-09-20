@@ -1,10 +1,11 @@
+<!-- session_link -->
 # Project Overview
 
 ## Purpose
 
 Pi is a minimal, self-extensible terminal coding agent harness.
 The core is deliberately small (four built-in tools, no sub-agents, no plan mode, no MCP, no permission popups) and is designed to be aggressively extended via TypeScript extensions, skills, prompt templates, themes, and pi packages.
-The monorepo ships a unified multi-provider LLM API (`pi-ai`), a stateful agent runtime (`pi-agent-core`), a custom terminal UI framework with differential rendering (`pi-tui`), the interactive coding agent CLI built on top of the others (`pi-coding-agent`), and the foundations for remote sessions: a transport-neutral CBOR protocol (`pi-protocol`), a transport-neutral remote session client (`pi-client`), an experimental session server (`pi-server`), a SQLite session storage backend (`pi-storage-sqlite-node`), and a model-backed evals harness (`pi-evals`).
+The monorepo ships a unified multi-provider LLM API (`pi-ai`), a stateful agent runtime (`pi-agent-core`), a custom terminal UI framework with differential rendering (`pi-tui`), the interactive coding agent CLI built on top of the others (`pi-coding-agent`), the foundations for remote sessions: a transport-neutral CBOR protocol (`pi-protocol`), a transport-neutral remote session client (`pi-client`), a session server (`pi-server`), a SQLite session storage backend (`pi-session-backend-sqlite-node`), and a model-backed evals harness (`pi-evals`), plus an app-composition runtime with facets, services, and replicated state (`chord`, standalone with no Pi dependencies), a durable conversation, task, and document runtime with in-memory storage (`pi-durable`), and vendor-neutral telemetry contracts and spans (`pi-telemetry`).
 
 ## Key Stakeholders
 
@@ -20,13 +21,17 @@ The monorepo ships a unified multi-provider LLM API (`pi-ai`), a stateful agent 
 
 **In scope:**
 
-- Nine workspace packages: `pi-ai`, `pi-agent-core`, `pi-tui`, `pi-coding-agent`, `pi-protocol`, `pi-client`, `pi-server`, `pi-storage-sqlite-node`, `pi-evals`.
+- Twelve workspace packages: `pi-ai`, `pi-agent-core`, `pi-tui`, `pi-coding-agent`, `pi-protocol`, `pi-client`, `pi-server`, `pi-session-backend-sqlite-node`, `pi-evals`, `chord`, `pi-durable`, `pi-telemetry`.
 - A terminal coding agent with read, bash, edit, and write tools plus session management.
 - An extension platform (custom tools, commands, events, UI, providers) that keeps the core minimal.
 - Multi-provider LLM access across 30+ providers with automatic auth resolution, token/cost tracking, tool-calling, and streaming.
 - An embeddable SDK and multiple run modes (interactive TUI, print, JSON, RPC).
-- Remote sessions: a CBOR wire protocol, a transport-neutral client, an experimental token-authenticated session server, and a SQLite session backend.
+- Remote sessions: a CBOR wire protocol, a transport-neutral client, a token-authenticated session server, and a SQLite session backend.
+- The legacy p1-orchestrator code formerly under `pi-server` (`server/src/legacy`) is removed and out of scope.
 - Behavioral, model-backed evals for measuring end-to-end workflow behavior.
+- App composition via `chord`: facets, services, and replicated state as a standalone runtime with no Pi dependencies.
+- Durable execution via `pi-durable`: conversation, task, and document runtimes with MemoryStorage.
+- Vendor-neutral telemetry contracts and spans via `pi-telemetry`.
 - Supply-chain hardening: pinned deps, lockfile governance, generated npm shrinkwrap, release smoke tests.
 
 **Out of scope:**
