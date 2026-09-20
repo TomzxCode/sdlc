@@ -57,6 +57,7 @@ erDiagram
     agents ||--o{ agent_runs : "executes"
     agents ||--o{ agent_task_sessions : "sessions"
     agents ||--o{ agent_ratings : "rated_by"
+    agents ||--o{ agent_activity_events : "emits"
     agents ||--o{ chat_sessions : "chats"
     agents ||--o{ chat_room_members : "joins"
     missions ||--o{ milestones : "contains"
@@ -89,7 +90,7 @@ erDiagram
 |---|---|---|
 | `@fusion/dashboard` | React SPA (board, task detail, planning mode, command center) + Express API server with domain registrars | React, Express, i18next, EventSource/SSE |
 | `@runfusion/fusion` (CLI) | `fn` command surface, TUI, daemon/serve, pi extension carrier | Node CLI, `pnpm`-packaged, `pi` extension |
-| `@fusion/core` | Domain model and task store: tasks, lifecycle moves, workflows IR, planner/overseer state, agents, missions/goals/research, secrets, settings, mesh/projects, plugins | TypeScript, PostgreSQL |
+| `@fusion/core` | Domain model and task store: tasks, lifecycle moves, workflows IR, planner/overseer state, agents, missions/goals/research, secrets, settings, mesh/projects, plugins; DB layer under `packages/core/src/db/` | TypeScript, Drizzle ORM, PostgreSQL (embedded-postgres PG15) |
 | `@fusion/engine` | Triage, scheduler, executor (agent sessions), merger (squash/rebase/conflict), review service, workflow-graph executor + node runners, self-healing sweeps, agent heartbeat | TypeScript |
 | `@fusion/desktop` / `@fusion/mobile` | Native shells wrapping the dashboard SPA via a shared `window.fusionShell` bridge | Electron / Capacitor |
 | `@fusion/plugin-sdk`, `plugins/*` | Third-party plugin authoring SDK and bundled plugins | TypeScript |
@@ -103,7 +104,7 @@ Tasks are created via the dashboard, CLI, import, or mission/research flows and 
 ## Infrastructure
 
 - **CI/CD:** GitHub Actions (`.github/workflows/`): `pr-checks.yml` (thin merge gate: lint, typecheck, build, gate), `full-suite.yml` (non-blocking on main), plus mobile, desktop-packaging, release, version, and test-release workflows
-- **Storage:** PostgreSQL runtime storage (embedded PostgreSQL binaries for local runs; see `docs/storage.md`); file-backed payloads; archives with soft-delete semantics
+- **Storage:** PostgreSQL runtime storage via Drizzle ORM (embedded-postgres PG15 binaries for local runs, DB layer under `packages/core/src/db/`; see `docs/storage.md`); file-backed payloads; archives with soft-delete semantics
 - **Observability:** structured diagnostic logging (see `docs/diagnostics.md`), run-audit event rows, Command Center health/usage surfaces
 - **Packaging:** `pnpm` workspace; desktop/mobile signed binaries (macOS/Windows signing scripts); Docker builds (`Dockerfile`, `docs/docker.md`)
 - **Localization:** i18next catalogs across locales (READMEs in ES/FR/KO/ZH)

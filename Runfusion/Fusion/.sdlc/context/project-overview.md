@@ -2,7 +2,11 @@
 
 ## Purpose
 
-Fusion is a software factory: a model- and surface-agnostic multi-agent orchestrator that converts a rough idea into planned, built, reviewed, and merged code. It is an AI-orchestrated task board that drives tasks through a workflow graph (planning → todo → in-progress → in-review → done), with AI agents that plan, implement, review, and ship work in isolated git worktrees behind a human approval gate. It is neutral by design across models, workflows, and surfaces: the same board is controllable from a desktop dashboard, a web UI, a mobile shell, and a terminal CLI, and it runs across many machines (nodes) in a fleet. Only the `@runfusion/fusion` package is published; it is the CLI plus a `pi` extension. The `@fusion/core`, `@fusion/dashboard`, and `@fusion/engine` packages are private and bundled into it.
+Fusion is a software factory: a model- and surface-agnostic multi-agent orchestrator that converts a rough idea into planned, built, reviewed, and merged code.
+It is an AI-orchestrated task board that drives tasks through a workflow graph (planning → todo → in-progress → in-review → done), with AI agents that plan, implement, review, and ship work in isolated git worktrees behind a human approval gate.
+It is neutral by design across models, workflows, and surfaces: the same board is controllable from a desktop dashboard, a web UI, a mobile shell, and a terminal CLI, and it runs across many machines (nodes) in a fleet.
+Only the `@runfusion/fusion` package is published; it is the CLI plus a `pi` extension.
+The `@fusion/core`, `@fusion/dashboard`, and `@fusion/engine` packages are private and bundled into it.
 
 ## Key Stakeholders
 

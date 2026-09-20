@@ -33,7 +33,11 @@
 
 ## Commit Messages
 
-Conventional Commits with a Fusion task ID prefix: `feat(FN-XXX):`, `fix(FN-XXX):`, `test(FN-XXX):`. One commit per step boundary. Task-worktree commits carry a `Fusion-Task-Id: FN-NNNN` trailer. Release commits are `chore(release): vX.Y.Z`. Branch work uses isolated git worktrees and keeps the primary checkout on `main`.
+- Conventional Commits with a Fusion task ID prefix: `feat(FN-XXX):`, `fix(FN-XXX):`, `test(FN-XXX):`.
+- Use one commit per step boundary.
+- Task-worktree commits carry a `Fusion-Task-Id: FN-NNNN` trailer.
+- Release commits are `chore(release): vX.Y.Z`.
+- Branch work uses isolated git worktrees and keeps the primary checkout on `main`.
 
 ## Branching
 
