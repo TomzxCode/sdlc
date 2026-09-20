@@ -140,9 +140,11 @@ The `schema.dbml` companion is therefore not applicable.
 | `packages/vscode` | VS Code extension with sidebar webview | VS Code Extension API, esbuild |
 | `packages/docs` | Documentation website source | MDX |
 | `packages/electron/ssh-manager.mjs` | SSH connection management for remote OpenChamber instances (Electron only) | Node SSH2, Electron IPC |
-| `packages/web/server/lib/preview/` | Preview browser proxy for locally running dev web apps | http-proxy-middleware |
+| `packages/web/server/lib/dev-servers/` | Dev-server discovery for the preview browser: enumerates listening sockets to answer what is running that the user could preview | lsof, netstat, proc net TCP parsing |
+| `packages/web/server/lib/linear/` | Linear integration: OAuth (PKCE, multi-workspace), issue lookup, team-to-project mapping, status updates, opt-in session status comments | Express, Linear GraphQL |
 | `packages/web/server/lib/walkthrough/` | AI-guided changes walkthrough: groups diff hunks into ordered stops and chapters using the small model | Express, hunk hashing, small-model calls |
 | `packages/web/server/lib/openchamber-control/` + `agent-tool/` | Control plane: typed action allowlist (project, model, session, scheduled tasks) shared by the CLI and the managed `openchamber` agent tool | Express, native OpenCode tool plugin |
+| `packages/web/server/lib/spaces/` | Isolated spaces backend (stage 1a, unwired: no routes, settings, or UI yet): space manager, place registry, local Docker place, hardening checker, label scheme | Docker CLI via spawned processes, no shell |
 
 ## Data Flow
 

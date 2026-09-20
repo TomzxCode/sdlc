@@ -39,6 +39,7 @@ Terms within each table are sorted alphabetically by the first column.
 | Hunk | A stable content-addressed unit of a unified diff (id is a hash of the hunk header and body plus scope and path). Hunk ids let walkthrough stops prove staleness when the code they describe changes. |
 | Inline Comments/Annotations | User annotations on specific lines of files within session messages, used for review and collaboration. |
 | Internationalization/i18n | Multi-language support using Lingui, with locale files for English, Polish, Chinese, and other languages. |
+| Linear Integration | Linear OAuth (PKCE, multi-workspace), issue lookup, Linear-team-to-project mapping, issue status updates, and opt-in session status comments posted on Linear issues. |
 | MCP | Model Context Protocol integration for connecting AI agents to external tools and data sources through a standardized protocol. |
 | Mini Chat | A compact Electron window for focused conversations without the full workspace UI, supporting quick prompts and responses. |
 | Multi-run | Running multiple AI agents in parallel from a single prompt, each in an isolated git worktree. Results are collected and presented side by side. |
@@ -47,6 +48,7 @@ Terms within each table are sorted alphabetically by the first column.
 | OpenChamber | This project; a multi-runtime GUI client for OpenCode providing web, desktop (Electron), and VS Code extension interfaces. |
 | Passkeys | Passwordless authentication for the OpenChamber UI using platform passkeys (WebAuthn) instead of a password. |
 | Permission | A security gate where the AI requests user approval before executing an operation (file write, command run, etc.). Permissions can be approved once or permanently. |
+| Place | Where isolated spaces run: local Docker, Docker on another machine over SSH, a Kubernetes cluster, or Apple `container`. The user can configure several places and one default. Only the local Docker place is implemented so far. |
 | Plan View | A structured UI view that visualizes the AI's step-by-step plan for completing a task, showing files to modify, commands to run, and their dependencies. |
 | Plugins | OpenCode plugin scripts (JS/TS) that extend agent behavior, installable as npm packages or local files with configurable options. |
 | Preview Browser | An embedded browser view for previewing locally running web applications during development, accessible from within OpenChamber. |
@@ -64,6 +66,7 @@ Terms within each table are sorted alphabetically by the first column.
 | Skills | Reusable automation packages that extend agent behavior, defining tools, prompts, and workflows. Skills are installed from a registry or local sources. |
 | Skills Catalog | A registry of available skills that users can browse, install, and configure to extend agent capabilities. |
 | Snippets | Reusable text templates that can be expanded in the chat input via autocomplete, supporting global and project-level scopes with aliases. |
+| Space | One isolated container holding an agent and a copy of the project code, managed by the space manager on a place. Spaces are created, listed, stopped, started, removed, and verified; every resource they own carries `openchamber.space` labels. |
 | Sync Layer | Client-side infrastructure for real-time state synchronization between the server and UI via SSE/WebSocket, including reconnect logic, coalescing, and store dispatch. |
 | Text Selection Context Menu | A context menu that appears on text selection in messages and editors, providing actions like copy, explain, refactor, or fix. |
 | Tunnel | A Cloudflare tunnel providing secure remote access to a local OpenChamber instance without exposing ports or configuring DNS. |

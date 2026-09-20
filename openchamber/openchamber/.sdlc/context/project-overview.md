@@ -29,6 +29,7 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 - CLI for starting, stopping, configuring, and tunneling the web server
 - Cloudflare tunnel integration for remote access
 - Git/GitHub workflows (commits, PRs, branch management, worktrees)
+- Linear integration (OAuth, issue lookup, team-to-project mapping, status updates, session status comments)
 - Integrated terminal (ghostty-web, bun-pty/node-pty)
 - Voice input (streaming dictation, local sherpa-onnx or OpenAI-compatible Whisper endpoints) and text-to-speech output
 - Multi-agent/multi-run sessions with isolated worktrees
@@ -45,11 +46,11 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 - Desktop SSH remote host management with port forwarding
 - Startup service (systemd, launchd) integration
 - Localization/i18n (12 locales including German, French, Japanese, Korean, Polish, Chinese simplified and traditional)
+- Isolated spaces backend (Docker place and space manager, stage 1a, unwired: no routes, settings, or UI yet)
 
 **Out of scope:**
 
 - The OpenCode server itself (separate project at opencode.ai)
-- Linear integration (on roadmap)
 - Built-in browser for running dev apps (on roadmap, preview browser exists for local dev servers)
 
 ## Key Constraints
