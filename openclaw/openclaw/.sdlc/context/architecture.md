@@ -42,7 +42,9 @@
 | CLI | Command-line interface for configuration, plugins, channels, operations | TypeScript, yargs |
 | Config System | JSON schema validation, file I/O, env var substitution, merge-patch | TypeScript, zod |
 | Control UI | Web dashboard for chat and administration | TypeScript, Lit web components |
-| Mobile/Desktop Apps | Companion applications for macOS, iOS, Android, Windows | Swift (iOS/macOS), Kotlin (Android), C# (Windows) |
+| Mobile/Desktop Apps | Companion applications for macOS, iOS, Android, Windows, Linux | Swift (iOS/macOS), Kotlin (Android), C# (Windows), Tauri (Linux) |
+| Rust Crates | Gateway client transport/policy and node host runtime in `crates/` | Rust (openclaw-gateway-client, openclaw-node-host) |
+| Agent Skills | Bundled agent skill definitions in `skills/` shipped with the package | Markdown with frontmatter |
 
 ## Data Flow
 
@@ -60,7 +62,7 @@
 
 | Area | Technology |
 |---|---|
-| Runtime | Node.js 22.22.3+, 24.15+, or 25.9+ (26 recommended), Bun compatible |
+| Runtime | Node.js `>=24.16.0 <25 \|\| >=26.1.0` (26 recommended), Bun compatible |
 | State storage | SQLite via Kysely query builder |
 | Configuration | JSON files with zod schema validation |
 | CI/CD | GitHub Actions, Blacksmith Testbox |
@@ -75,7 +77,7 @@
 ## Architecture Decisions
 
 Key decisions are recorded in `.sdlc/knowledge/decisions/`. Notable patterns include:
-- Single-user architecture: no multi-tenancy, simplified auth and state management
+- Single trust-domain architecture: team deployment shares one control plane via configuration, not multi-tenant isolation
 - SQLite-first: all runtime state in SQLite, no JSON sidecar files
 - Plugin facade pattern: plugins import core only via `openclaw/plugin-sdk/*`
 - No silent config compat: runtime reads canonical config only; migrations handled by `openclaw doctor --fix`
