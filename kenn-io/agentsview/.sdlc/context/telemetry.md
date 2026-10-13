@@ -13,15 +13,22 @@
 
 - Event names use snake_case.
 - Only explicitly allowlisted events may be sent.
-- The allowlist is enforced in code via kittelemetry.WithAllowedEvent.
+- The allowlist is enforced in code via kittelemetry.WithAllowedEvent (see internal/telemetry/telemetry.go).
 - Any non-allowlisted event is rejected through EventAllowed and SanitizeProperties.
-- No per-feature event naming scheme exists beyond the single current event.
 
 ## Existing event taxonomy
 
 | Event | Trigger | Key properties |
 |---|---|---|
 | daemon_active | Server startup and every 24 hours while the daemon runs | application=agentsview, version, commit, OS, CPU architecture, source=daemon, installation ID as DistinctId |
+| app_opened | App surface opened | surface=web |
+| visit_ended | App visit ended | surface=web, duration_bucket (under_1m, 1_to_5m, 5_to_30m, over_30m) |
+| screen_viewed | Screen viewed (daily-claimed per screen) | screen (sessions, usage, activity, trends, recall, quality, pinned, trash, recent-edits, data, settings), surface=web |
+| search_run | Search executed | query_type (text, semantic, hybrid) |
+| session_viewed | Session viewed | agent (per-agent type) |
+| export_run | Export executed | format (html, insight_html, csv, markdown_link, gist, insight_gist) |
+| insight_generated | Insight generated | kind (per insight kind) |
+| analytics_viewed | Analytics page viewed | page (usage, activity, trends, quality) |
 
 - The ping runs in the background and never blocks startup or operation.
 - Person-profile processing is disabled with $process_person_profile=false.

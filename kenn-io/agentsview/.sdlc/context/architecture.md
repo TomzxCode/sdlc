@@ -35,7 +35,7 @@
 | Sync Engine (internal/sync) | Session file discovery, parsing, sanitization, DB writes | Go, fsnotify |
 | Session Watcher (internal/sessionwatch) | Polls one session DB state and source file for live refresh | Go, polling |
 | Background Poller (internal/poller) | Runs interval-driven background jobs | Go |
-| Parsers (internal/parser) | Per-agent session file format parsers (50+ agents) | Go |
+| Parsers (internal/parser) | Per-agent session file format parsers (70+ agents, 76 AgentType values) | Go |
 | SQLite DB (internal/db) | Primary archive: sessions, messages, FTS5, analytics, usage | SQLite, FTS5 |
 | Hybrid Search (internal/db RRFMerge) | Fuses FTS5 and vector legs with reciprocal-rank fusion | Go |
 | HTTP Server (internal/server) | REST API (Huma), SPA serving, SSE events, bearer auth, CORS | Go, Huma v2 |
@@ -45,8 +45,9 @@
 | DuckDB (internal/duckdb) | Push sync from SQLite, read-only serve, Quack protocol | Go, duckdb driver |
 | ClickHouse (internal/clickhouse) | Push sync from SQLite, remote read-only mirror and serve | Go, ClickHouse driver |
 | Vector (internal/vector) | Semantic search index, embeddings encoder and manager | Go, sqlite-vec |
-| Raw Ingest (internal/rawcapture, internal/rawcheckpoint, internal/rawsync, internal/rawupload, internal/rawclient, internal/rawderive, internal/rawwatch, internal/rawpath) | Authenticated raw custody transport from laptop outbox to derived sessions | Go, device tokens |
+| Raw Ingest (internal/rawcapture, internal/rawcheckpoint, internal/rawsync, internal/rawupload, internal/rawclient, internal/rawderive, internal/rawwatch, internal/rawpath, internal/rawarchive, internal/rawtest) | Authenticated raw custody transport from laptop outbox to derived sessions | Go, device tokens |
 | Remote Sync (internal/remotesync) | Archive mirror and delta import over SSH and HTTP | Go, SSH, HTTP |
+| S3 Ingest (internal/ingest, internal/capture, internal/parser S3Discovery) | Opt-in session discovery from S3-compatible roots | Go, minio-go |
 | MCP Server (internal/mcp) | Exposes archive tools over stdio and HTTP transports | Go, MCP |
 | Activity (internal/activity) | Activity aggregation engine and report artifacts | Go |
 | Insight (internal/insight) | AI-generated canned and generated session insights | Go |
@@ -55,6 +56,8 @@
 | Artifacts (internal/artifact) | Canonical artifact export, import, store, and folder transport | Go |
 | Config (internal/config) | TOML-based config, env vars, CLI flags | Go, BurntSushi/toml |
 | Telemetry (internal/telemetry) | Anonymous PostHog reporter with env opt-out | Go, PostHog |
+| Shared reads (internal/readbase, internal/storage) | Shared replica and mirror catalog reads | Go |
+| Secrets (internal/secrets) | Secret scanning with redacted findings | Go |
 
 ## Data flow
 

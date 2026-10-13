@@ -22,7 +22,7 @@ Everything stays local with no accounts by default, and sharing features are opt
 ## Scope
 
 **In scope:**
-- Session discovery, parsing, and indexing from 70+ AI coding agents (72 AgentType values in internal/parser/types.go)
+- Session discovery, parsing, and indexing from 70+ AI coding agents (76 AgentType values in internal/parser/types.go)
 - Full-text search (FTS5) across all message content
 - Semantic search (opt-in) via OpenAI-compatible embeddings
 - Token usage and cost tracking with automatic pricing
