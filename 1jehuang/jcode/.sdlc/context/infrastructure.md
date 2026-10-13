@@ -9,7 +9,7 @@
 | Mobile client | Swift | ios/ (JCodeKit plus JCodeMobile) |
 | Telemetry store | SQL via Cloudflare D1 | telemetry-worker migrations |
 | Installers | Bash and PowerShell | scripts plus jcode.sh |
-| Workspace | Cargo workspace | 84 crates under crates/ plus root |
+| Workspace | Cargo workspace | 88 crates under crates/ plus root |
 
 ## Development tooling
 
