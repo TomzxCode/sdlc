@@ -1,3 +1,83 @@
-agents_ref: efeebba715e7141c09210195be46afad8ca262f5
+# SDLC Sync Metadata
+# Tracks which version of agents was used for the last sync.
+# Used by sync-sdlc to detect process/template changes and migrate existing files.
+agents_ref: f248f3390b3eb828f852ef42dbb4cad98ae5724e
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-09-20
+last_synced: 2026-10-13
+code_ref: 0d240f1d4ade1c93dad1135fcb9d51decd25386b
+code_index:
+  "p1-provider-auth":
+    - crates/jcode-provider-core/
+    - crates/jcode-provider-anthropic/
+    - crates/jcode-provider-anthropic-runtime/
+    - crates/jcode-provider-openai/
+    - crates/jcode-provider-openai-runtime/
+    - crates/jcode-provider-gemini/
+    - crates/jcode-provider-gemini-runtime/
+    - crates/jcode-provider-bedrock/
+    - crates/jcode-provider-copilot/
+    - crates/jcode-provider-copilot-runtime/
+    - crates/jcode-provider-cursor-runtime/
+    - crates/jcode-provider-openrouter/
+    - crates/jcode-provider-openrouter-runtime/
+    - crates/jcode-provider-antigravity/
+    - crates/jcode-provider-antigravity-runtime/
+    - crates/jcode-provider-grok-build-runtime/
+    - crates/jcode-provider-metadata/
+    - crates/jcode-provider-env/
+    - crates/jcode-provider-doctor/
+    - crates/jcode-azure-auth/
+    - crates/jcode-auth-types/
+    - src/cli/auth_test.rs
+    - src/cli/auth_import.rs
+  "p2-agent-memory":
+    - crates/jcode-memory-types/
+    - crates/jcode-embedding/
+  "p3-swarm-coordination":
+    - crates/jcode-swarm-core/
+    - crates/jcode-plan/
+  "p4-terminal-ui":
+    - crates/jcode-tui/
+    - crates/jcode-tui-core/
+    - crates/jcode-tui-anim/
+    - crates/jcode-tui-markdown/
+    - crates/jcode-tui-mermaid/
+    - crates/jcode-tui-messages/
+    - crates/jcode-tui-permissions/
+    - crates/jcode-tui-render/
+    - crates/jcode-tui-session-picker/
+    - crates/jcode-tui-account-picker/
+    - crates/jcode-tui-style/
+    - crates/jcode-tui-tool-display/
+    - crates/jcode-tui-usage-overlay/
+    - crates/jcode-tui-visual-debug/
+    - crates/jcode-tui-workspace/
+    - crates/jcode-terminal-image/
+    - crates/jcode-terminal-launch/
+    - crates/jcode-terminal-prompt/
+  "p5-session-resume-replay":
+    - crates/jcode-session-types/
+    - crates/jcode-message-types/
+    - crates/jcode-storage/
+    - crates/jcode-import-core/
+  "p6-ambient-mode":
+    - crates/jcode-ambient-types/
+    - crates/jcode-background-types/
+    - crates/jcode-overnight-core/
+  "p7-harness-api-sdk":
+    - crates/jcode-harness-api/
+    - crates/jcode-harness-api-server/
+    - crates/jcode-sdk/
+    - sdk/typescript/
+    - ios/
+  "p8-telemetry":
+    - crates/jcode-telemetry-core/
+    - telemetry-worker/
+    - TELEMETRY.md
+  "p9-install-and-update":
+    - crates/jcode-update-core/
+    - scripts/install.sh
+    - scripts/install_release.sh
+    - scripts/install.ps1
+  "p10-context-compaction":
+    - crates/jcode-compaction-core/

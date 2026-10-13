@@ -12,7 +12,7 @@
 | Transcript endpoint | `https://telemetry.jcode.sh/v1/transcript` (optional transcript sharing only) |
 | Full disclosure | `TELEMETRY.md` in repo root |
 | Client implementation | `crates/jcode-telemetry-core/src/` |
-| Server implementation | `telemetry-worker/` (Worker source, `schema.sql`, 26 migrations) |
+| Server implementation | `telemetry-worker/` (Worker source, `schema.sql`, 29 migrations) |
 
 ## Event Naming Conventions
 
@@ -44,12 +44,16 @@
 | `discovery` | Each `discover_tools` attempt completes | `request_id`, `phase`, `category`, `selected_tool`, `outcome`, `failure_reason`, `latency_ms` |
 | `todo_session` | Active session with todos ends | `correlation_id`, `todos_created`, `todos_completed`, `todos_abandoned`, confidence score aggregates |
 | `transcript_upload` | Consented non-empty session closes or crashes | `upload_id`, `id`, `consent_version`, `provider`, `model`, `message_count` |
+| `usage_report` | Each completed model response | Token counts and model labels only, per-day per-model rollup in `daily_model_usage` (migration `0027`) |
+| `desktop_active` | Desktop companion active check-in | Fleet activity reporting in `desktop-fleet.sql` (migration `0029`) |
+| `desktop_upgrade` | Desktop companion version change | Fleet upgrade reporting (migration `0029`) |
+| `desktop_update` | Desktop self-update attempt completes | Outcome fields in `desktop_update_details` by `install_kind` and failure stage (migration `0029`) |
 
 - Session cadence fields include hour and weekday buckets, gap seconds, burst counts, and concurrency snapshots.
 - Agent time fields include active milliseconds, model versus tool split, idle time, and time to first useful action.
 - Retention helpers include days since install plus active days in the last 7 and 30 days.
 - Full field definitions live in `TELEMETRY.md`.
-- Storage definitions live in `telemetry-worker/schema.sql` and migrations `0001` through `0026`.
+- Storage definitions live in `telemetry-worker/schema.sql` and migrations `0001` through `0029`.
 
 ## Identity Resolution
 
