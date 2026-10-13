@@ -41,7 +41,7 @@ The agent autonomously creates and improves skills from its own experience, pers
 
 ## Key Constraints
 
-- **Python 3.11 through 3.13** (capped below 3.14 for wheel compatibility)
+- **Python 3.11 through 3.14** (`requires-python = ">=3.11,<3.15"`; 3.14 is the newest version with verified wheels)
 - **Dependencies pinned with upper bounds** for supply-chain attack surface reduction (post-litellm compromise policy)
 - **Per-conversation prompt caching is sacred:** system prompt must be byte-stable for the life of a conversation; mid-conversation context mutation is forbidden
 - **The core is a narrow waist:** every model tool is sent on every API call, so new core tools are the last resort — capability lives at the edges via CLI + skill, service-gated tools, plugins, and MCP servers

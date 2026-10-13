@@ -1,6 +1,7 @@
 ---
 title: "<Feature Name>"
 status: draft
+session_link: "<filled by skill>"
 ---
 
 # Codebase Analysis: <Feature Name>
@@ -21,7 +22,27 @@ status: draft
 
 ## Dependency and Coupling Map
 
-<How the relevant components depend on each other and on external systems. Call out tight coupling, shared state, synchronous vs. asynchronous boundaries, and the blast radius of a change.>
+```mermaid
+flowchart LR
+    Feature["<this feature>"]
+    CompA["<component>"]
+    CompB["<component>"]
+    Ext["<external system>"]
+    Feature --> CompA
+    CompA --> CompB
+    CompA --> Ext
+    classDef reuse fill:#dcfce7,stroke:#16a34a,color:#000
+    classDef extend fill:#dbeafe,stroke:#2563eb,color:#000
+    classDef refactor fill:#fef9c3,stroke:#ca8a04,color:#000
+    classDef replace fill:#fee2e2,stroke:#dc2626,color:#000
+    class CompA extend
+    class CompB reuse
+```
+
+Node classes match the change dispositions from the Changeability Assessment below (reuse / extend / refactor / replace).
+External systems appear as plain nodes.
+
+<Prose call-outs for tight coupling, shared state, synchronous vs. asynchronous boundaries, and the blast radius of a change. A component claimed to be loosely coupled but drawn with edges to every neighbor is apparent here immediately.>
 
 ## Changeability Assessment
 
@@ -35,7 +56,7 @@ status: draft
 
 ## Migration and Impact Considerations
 
-<For every Refactor or Replace disposition: the path from current to target behavior, backward compatibility, rollout strategy, what else breaks, and how to de-risk. Omit this section if the analysis is greenfield or contains only Reuse/Extend dispositions.>
+<For every Refactor or Replace disposition: the path from current to target behavior, backward compatibility, rollout strategy, what else breaks, and how to reduce the risk. Omit this section if the analysis is greenfield or contains only Reuse/Extend dispositions.>
 
 ## Assumptions About Existing Code
 

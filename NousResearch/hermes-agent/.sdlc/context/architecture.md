@@ -32,11 +32,11 @@ flowchart TB
 | AIAgent (run_agent.py) | Core conversation loop — manages chat completions API calls, tool-calling iterations, interrupt handling, budget tracking, subagent spawning | Python, OpenAI SDK |
 | HermesCLI (cli.py) | Interactive CLI orchestrator with prompt_toolkit REPL, Rich panels, skin engine, slash command dispatch (~70 commands) | Python, prompt_toolkit, Rich |
 | Tool Registry (tools/registry.py) | Central registry for tool schemas and handlers with a dispatch() entry point, auto-discovering tools from tools/*.py at import time | Python |
-| Tool Implementations (tools/*.py) | ~260 tool modules including topical facade siblings — terminal, file, web, browser, vision, delegation, cron, kanban, etc., each self-registering at import time | Python |
+| Tool Implementations (tools/*.py) | ~276 tool modules including topical facade siblings — terminal, file, web, browser, vision, delegation, cron, kanban, etc., each self-registering at import time | Python |
 | Toolset Definitions (toolsets.py) | Composable tool groupings for platforms and scenarios (hermes-cli, hermes-telegram, web, browser, file, etc.) | Python |
 | Model Tools (model_tools.py) | Orchestration layer — tool discovery, schema collection, handle_function_call() dispatch, gating, MCP integration, approval gates | Python |
 | Gateway Runner (gateway/run.py) | Async runtime for all messaging platforms — session lifecycle, stream dispatch, approval flow, slash command dispatch, structured as a facade with run_*.py siblings | Python, asyncio |
-| Platform Adapters (gateway/platforms/ + plugins/platforms/) | Base adapter ABC, shared ingress helpers, and some in-tree adapters (Signal, webhook, API server, Weixin, WhatsApp Cloud, etc.) stay in gateway/platforms/, while the 22 canonical per-platform adapters (Telegram, Discord, Slack, Matrix, email, SMS, etc.) live under plugins/platforms/ | Python |
+| Platform Adapters (gateway/platforms/ + plugins/platforms/) | Base adapter ABC, shared ingress helpers, and some in-tree adapters (Signal, webhook, API server, Weixin, WhatsApp Cloud, etc.) stay in gateway/platforms/, while the 21 canonical per-platform adapters (Telegram, Discord, Slack, Matrix, email, SMS, etc.) live under plugins/platforms/ | Python |
 | TUI Frontend (ui-tui/) | Ink (React) terminal UI with composer, transcript, session picker, slash commands | TypeScript, Ink, React |
 | TUI Gateway (tui_gateway/) | Python JSON-RPC backend over stdio serving the TUI frontend | Python |
 | Electron Desktop (apps/desktop/) | Standalone Electron desktop app with its own React composer and slash-command pipeline | TypeScript, Electron, React, nanostores |
@@ -45,9 +45,9 @@ flowchart TB
 | Cron Scheduler (cron/scheduler.py) | Tick loop for scheduled jobs — duration, cron expressions, ISO timestamps | Python |
 | Curator (agent/curator.py) | Background skill lifecycle maintenance — tracks usage, auto-archives stale agent-created skills | Python |
 | Configuration System (hermes_cli/config.py) | config.yaml with deep-merge from DEFAULT_CONFIG, profile-aware paths, .env for secrets only | Python |
-| Session Store (hermes_state.py + hermes_state_*.py) | SQLite database with FTS5 full-text search for conversation history, structured as a SessionDB facade with ~28 topical siblings | Python, SQLite |
+| Session Store (hermes_state.py + hermes_state_*.py) | SQLite database with FTS5 full-text search for conversation history, structured as a SessionDB facade with 33 topical siblings | Python, SQLite |
 | Kanban Board (hermes_cli/kanban*.py, tools/kanban_tools.py) | Durable SQLite-backed multi-agent work queue — boards, tasks, assignees, claims, comments, attachments, dependency links, with the dispatcher running inside the gateway by default | Python |
-| Observer Hooks (plugins/observability/) | Backend-neutral telemetry contract (trace/metric/audit/replay/export) consumed by the Langfuse plugin | Python |
+| Observer Hooks (agent/monitoring/ + Langfuse plugin) | Backend-neutral telemetry contract (trace/metric/audit/replay/export) consumed by the Langfuse plugin | Python |
 
 ## Data Flow
 
