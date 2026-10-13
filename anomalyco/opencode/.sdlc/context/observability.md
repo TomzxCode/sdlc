@@ -14,8 +14,8 @@
 
 | Library | Pillar | Configuration |
 |---|---|---|
-| `@effect/opentelemetry` plus `@opentelemetry/api`, `@opentelemetry/context-async-hooks`, `@opentelemetry/exporter-trace-otlp-http`, `@opentelemetry/sdk-trace-base` (and `sdk-trace-node` in `packages/opencode`) | Tracing | `packages/core/src/observability/otlp.ts`, active only when an OTLP endpoint flag is set |
-| Effect `Logger` with structured formatter in `packages/core/src/observability/logging.ts` | Logging | File logger to `opencode.log`, stderr gated by env, OTLP log export gated by endpoint |
+| `@effect/opentelemetry` plus `@opentelemetry/api`, `@opentelemetry/context-async-hooks`, `@opentelemetry/exporter-trace-otlp-http`, `@opentelemetry/sdk-trace-base` | Tracing | `packages/util/src/observability/otlp.ts`, active only when an OTLP endpoint flag is set |
+| Effect `Logger` with structured formatter in `packages/util/src/observability/logging.ts` | Logging | File logger to `opencode.log`, stderr gated by env, OTLP log export gated by endpoint |
 | `@sentry/solid` in `packages/app` and `packages/desktop` | Errors | Initialized in `packages/app/src/entry.tsx` when `VITE_SENTRY_DSN` is set |
 
 ## Log aggregation
@@ -37,10 +37,9 @@
 - Span export uses `BatchSpanProcessor` with `OTLPTraceExporter` to `{endpoint}/v1/traces`.
 - Setup registers `AsyncLocalStorageContextManager` as the global context manager so AI SDK spans parent correctly.
 - Tracing layers are empty when no endpoint is set, so local runs emit no remote spans.
-- LLM calls in `packages/opencode/src/session/llm.ts` attach tracing only when `experimental.openTelemetry` is enabled.
-- The LLM path resolves the optional `OtelTracer` service and wraps `startSpan` to add a `session.id` attribute.
-- Agent generation in `packages/opencode/src/agent/agent.ts` forwards the same experimental OpenTelemetry tracer option.
-- Named Effect spans cover operations such as `Session.updateMessage`, `Session.updatePart`, `Tool.execute`, and `GlobalHttpApi.health`.
+- LLM calls in `packages/core/src/session/model-transport.ts` attach tracing spans alongside session operations.
+- Agent generation forwards the same experimental OpenTelemetry tracer option.
+- Named Effect spans cover operations such as session updates, tool execution, and model transport.
 - Sampling strategy and propagation format were not conclusively determined from the repo.
 
 ## Alerting
@@ -73,8 +72,8 @@
 
 ## Health endpoints
 
-- `GET /global/health` exists in the instance HTTP API and returns healthy status plus server version.
-- No `/ready` or `/ping` endpoint was found.
+- No dedicated `/health`, `/ready`, or `/ping` endpoint was found in `packages/server/src` or `packages/protocol/src` in this pass.
+- The public API contract is served at `/openapi.json`.
 - No dedicated readiness versus liveness split was found.
 
 ## Error tracking

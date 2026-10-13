@@ -1,3 +1,78 @@
-agents_ref: efeebba715e7141c09210195be46afad8ca262f5
+agents_ref: 993718a297d6b3a4eff7755ef3c8ff5584129202
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-09-20
+last_synced: 2026-10-13
+code_ref: d8129ca1e036a967add1e7078679fd9b3697a180
+code_index:
+  "FEAT-0001-session-runtime":
+    - packages/core/src/session/
+    - packages/core/src/database/
+    - packages/core/src/execution
+  "FEAT-0002-agent-tool-system":
+    - packages/core/src/agent.ts
+    - packages/core/src/tool
+    - packages/core/src/permission
+    - packages/core/src/skill
+    - packages/core/src/command.ts
+  "FEAT-0003-llm-provider-layer":
+    - packages/ai/
+    - packages/core/src/models-dev
+    - packages/core/src/model-resolver.ts
+    - packages/http-recorder/
+  "FEAT-0004-terminal-ui":
+    - packages/tui/
+    - packages/cli/src/mini.ts
+    - packages/cli/src/mini-host.ts
+    - packages/theme/
+    - packages/latex/
+    - packages/merman/
+  "FEAT-0005-web-desktop-apps":
+    - packages/app/
+    - packages/desktop/
+    - packages/session-ui/
+    - packages/ui/
+    - packages/gui-extensions/
+    - services/update/
+  "FEAT-0006-http-api-server":
+    - packages/server/
+    - packages/protocol/
+    - packages/schema/
+    - packages/client/
+    - packages/httpapi-codegen/
+  "FEAT-0007-plugin-system":
+    - packages/plugin/
+    - packages/plugin-browser/
+    - packages/core/src/plugin
+  "FEAT-0008-sdk-editor-integrations":
+    - packages/sdk/
+    - sdks/vscode/
+  "FEAT-0009-llm-core-package":
+    - packages/ai/
+  "FEAT-0010-enterprise-cloud-platform":
+    - packages/console/
+    - packages/enterprise/
+    - packages/stats/
+    - packages/identity/
+    - services/files/
+    - infra/
+    - sst.config.ts
+  "FEAT-0011-acp-protocol":
+    - packages/cli/src/acp/
+  "FEAT-0012-slack-integration": []
+  "FEAT-0013-github-actions-integration":
+    - github/
+  "p1-codemode":
+    - packages/codemode/
+    - packages/core/src/codemode
+  "p2-config-system":
+    - packages/core/src/config
+    - packages/core/src/config.ts
+  "p3-session-sharing-sync":
+    - packages/function/
+  "p4-lsp-integration":
+    - packages/core/src/formatter
+    - packages/core/src/formatter.ts
+  "p5-docs-website":
+    - services/www/
+    - services/changelog/
+    - packages/posts/
+    - packages/web/
