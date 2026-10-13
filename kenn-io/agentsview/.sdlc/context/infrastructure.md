@@ -4,24 +4,24 @@
 
 | Component | Technology | Version |
 |---|---|---|
-| Language | Go | 1.27.0 |
+| Language | Go | 1.27.2 |
 | Module | go.kenn.io/agentsview | N/A (version from git describe via ldflags) |
 | HTTP API framework | Huma v2 (OpenAPI 3.1) | v2.39.1 |
 | CLI framework | cobra | v1.10.2 |
 | Primary database | SQLite via mattn/go-sqlite3, CGO, FTS5 build tag | v1.14.52 |
 | Vector search bindings | sqlite-vec via go.kenn.io/kit vector package | asg017 bindings v0.1.6 (indirect) |
-| PostgreSQL driver | pgx/v5 (optional push sync target, pgvector pg16 in tests) | v5.10.0 |
+| PostgreSQL driver | pgx/v5 (optional push sync target, pgvector pg16 in tests) | v5.11.0 |
 | DuckDB driver | duckdb-go/v2 (optional mirror and Quack reads) | v2.10505.0 |
 | ClickHouse driver | clickhouse-go/v2 (optional remote mirror) | v2.48.0 |
 | S3 discovery | minio-go/v7 | v7.3.0 |
 | AI tool integration | MCP Go SDK | v1.7.0 |
-| Frontend framework | Svelte | 5.57.0 |
-| Frontend toolchain | Vite+ via vp CLI (Vite, Rolldown, Vitest, Oxlint, Oxfmt) | vite-plus 0.3.1, Node >= 24.11.0 |
+| Frontend framework | Svelte | 5.57.1 |
+| Frontend toolchain | Vite+ via vp CLI (Vite, Rolldown, Vitest, Oxlint, Oxfmt) | vite-plus 1.0.0, Node >= 24.11.0 |
 | Frontend i18n | Paraglide JS with localStorage strategy | 2.20.2 |
 | Frontend design system | kit-ui (commit-pinned git dependency) | 4e2d49e768d07c4ebca7da8dd37ca54f01cac28e |
 | Frontend e2e | Playwright | 1.63.0 |
 | Desktop wrapper | Tauri (desktop/) with macOS DMG, Windows NSIS, Linux AppImage targets | See desktop/src-tauri |
-| API client generation | orval with Huma OpenAPI spec | 8.30.0 |
+| API client generation | orval with Huma OpenAPI spec | 8.39.0 |
 
 ## Development tooling
 
@@ -87,6 +87,7 @@
 |---|---|---|
 | GET /api/ping | 200 OK with `{ok: true, healthy: bool, service, version, pid, sync}` where healthy is false when the sync engine reports stalled | Local operator or CLI polling, no load balancer or k8s probe exists |
 | GET /api/openapi.json | 200 OK with the Huma OpenAPI 3.1 document | Contract tests and orval client generation |
+| GET /api/v1/raw-sync/health | 200 OK with raw-sync custody health | Raw-sync status checks |
 
 - No /health, /ready, /livez, or /metrics endpoint exists.
 - The /api/v1/health path seen in internal/server/compress_test.go is only a gzip-middleware test fixture, not a registered route.

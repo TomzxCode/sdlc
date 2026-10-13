@@ -1,3 +1,82 @@
-agents_ref: efeebba715e7141c09210195be46afad8ca262f5
+agents_ref: 993718a297d6b3a4eff7755ef3c8ff5584129202
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-09-20
+last_synced: 2026-10-13
+code_ref: 89ed5b800ebffc893f393d4e37b105cc8fc31947
+code_index:
+  "p1-session-sync":
+    - cmd/agentsview/session_sync.go
+    - internal/sync/
+    - internal/parser/
+    - internal/sessionwatch/
+    - internal/poller/
+    - internal/remotesync/
+  "p2-full-text-search":
+    - internal/db/search.go
+    - internal/db/search_content.go
+    - internal/db/cjk_fts_search.go
+  "p3-semantic-search":
+    - internal/vector/
+    - cmd/agentsview/embeddings.go
+  "p4-analytics-usage":
+    - internal/activity/
+    - internal/usagefacts/
+    - internal/pricing/
+    - internal/pricingrefresh/
+    - internal/cursorusage/
+    - internal/money/
+    - internal/signals/
+    - internal/friction/
+    - internal/insight/
+  "p5-postgresql-sync":
+    - internal/postgres/
+    - cmd/agentsview/pg.go
+  "p6-duckdb-mirror":
+    - internal/duckdb/
+    - cmd/agentsview/duckdb.go
+  "p7-admin-operations":
+    - internal/secrets/
+    - internal/export/
+    - internal/importer/
+    - internal/update/
+    - internal/config/
+    - internal/artifact/
+    - internal/skills/
+    - internal/chromehost/
+    - cmd/agentsview/archive.go
+    - cmd/agentsview/export.go
+    - cmd/agentsview/import.go
+    - cmd/agentsview/health.go
+  "p8-mcp-server":
+    - internal/mcp/
+    - internal/mcpdiscovery/
+    - cmd/agentsview/mcp.go
+  "p9-web-frontend":
+    - frontend/src/
+    - internal/server/
+    - internal/service/
+    - internal/servicehttp/
+    - internal/apiclient/
+    - internal/web/
+  "p10-recall-system":
+    - internal/recall/
+    - internal/db/recall.go
+  "p11-desktop-app":
+    - desktop/
+  "p12-clickhouse-mirror":
+    - internal/clickhouse/
+    - cmd/agentsview/backends.go
+    - cmd/agentsview/daemon_push.go
+  "p13-raw-sync":
+    - internal/rawcapture/
+    - internal/rawcheckpoint/
+    - internal/rawsync/
+    - internal/rawupload/
+    - internal/rawclient/
+    - internal/rawderive/
+    - internal/rawpath/
+    - internal/rawwatch/
+    - internal/rawarchive/
+    - internal/rawtest/
+    - internal/capture/
+    - internal/ingest/
+    - cmd/agentsview/raw_sync.go

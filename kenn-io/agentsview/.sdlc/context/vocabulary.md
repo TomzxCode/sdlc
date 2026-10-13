@@ -22,6 +22,7 @@
 | pull quote | A notable excerpt extracted from session messages, used in reports |
 | Quack | DuckDB extension and remote protocol for serving a DuckDB mirror over the network to trusted clients |
 | raw capture | Local preservation of original provider session files into a durable upload outbox without parsing their content |
+| raw archive | Durable store of original provider session files (raw_archive_* tables, internal/rawarchive) kept alongside derived sessions |
 | raw sync | Upload of original session files to an operator-managed server for later hosted processing |
 | recall entry | A distilled, reusable fact extracted from session history with evidence links |
 | remote sync | Syncing sessions from other machines via SSH or HTTP |

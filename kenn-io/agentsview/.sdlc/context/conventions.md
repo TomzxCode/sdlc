@@ -38,7 +38,6 @@ internal/           Go packages
   mcp/              MCP server
   mcpdiscovery/     MCP server discovery
   remotesync/       Remote sync (SSH, HTTP)
-  ssh/              SSH transport and session extraction
   secrets/          Secret scanning
   signals/          Session health signals
   skills/           Skill definitions
@@ -58,6 +57,17 @@ internal/           Go packages
   rawsync/          Raw sync manifests and device auth
   rawupload/        Raw event uploader
   rawwatch/         Raw archive watcher and auditor
+  rawarchive/       Raw archive store
+  rawtest/          Raw test helpers
+  readbase/         Shared replica and mirror reads
+  storage/          Storage helpers
+  chromehost/       Browser host helpers
+  ctxio/            Context IO helpers
+  friction/         Session friction signals
+  httputil/         HTTP helpers
+  ingest/           S3 ingest
+  serdejson/        JSON serialization helpers
+  volumeid/         Volume identity helpers
   usagefacts/       Usage fact records
   timeutil/         Time parsing utilities
   jsonutil/         JSON helpers
