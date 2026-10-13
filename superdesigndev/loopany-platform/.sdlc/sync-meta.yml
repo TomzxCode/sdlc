@@ -1,3 +1,48 @@
-agents_ref: efeebba715e7141c09210195be46afad8ca262f5
+agents_ref: 993718a297d6b3a4eff7755ef3c8ff5584129202
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-09-20
+last_synced: 2026-10-13
+code_ref: df8754820e16a8f233e4e91bae0aa844a1288886
+code_index:
+  "p1-scheduled-loop-engine":
+    - packages/server/src/scheduler/
+  "p2-machine-gateway":
+    - packages/server/src/gateway/index.ts
+    - packages/server/src/gateway/cli.ts
+    - packages/server/src/gateway/validate.ts
+    - packages/server/src/gateway/delivery.ts
+    - packages/server/src/gateway/prompt.ts
+    - packages/server/src/gateway/tokens.ts
+    - packages/server/src/gateway/retention.ts
+    - packages/server/src/gateway/rateLimit.ts
+  "p3-loopany-daemon-cli":
+    - packages/daemon/src/
+  "p4-artifact-sync-dashboard":
+    - packages/server/src/gateway/sync.ts
+    - packages/server/src/gateway/blobstore.ts
+    - packages/server/src/gateway/artifacts.ts
+    - packages/server/src/routes/api.artifact.$loopId.$.ts
+    - packages/daemon/src/watcher.ts
+    - packages/daemon/src/artifacts.ts
+  "p5-web-dashboard-teams":
+    - packages/server/src/routes/
+    - packages/server/src/components/
+    - packages/server/src/server/loopApi.ts
+    - packages/server/src/lib/machinePresence.ts
+  "p6-onboarding-first-run":
+    - packages/server/src/routes/onboarding.tsx
+    - packages/server/src/components/OnboardingWizard.tsx
+    - packages/server/src/components/OnboardingEntry.tsx
+    - packages/server/src/lib/onboardingState.ts
+    - packages/server/src/lib/firstRun.ts
+    - packages/server/src/lib/creationSteps.ts
+  "p7-template-market":
+    - packages/server/src/skill/templates/
+    - packages/server/src/skill/bundles/
+    - packages/server/src/server/templates.ts
+    - packages/server/src/server/bundles.ts
+    - packages/server/src/server/templateRatings.ts
+    - packages/server/src/routes/templates.tsx
+  "p8-notifications-channels":
+    - packages/server/src/gateway/notify.ts
+    - packages/server/src/components/ChannelAddForm.tsx
+    - packages/server/src/components/NotificationsModal.tsx
