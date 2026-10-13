@@ -1,3 +1,67 @@
-agents_ref: 6b6230734334f65a8fb183d8998d53b4857e5c63
+agents_ref: f248f3390b3eb828f852ef42dbb4cad98ae5724e
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-09-20
+last_synced: 2026-10-13
+code_ref: da1add76ed01c1f7ff5c74d09f0fb1dd8f814eda
+code_index:
+  "p1-task-board-lifecycle":
+    - packages/core/src/task-store
+    - packages/core/src/board
+    - packages/dashboard/src/routes/register-tasks.ts
+    - packages/dashboard/src/routes/register-task-workflow-routes.ts
+  "p2-workflows-workflow-editor":
+    - packages/core/src/workflows
+    - packages/engine/src/workflows
+    - packages/dashboard/src/routes/register-workflow-routes.ts
+    - packages/dashboard/src/routes/board-workflows.ts
+  "p3-planning-oversight":
+    - packages/core/src/planner
+    - packages/engine/src/overseer
+    - packages/dashboard/app/components/PlanningModeModal.tsx
+    - packages/dashboard/src/routes/register-planning-chat.ts
+  "p4-agent-execution-engine":
+    - packages/engine/src/executor.ts
+    - packages/engine/src/agent-heartbeat.ts
+    - packages/engine/src/scheduler.ts
+    - packages/engine/src/sandbox
+    - packages/core/src/run-audit
+  "p5-automated-review-merge-pr":
+    - packages/engine/src/merger.ts
+    - packages/engine/src/merge
+    - packages/dashboard/src/routes/register-pull-requests-routes.ts
+    - packages/dashboard/src/routes/register-gitlab.ts
+  "p6-missions-goals-research-evals":
+    - packages/core/src/missions
+    - packages/core/src/research
+    - packages/engine/src/mission-autopilot.ts
+    - packages/dashboard/src/routes/register-integrated-routers.ts
+  "p7-command-center-monitoring":
+    - packages/dashboard/app/components/command-center/CommandCenter.tsx
+    - packages/dashboard/src/routes/register-command-center-routes.ts
+    - packages/dashboard/src/routes/register-signal-routes.ts
+    - packages/dashboard/src/routes/register-usage-routes.ts
+  "p8-secrets-settings-configuration":
+    - packages/core/src/secrets
+    - packages/core/src/config
+    - packages/core/src/mcp-builtin-servers.ts
+    - packages/dashboard/src/routes/register-secrets-routes.ts
+  "p9-multi-node-shells":
+    - packages/core/src/mesh
+    - packages/core/src/central
+    - packages/cli/src/commands
+    - packages/desktop
+    - packages/mobile
+  "p10-plugins-extensions":
+    - packages/plugin-sdk
+    - packages/core/src/plugins
+    - packages/engine/src/plugins
+    - plugins/fusion-plugin-reports
+    - packages/pi-claude-cli
+  "p11-knowledge-graph-memory":
+    - packages/core/src/knowledge-graph
+    - packages/core/src/memory
+    - packages/dashboard/src/routes/register-knowledge-routes.ts
+  "p12-chat-messaging":
+    - packages/core/src/chat
+    - packages/dashboard/src/routes/register-chat-room-routes.ts
+    - packages/dashboard/src/routes/register-messaging-scripts.ts
+    - packages/dashboard/src/chat-project-services.ts
