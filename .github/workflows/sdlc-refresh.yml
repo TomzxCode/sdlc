@@ -1,7 +1,7 @@
 name: SDLC Refresh
 
 # Refresh a single project's .sdlc/ artifacts by running the sync-sdlc skill
-# from tomzx/agents against the upstream source, with opencode on the free
+# from tomzx/agents against the upstream source, with opencode2 on the free
 # opencode/muse-spark-1.3-contributor-free model from OpenCode Zen. Triggered manually, or called as a
 # reusable workflow by the SDLC Refresh (all) orchestrator, with the target as
 # organization/repository.
@@ -103,10 +103,11 @@ jobs:
           fi
           ls -la "$link"
 
-      - name: Install opencode
-        # The installer drops the binary at ~/.opencode/bin and appends it to
-        # $GITHUB_PATH, so `opencode` is on PATH for the steps below.
-        run: curl -fsSL https://opencode.ai/install | bash
+      - name: Install opencode2
+        # The v2 installer drops the binary at ~/.opencode/bin, appends it to
+        # $GITHUB_PATH, and installs an `opencode2` shim, so `opencode2` is on
+        # PATH for the steps below.
+        run: curl -fsSL https://opencode.ai/v2/install | bash
 
       - name: Install skills from tomzx/agents
         run: |
@@ -125,7 +126,7 @@ jobs:
           OPENCODE_DISABLE_AUTOUPDATE: "1"
           MODEL: ${{ inputs.model }}
         run: |
-          opencode run \
+          opencode2 run \
             --model "$MODEL" \
             --dir "$RUNNER_TEMP/source" \
             --dangerously-skip-permissions \
