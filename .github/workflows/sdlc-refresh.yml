@@ -113,10 +113,10 @@ jobs:
         run: |
           agents="$RUNNER_TEMP/agents"
           git clone https://github.com/tomzx/agents "$agents"
-          # Global skill discovery reads ~/.opencode/skills and the global
-          # AGENTS.md is read from ~/.config/opencode/AGENTS.md.
-          ln -s "$agents/skills" "$HOME/.opencode/skills"
+          # V2 discovers global skills under ~/.config/opencode/skills and reads
+          # the global AGENTS.md from ~/.config/opencode/AGENTS.md.
           mkdir -p "$HOME/.config/opencode"
+          ln -s "$agents/skills" "$HOME/.config/opencode/skills"
           ln -s "$agents/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
 
       - name: Refresh SDLC artifacts
@@ -126,11 +126,11 @@ jobs:
           OPENCODE_DISABLE_AUTOUPDATE: "1"
           MODEL: ${{ inputs.model }}
         run: |
+          cd "$RUNNER_TEMP/source"
           opencode2 run \
+            --auto \
             --model "$MODEL" \
-            --dir "$RUNNER_TEMP/source" \
-            --dangerously-skip-permissions \
-            --command sync-sdlc
+            "@sync-sdlc refresh this project's .sdlc artifacts"
 
       - name: Publish refreshed artifacts
         run: |
