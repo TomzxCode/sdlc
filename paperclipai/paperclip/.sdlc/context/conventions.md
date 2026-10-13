@@ -20,7 +20,7 @@ pnpm workspace monorepo. Each concern lives in its own package:
 - `ui/` — React app; pages under `ui/src/pages/`, components under `ui/src/components/`, API clients under `ui/src/api/`, hooks under `ui/src/hooks/`, context under `ui/src/context/`.
 - `packages/db/` — Drizzle schema files under `packages/db/src/schema/` (one file per table), migrations generated via `pnpm db:generate` (reads compiled `dist/schema/*.js`).
 - `packages/shared/` — shared types, constants, validators; `index.ts` re-exports.
-- `packages/adapters/<adapter>-local/` — one package per built-in adapter.
+- `packages/adapters/<adapter>-local/` — one package per built-in adapter; gateway/cloud variants use matching non-`-local` names (e.g. `hermes`, `hermes-gateway`, `cursor-cloud`, `openclaw-gateway`).
 - `packages/plugins/` — SDK, scaffolder, sandbox providers, example plugins.
 - `doc/` — product and operational docs; `doc/plans/` for repo plan files (`YYYY-MM-DD-slug.md`); `doc/spec/` and `doc/experimental/` for deeper specs.
 
@@ -41,6 +41,7 @@ Conventional Commits style with scope. Observed patterns from `git log`:
 - `feat: ...`, `feat(scope): ...` (e.g. `feat(skills): ...`)
 - `fix: ...`, `fix(scope): ...` (e.g. `fix(server): ...`, `fix(issues): ...`, `fix(workspace-runtime): ...`)
 - `docs: ...`
+- `refactor: ...`, `refactor(scope): ...` (e.g. `refactor(server): ...`)
 - Adapter prefixes allowed inline, e.g. `[codex] Fix mobile issue chat spacing`.
 - Keep messages clear and meaningful; one PR = one logical change.
 

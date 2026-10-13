@@ -30,18 +30,18 @@
 | `install.started` | CLI onboarding flow begins (`cli/src/commands/onboard.ts:553`) | none |
 | `install.completed` | CLI onboarding finishes (`cli/src/commands/onboard.ts:730`) | `adapter_type` |
 | `company.imported` | CLI company import (`cli/src/commands/client/company.ts:1869`) | `source_type`, `source_ref` (salted-hashed when private), `source_ref_hashed` |
-| `project.created` | Project creation route (`server/src/routes/projects.ts:317-319`) | none |
+| `project.created` | Project creation route (`server/src/routes/projects.ts:431-434`) | none |
 | `routine.created` | Routine creation route (`server/src/routes/routines.ts:179-181`) | none |
-| `routine.run` | Routine dispatch (`server/src/services/routines.ts:2039`) | `source`, `status` |
+| `routine.run` | Routine dispatch (`server/src/services/routines.ts:2049-2055`) | `source`, `status` |
 | `goal.created` | Goal creation route (`server/src/routes/goals.ts:43-45`) | `goal_level` |
-| `agent.created` | Agent creation routes (`server/src/routes/agents.ts:4689-4691`) | `agent_role`, `agent_id` |
-| `skill.imported` | Skill import route (`server/src/routes/company-skills.ts:1192-1195`) | `source_type`, `skill_ref` |
-| `agent.first_heartbeat` | First agent heartbeat (`server/src/services/heartbeat.ts:17864`) | `agent_role`, `agent_id` |
-| `agent.task_completed` | Issue-side task completion (`server/src/routes/issues.ts:14214-14222`) | `agent_role`, `agent_id`, `adapter_type`, `model`, hashed `task_id` |
+| `agent.created` | Agent creation routes (`server/src/routes/agents.ts:4479,4662`) | `agent_role`, `agent_id` |
+| `skill.imported` | Skill import route (`server/src/routes/company-skills.ts:1367-1375`) | `source_type`, `skill_ref` |
+| `agent.first_heartbeat` | First agent heartbeat (`server/src/services/heartbeat.ts:1591-1598`) | `agent_role`, `agent_id` |
+| `agent.task_completed` | Issue-side task completion (`server/src/routes/issues.ts:15091-15098`) | `agent_role`, `agent_id`, `adapter_type`, `model`, hashed `task_id` |
 | `agent.task_run` | Terminal run transition via `emitAgentTaskRun`, emitted once per run (`server/src/services/agent-task-run-telemetry.ts:55-125`) | `agent_id`, `state`, `adapter_type`, `agent_role`, `model`, duration and token counts, hashed `task_id` |
-| `error.handler_crash` | HTTP error-handler crash (`server/src/middleware/error-handler.ts:89-90`) | `error_code` |
-| `interaction.created` | Issue-thread interaction creation (`server/src/services/issue-thread-interactions.ts:1402`) | `interaction_kind`, `used_deprecated_resolver_policy_alias` |
-| `interaction.resolved` | Issue-thread interaction resolution (`server/src/services/issue-thread-interactions.ts:1370`) | `interaction_kind`, `status`, `resolved_by_kind`, outcome counts, `legacy_inherited_restriction` |
+| `error.handler_crash` | HTTP error-handler crash (`server/src/middleware/error-handler.ts:92`) | `error_code` |
+| `interaction.created` | Issue-thread interaction creation (`server/src/services/issue-thread-interactions.ts:1417`) | `interaction_kind`, `used_deprecated_resolver_policy_alias` |
+| `interaction.resolved` | Issue-thread interaction resolution (`server/src/services/issue-thread-interactions.ts:1385`) | `interaction_kind`, `status`, `resolved_by_kind`, outcome counts, `legacy_inherited_restriction` |
 
 - The generated contract at `packages/shared/src/telemetry/generated/paperclip-telemetry.ts` is the authority for names, dimensions, optionality, and enum domains.
 - The event catalog is intentionally not copied into `packages/shared/src/telemetry/README.md` because copies drift as the contract changes.
@@ -57,7 +57,7 @@
 ## Privacy and Compliance
 
 - Telemetry is enabled by default and is opt-out, not opt-in.
-- It is disabled by `PAPERCLIP_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`, any detected CI environment, or `telemetry.enabled: false` in config (`packages/shared/src/telemetry/config.ts:66-86`).
+- It is disabled by `PAPERCLIP_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`, any detected CI environment, or `telemetry.enabled: false` in config (`packages/shared/src/telemetry/config.ts:67-86`).
 - Emitters must not send PII, secrets, credentials, private paths, prompts, or model output through dimensions.
 - Credential-bearing chat setup failures are replaced with a generic error before the crash-report path.
 - Contract-first rule: the generated contract is updated before normal emitters use new events.
