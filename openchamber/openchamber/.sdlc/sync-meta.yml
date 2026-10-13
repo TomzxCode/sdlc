@@ -1,3 +1,215 @@
-agents_ref: efeebba715e7141c09210195be46afad8ca262f5
-agents_remote: https://github.com/tomzx/agents
-last_synced: "2026-09-20"
+# SDLC Sync Metadata
+# Tracks which version of agents was used for the last sync.
+# Used by sync-sdlc to detect process/template changes and migrate existing files.
+agents_ref: 993718a297d6b3a4eff7755ef3c8ff5584129202         # Git SHA of agents repo at last sync
+agents_remote: https://github.com/tomzx/agents      # Remote URL of agents repo (e.g. https://github.com/user/agents)
+last_synced: "2026-10-13"            # ISO 8601 date of last sync (e.g. 2026-06-12)
+code_ref: 0f57a76cd156481bad179be5b4c441bdeb72ee2a           # Project repo HEAD SHA at last sync; sync-sdlc scans only changes since this commit
+code_index:              # Per-feature code paths, so an incremental sync can map a changed file to its feature
+  "FEAT-0001-chat-session-management":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+    - packages/ui/src/sync
+    - packages/web/server
+  "FEAT-0002-git-github-integration":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+    - packages/vscode/src
+    - packages/web/server/lib
+    - packages/web/src/api
+  "FEAT-0003-integrated-terminal":
+    - packages/ui/src/components
+    - packages/web/server/TERMINAL_WS_PROTOCOL.md
+    - packages/web/server/lib
+  "FEAT-0004-files-editor":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+    - packages/vscode/src
+    - packages/web/server/lib
+    - packages/web/src/api
+  "FEAT-0005-diff-viewer":
+    - packages/ui/src/components
+  "FEAT-0006-custom-theming":
+    - packages/ui/src/contexts
+    - packages/ui/src/lib
+  "FEAT-0007-settings":
+    - packages/ui/src/components
+    - packages/ui/src/contexts
+    - packages/web/server/lib
+  "FEAT-0008-notifications-updates":
+    - packages/electron
+    - packages/ui/src
+    - packages/ui/src/components
+    - packages/ui/src/sync
+    - packages/vscode/src
+    - packages/web/server/lib
+    - packages/web/src/api
+  "FEAT-0009-onboarding-auth":
+    - packages/ui/src/components
+    - packages/web/server/lib
+  "FEAT-0010-vscode-extension":
+    - packages/vscode/src
+    - packages/vscode/webview
+    - packages/vscode/webview/api
+  "FEAT-0011-model-picker":
+    - packages/ui/src/components
+    - packages/ui/src/lib
+  "FEAT-0012-custom-slash-commands":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+  "FEAT-0013-skills-catalog":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+    - packages/vscode/src
+    - packages/web/server/lib
+  "FEAT-0014-tunnel-remote-access":
+    - packages/web/bin
+    - packages/web/server/lib
+  "FEAT-0015-multi-agent-multi-run":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+    - packages/ui/src/sync
+  "FEAT-0016-git-worktree-management":
+    - packages/ui/src/components
+    - packages/ui/src/lib
+    - packages/ui/src/stores
+    - packages/ui/src/sync
+    - packages/vscode/src
+    - packages/web/server/lib
+  "FEAT-0017-timeline-undo-redo":
+    - packages/ui/src/components
+  "FEAT-0018-permission-edit-mode":
+    - packages/ui/src/components
+    - packages/ui/src/lib
+    - packages/ui/src/stores
+    - packages/ui/src/sync
+    - packages/web/server/lib
+  "FEAT-0019-question-cards":
+    - packages/ui/src/components
+  "FEAT-0020-git-identities-profiles":
+    - packages/ui/src/components
+  "FEAT-0021-pwa-support":
+    - packages/ui/src/hooks
+    - packages/web/server/lib
+    - packages/web/src
+  "FEAT-0022-github-issue-pr-starters":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+    - packages/web/server/lib
+  "FEAT-0023-plan-view":
+    - packages/ui/src/components
+  "FEAT-0024-mobile-ui-touch-gestures":
+    - packages/ui/src/apps
+    - packages/ui/src/components
+    - packages/ui/src/hooks
+  "FEAT-0025-inline-comments-annotations":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+  "FEAT-0026-text-selection-context-menu":
+    - packages/ui/src/components
+  "FEAT-0027-reasoning-thinking-display":
+    - packages/ui/src/components
+  "FEAT-0028-open-in-external-apps":
+    - packages/ui/src/components
+    - packages/ui/src/lib
+  "FEAT-0029-voice-mode":
+    - packages/ui/src/components
+    - packages/web/server/lib
+  "FEAT-0030-context-panel":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+  "FEAT-0031-usage-quota-tracking":
+    - packages/ui/src/components
+    - packages/web/server/lib
+  "FEAT-0032-session-folders":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+    - packages/web/server/lib
+  "FEAT-0033-mcp":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+  "FEAT-0034-ai-generated-commits-pr":
+    - packages/ui/src/components
+    - packages/ui/src/sync
+  "FEAT-0035-project-management":
+    - packages/ui/src/components
+    - packages/web/server/lib
+  "FEAT-0036-docker-self-hosted":
+    - Dockerfile
+    - docker-compose.yml
+    - Caddyfile
+  "FEAT-0037-ssh-remote-host-management":
+    - packages/electron
+    - packages/ui/src/components
+  "FEAT-0038-project-actions-notes":
+    - packages/ui/src/components
+    - packages/web/server/lib
+  "FEAT-0039-magic-prompts":
+    - packages/ui/src/components
+    - packages/web/server/lib
+  "FEAT-0040-scheduled-tasks":
+    - packages/ui/src/components
+    - packages/web/server/lib
+  "FEAT-0041-command-palette":
+    - packages/ui/src/components
+    - packages/ui/src/stores
+  "FEAT-0042-session-export":
+    - packages/ui/src/lib
+  "FEAT-0043-electron-desktop":
+    - packages/electron
+    - packages/electron/scripts
+  "FEAT-0044-session-pinning-multi-select":
+    - packages/ui/src/components
+    - packages/ui/src/lib
+  "FEAT-0045-internationalization":
+    - packages/ui/src/lib
+  "FEAT-0046-font-customization":
+    - packages/ui/src/lib
+    - packages/ui/src/stores
+  "FEAT-0047-preview-browser":
+    - packages/web/server/lib
+  "FEAT-0048-response-style-presets":
+    - packages/ui/src/lib/responseStyle.ts
+    - packages/web/server/lib/opencode
+  "FEAT-0049-mini-chat-electron":
+    - packages/electron
+  "FEAT-0050-event-bus":
+    - packages/ui/src/sync
+    - packages/web/server/lib
+  "p1-snippets":
+    - packages/web/server/lib
+  "p10-isolated-spaces":
+    - packages/web
+    - packages/web/server/lib
+  "p11-message-search":
+    - packages/web/server/lib/message-search
+    - packages/ui/src/lib/messageSearch.ts
+  "p12-agent-memory":
+    - packages/web/server/lib/agent-memory
+    - packages/ui/src/lib/agentMemoryApi.ts
+  "p13-session-knowledge":
+    - packages/web/server/lib/session-knowledge
+    - packages/ui/src/lib/sessionKnowledgeApi.ts
+  "p14-browser-control":
+    - packages/web/server/lib/browser-control
+    - packages/ui/src/lib/browser
+  "p2-plugins":
+    - packages/ui/src/stores
+    - packages/web/server/lib
+  "p3-session-assist":
+    - packages/web/server/lib/session-assist
+  "p4-auto-review":
+    - packages/ui/src/lib
+  "p5-session-goals":
+    - packages/ui/src/stores
+    - packages/web/server/lib
+  "p6-walkthrough":
+    - packages/ui/src/components
+    - packages/web/server/lib
+  "p7-diagram-editor":
+    - packages/ui/src/components
+  "p8-agent-manager":
+    - packages/ui/src/components
+  "p9-control-plane":
+    - packages/web/bin/lib
+    - packages/web/server/lib
