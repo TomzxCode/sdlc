@@ -19,12 +19,16 @@
 │   ├── macos/           # macOS desktop app (Swift/SwiftUI)
 │   ├── ios/             # iOS app (Swift/SwiftUI)
 │   ├── android/         # Android app (Kotlin)
+│   ├── linux/           # Linux app (Tauri)
 │   └── shared/          # Shared app code
 ├── config/              # Generated config files
+├── crates/              # Rust workspace (openclaw-gateway-client, openclaw-node-host)
+├── custodian-skills/    # Custodian agent skill definitions
 ├── docs/                # Documentation
 ├── extensions/          # Plugin packages (152+ extensions)
 ├── packages/            # Shared packages (SDK, protocol, core libraries)
 ├── scripts/             # Build and CI scripts
+├── skills/              # Bundled agent skill definitions shipped with the package
 ├── src/                 # Core TypeScript source
 │   ├── agents/          # Agent runtime
 │   ├── channels/        # Channel system

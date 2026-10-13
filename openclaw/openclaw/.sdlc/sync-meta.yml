@@ -1,3 +1,82 @@
-agents_ref: efeebba715e7141c09210195be46afad8ca262f5
+# SDLC Sync Metadata
+# Tracks which version of agents was used for the last sync.
+# Used by sync-sdlc to detect process/template changes and migrate existing files.
+agents_ref: 993718a297d6b3a4eff7755ef3c8ff5584129202
 agents_remote: https://github.com/tomzx/agents
-last_synced: "2026-09-20"
+last_synced: "2026-10-13"
+code_ref: c6546e217ed5aff7fe3b8e553075b84e4111878b
+code_index:
+  "p1-gateway-server":
+    - src/gateway/
+    - test/gateway.multi.e2e.test.ts
+  "p2-agent-runtime":
+    - src/agents/
+  "p3-channel-integration":
+    - src/channels/
+    - extensions/discord/
+    - extensions/telegram/
+    - extensions/slack/
+    - extensions/mattermost/
+    - extensions/msteams/
+    - extensions/teams-meetings/
+    - extensions/a2a/
+  "p4-plugin-sdk":
+    - src/plugin-sdk/
+    - src/plugins/
+    - packages/plugin-sdk/
+  "p5-cli":
+    - openclaw.mjs
+    - src/cli/
+    - src/commands/
+  "p6-configuration-system":
+    - src/config/
+    - src/flows/doctor-lint-flow.ts
+    - src/flows/bundled-health-checks.ts
+  "p7-companion-applications":
+    - apps/macos/
+    - apps/ios/
+    - apps/android/
+    - apps/shared/
+    - apps/linux/
+    - extensions/device-pair/
+  "p8-control-ui":
+    - ui/src/
+  "p9-media-voice-system":
+    - src/media-generation/
+    - src/image-generation/
+    - src/video-generation/
+    - src/music-generation/
+    - src/tts/
+    - src/talk/
+    - src/realtime-transcription/
+    - src/meeting-bot/
+    - extensions/elevenlabs/
+    - extensions/deepgram/
+    - extensions/talk-voice/
+    - extensions/voice-call/
+  "p10-automation-scheduling":
+    - src/cron/
+    - src/flows/
+    - src/gateway/hooks.ts
+  "p11-rust-node-host":
+    - crates/Cargo.toml
+    - crates/openclaw-node-host/
+    - crates/openclaw-gateway-client/
+    - test/fixtures/node-sidecar-protocol-v1.json
+    - test/fixtures/node-sidecar-negotiation-v1.json
+    - test/fixtures/node-sidecar-handshake-v1.json
+    - test/fixtures/node-sidecar-runtime-v1.json
+    - test/fixtures/node-invoke-lifecycle-contract.json
+    - test/fixtures/node-runtime-integration-contract.json
+    - src/gateway/node-pairing-auto-approve.ts
+    - src/gateway/node-pairing-ssh-verify.ts
+    - src/gateway/node-registry-pairing.ts
+    - src/gateway/node-registry.ts
+    - docs/gateway/pairing.md
+  "p12-canvas-dynamic-ui":
+    - extensions/canvas/
+    - ui/src/app/gateway-canvas-surface.ts
+    - ui/src/components/canvas-widget-view.ts
+    - ui/src/lib/chat/tool-display.ts
+    - docs/platforms/mac/canvas.md
+    - docs/tools/show-widget.md

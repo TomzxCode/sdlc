@@ -29,6 +29,8 @@
 | Auth Profile | A named set of credentials for a provider (API keys, OAuth tokens) |
 | Canvas | Agent-driven visual workspace rendered in the Control UI for rich interactive content |
 | ClawSweeper | Automated issue/PR triage and maintenance bot for the OpenClaw repository |
+| Team deployment | One shared Gateway configured for a whole team (shared sessions, roles, workspace chat); same product as personal setup, not a separate edition |
+| Telemetry check | Daily version-check request plus opt-in anonymous feature statistics, controlled by `telemetry.enabled` and `update.checkOnStart` |
 | DM Policy | Direct Message pairing policy controlling who can message the assistant |
 | Env Vars | Environment variables used for configuration (OPENAI_API_KEY, etc.) |
 | Facilitator | A pattern for delegating work to subagents |

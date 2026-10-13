@@ -11,15 +11,15 @@ Update this file when tooling, environments, or deployment procedures change.
 
 | Component | Technology | Version |
 |---|---|---|
-| Language | TypeScript (strict ESM, no `any`) | 6.0.3 |
+| Language | TypeScript (strict ESM, no `any`) | 7.1.0-dev (see `package.json` devDependencies) |
 | Runtime | Node.js (`>=24.16.0 <25 \|\| >=26.1.0`, Node 26 recommended) | See `node-version.mjs` floors |
-| Package manager | pnpm (isolated linker, `verifyDepsBeforeRun: false`) | 12.4.0 |
+| Package manager | pnpm (isolated linker, `verifyDepsBeforeRun: false`) | 12.9.0 |
 | Bundler | tsdown via `scripts/tsdown-build.mts` | Pinned in `pnpm-lock.yaml` |
 | Type checker | tsgo native compiler (`pnpm tsgo:core`, shards for extensions/scripts/tests) | Pinned in `pnpm-lock.yaml` |
 | Gateway server | Custom `node:http` server in `src/gateway` (probe routing in `gateway-http-route-contracts.ts`) | n/a |
-| Control UI | Lit web components built with Vite | Lit 3.3.3, Vite 8.3.0 |
-| Database | SQLite via `node:sqlite` with Kysely query builder | Kysely 0.29.5 |
-| Test runner | Vitest with per-area configs in `test/vitest/` | 5.0.0 |
+| Control UI | Lit web components built with Vite | Lit 3.3.3, Vite 8.3.2 |
+| Database | SQLite via `node:sqlite` with Kysely query builder | Kysely 0.29.6 |
+| Test runner | Vitest with per-area configs in `test/vitest/` | 5.0.1 |
 
 ## Development Tooling
 
