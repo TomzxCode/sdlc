@@ -1,35 +1,26 @@
 ---
 title: "<Feature Name>"
 status: draft
+session_link: "<filled by skill>"
 ---
 
 # Mockups: <Feature Name>
 
 ## Overview
 
-<One paragraph describing the UI surface, the primary user, and the main goal of the screens.>
+<One paragraph describing the UI surface, the primary user, and the main goal of the screens. State that the per-screen HTML mockups live under `mockups/`.>
 
 ## Screen Inventory
 
-| Screen | Purpose | Entry From | Exits To |
-|---|---|---|---|
-| <name> | <what the user does here> | <where they came from> | <where they can go> |
+| Screen | Purpose | Entry From | Exits To | Mockup |
+|---|---|---|---|---|
+| <name> | <what the user does here> | <where they came from> | <where they can go> | [`mockups/<screen-slug>.html`](mockups/<screen-slug>.html) |
 
 ## Wireframes
 
 ### <Screen 1>
 
-```
-+-----------------------------------------------+
-|  <logo>              <nav>            <avatar> |
-+-----------------------------------------------+
-|                                               |
-|  <primary content region>                     |
-|                                               |
-|  [ primary action ]                           |
-|                                               |
-+-----------------------------------------------+
-```
+**Mockup:** [`mockups/<screen-slug>.html`](mockups/<screen-slug>.html)
 
 **Regions**
 
@@ -62,10 +53,11 @@ status: draft
 
 ## Navigation Flow
 
-```
-<List view> --select--> <Detail view> --save--> <Confirmation>
-    ^                                          |
-    |_________________back_____________________|
+```mermaid
+flowchart LR
+  List -- select --> Detail
+  Detail -- save --> Confirmation
+  Confirmation -- back --> List
 ```
 
 ## Responsive Behavior
@@ -89,7 +81,7 @@ status: draft
 
 ## High-Fidelity Needs
 
-- <Where ASCII is insufficient and a Figma/HTML/prototype is warranted, with a pointer or request>
+- <Where a static HTML mockup is insufficient (motion, drag-and-drop, canvas, interactive prototype) and a Figma file or clickable prototype is warranted, with a pointer or request>
 
 ## Out of Scope
 

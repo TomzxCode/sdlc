@@ -1,3 +1,80 @@
-agents_ref: efeebba715e7141c09210195be46afad8ca262f5
+agents_ref: f248f3390b3eb828f852ef42dbb4cad98ae5724e
 agents_remote: https://github.com/tomzx/agents
-last_synced: "2026-09-20"
+last_synced: "2026-10-13"
+code_ref: 63d0b94120027d487c9a5235b9ec64b696af1b26
+code_index:
+  "p1-core-agent":
+    - run_agent.py
+    - agent/
+    - model_tools.py
+    - toolsets.py
+    - tests/agent/
+  "p2-multi-platform-cli":
+    - cli.py
+    - hermes_cli/cli_*_mixin.py
+    - cli-config.yaml.example
+    - tests/hermes_cli/
+  "p3-messaging-gateway":
+    - gateway/run.py
+    - gateway/platforms/
+    - gateway/session*.py
+    - tests/gateway/
+  "p4-terminal-browser-automation":
+    - tools/terminal_tool*.py
+    - tools/environments/
+    - tools/browser_*.py
+    - tools/code_execution_tool.py
+    - tests/computer_use/
+  "p5-plugin-system":
+    - plugins/
+    - hermes_cli/plugins*.py
+    - plugin-catalog/
+    - tests/plugins/
+  "p6-skill-system":
+    - skills/
+    - optional-skills/
+    - agent/curator*.py
+    - agent/skill_*.py
+  "p7-memory-knowledge":
+    - agent/memory_manager.py
+    - agent/memory_provider.py
+    - plugins/memory/
+    - hermes_state_fts.py
+  "p8-cron-delegation":
+    - cron/
+    - tools/async_delegation.py
+    - tools/delegate_tool*.py
+    - tests/cron/
+  "p9-multi-surface-tui":
+    - ui-tui/
+    - tui_gateway/
+    - apps/desktop/
+    - web/
+    - hermes_cli/web_routers/
+  "p10-config-profiles":
+    - hermes_cli/config*.py
+    - hermes_constants.py
+    - providers/
+  "p11-mcp-integration":
+    - mcp_serve.py
+    - tools/mcp_tool.py
+    - optional-mcps/
+  "p12-acp-protocol":
+    - acp_adapter/
+    - tests/acp_adapter/
+  "p13-trajectory-data":
+    - batch_runner.py
+    - trajectory_compressor.py
+    - mini_swe_runner.py
+    - evals/
+  "p14-internationalization":
+    - locales/
+    - hermes_cli/config_language.py
+  "p15-kanban":
+    - hermes_cli/kanban*.py
+    - plugins/kanban/
+  "p16-observability":
+    - agent/monitoring/
+    - scripts/observability/
+    - hermes_logging.py
+    - tests/monitoring/

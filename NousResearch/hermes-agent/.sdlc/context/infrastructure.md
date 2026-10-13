@@ -11,8 +11,8 @@ Update this file when tooling, environments, or deployment procedures change.
 
 | Component | Technology | Version |
 |---|---|---|
-| Language | Python | `requires-python = ">=3.11,<3.14"` (type-check target 3.13 via `[tool.ty.environment]`) |
-| Runtime | CPython (venv per install) | 3.11–3.13 |
+| Language | Python | `requires-python = ">=3.11,<3.15"` (type-check target 3.13 via `[tool.ty.environment]`, 3.14 wheels verified) |
+| Runtime | CPython (venv per install) | 3.11–3.14 |
 | Web framework | FastAPI | `>=0.104.0,<1` in core, `==0.133.1` in `[web]` extra |
 | ASGI server | Uvicorn (standard) | `>=0.31.0,<1` in core, `==0.41.0` in `[web]` extra |
 | LLM SDK | OpenAI SDK | `==2.24.0` |
@@ -23,7 +23,7 @@ Update this file when tooling, environments, or deployment procedures change.
 | Lockfile | uv.lock (exact-pinned core deps) | Present at repo root |
 | JS runtime | Node.js | `^22.22.0 \|\| ^24.11.0 \|\| >=26.0.0` (root and desktop `engines`) |
 | JS package manager | npm workspaces (`apps/*`, `ui-tui`, `web`, `tests-js`) | npm `<11.10.0 \|\| >=11.17.0`, `package-lock.json` present |
-| Desktop shell | Electron | `==40.10.2` with electron-builder `==26.15.3` |
+| Desktop shell | Electron | `==40.10.2` with electron-builder `==27.0.0-alpha.6` |
 | Desktop bundler | Vite | `==8.2.0` |
 | UI libraries | React + React DOM | `==19.2.7` (TUI and desktop) |
 | TUI renderer | Ink via local `@hermes/ink` fork | `file:./packages/hermes-ink` |
