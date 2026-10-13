@@ -12,31 +12,29 @@ flowchart TB
     subgraph product["Product"]
         CA["pi-coding-agent<br/>AgentSession, AgentSessionRuntime,<br/>SessionManager JSONL, ModelRegistry,<br/>DefaultResourceLoader, ExtensionRunner,<br/>InteractiveMode, run modes"]
     end
-    subgraph remote["Remote stack"]
-        PROTO["pi-protocol<br/>CBOR + 4-byte BE length framing,<br/>hello / request-response envelopes v2"]
-        CLIENT["pi-client<br/>PiClient, ByteTransport,<br/>SessionLease exclusive/shared"]
-        SERVER["pi-server<br/>PiServer, LiveSessionManager,<br/>listeners, createUnixServer"]
+    subgraph capabilities["Tool + execution capabilities"]
+        CODEMODE["pi-codemode<br/>QuickJS/WASM sandbox,<br/>only capability is calling injected tools"]
+        MCP["pi-mcp<br/>standalone MCP client,<br/>stdio + StreamableHTTP transports"]
+        ENV["pi-env<br/>Rust daemon deployed over SSH,<br/>RemoteExecutionEnv client"]
     end
     subgraph storage["Storage + evals"]
-        SQLITE["pi-session-backend-sqlite-node<br/>SqliteSessionRepository, migrations,<br/>materialized views, optional FTS"]
+        DURABLE["pi-durable<br/>conversation/task/document runtime,<br/>sqlite storage + migrations"]
         EVALS["pi-evals<br/>AgentSession adapted to vitest-evals"]
     end
-    subgraph runtime["New runtimes"]
+    subgraph runtime["Cross-cutting runtimes"]
         CHORD["chord<br/>facets/plugins/services keyed+singleton,<br/>replicated state via publish,<br/>remote-service boundary"]
-        DURABLE["durable/pico<br/>durable conversation/task/document runtime,<br/>MemoryStorage"]
-        TELEM["telemetry<br/>TelemetryContext/startSpan,<br/>typed event/attribute schema,<br/>memory + noop backends"]
+        TELEM["pi-telemetry<br/>TelemetryContext/startSpan,<br/>typed event/attribute schema,<br/>memory + noop backends"]
     end
     AI --> CORE
     CORE --> CA
     TUI --> CA
-    PROTO --> CLIENT
-    PROTO --> SERVER
-    CLIENT <--> SERVER
-    CA --> CLIENT
-    SQLITE --> CORE
+    CODEMODE --> CA
+    MCP --> CA
+    ENV --> DURABLE
+    DURABLE --> CA
     CA --> EVALS
     CHORD --> CA
-    DURABLE --> CA
+    CHORD --> DURABLE
     TELEM --> CA
     TELEM --> CORE
 ```
@@ -44,18 +42,17 @@ flowchart TB
 Pi is a layered TypeScript monorepo.
 Three leaf libraries (`pi-ai`, `pi-agent-core`, `pi-tui`) compose into the `pi-coding-agent` CLI product.
 `pi-ai` is the LLM boundary, `pi-agent-core` is the agent loop boundary, `pi-tui` is the rendering boundary, and the coding agent wires them together with sessions, extensions, tools, and a TUI.
-A second stack enables remote sessions: `pi-protocol` defines the wire protocol and framing, `pi-client` is the transport-neutral client used by the coding agent to attach to remote servers, and `pi-server` hosts `PiServer` session servers.
-`pi-session-backend-sqlite-node` provides an optional SQLite backend for agent sessions, and `pi-evals` adapts a real `AgentSession` to `vitest-evals` for model-backed behavioral checks.
-Three newer runtimes cut across the product: `chord` (facets/plugins/services with replicated state), `durable/pico` (durable conversation/task/document runtime), and `telemetry` (spans and typed events).
-The legacy child-process supervisor in `pi-server` is gone.
+Three capability packages extend what the agent can do: `pi-codemode` runs model-written JavaScript in an isolated QuickJS/WASM sandbox whose only capability is calling injected tools, `pi-mcp` is a standalone MCP client (stdio and StreamableHTTP transports) that the coding agent consumes through `src/extensions/mcp/`, and `pi-env` provides remote execution via a small Rust daemon deployed over SSH with a `RemoteExecutionEnv` client for the durable runtime.
+`pi-durable` is the durable conversation/task/document runtime with SQLite storage, migrations, and storage backends under `packages/durable/src/storage/sqlite/`.
+`pi-evals` adapts a real `AgentSession` to `vitest-evals` for model-backed behavioral checks.
+Two cross-cutting runtimes serve the product: `chord` (facets/plugins/services with replicated state) and `pi-telemetry` (spans and typed events).
+The former remote-session stack (`pi-protocol` CBOR framing, `pi-client` `PiClient`, `pi-server` `PiServer`, the `pi-session-backend-sqlite-node` package, and the legacy supervisor) is deleted and has no replacement in this topology.
 
 ## Entity Relationship Diagram
 
 ```mermaid
 erDiagram
     Session ||--o{ SessionEntry : contains
-    Session ||--o{ Snapshot : publishes
-    Session ||--o{ SessionLease : guards
     Session ||--o{ Conversation : hosts
     Provider ||--o{ Model : catalogs
     Extension ||--o{ Skill : bundles
@@ -64,6 +61,9 @@ erDiagram
     Facet ||--o{ Service : provides
     Conversation ||--o{ Task : tracks
     Conversation ||--o{ Document : owns
+    Conversation ||--o{ SandboxExecution : runs
+    McpServer ||--o{ McpTool : serves
+    Session ||--o{ McpServer : connects
     Session ||--o{ Span : traces
     Span ||--o{ Span : parents
     Session {
@@ -102,15 +102,6 @@ erDiagram
         string name PK
         string extension FK
     }
-    SessionLease {
-        string id PK
-        string sessionId FK
-        string mode
-    }
-    Snapshot {
-        string sessionId FK
-        int version
-    }
     Facet {
         string key PK
         string scope
@@ -131,6 +122,20 @@ erDiagram
         string id PK
         string conversationId FK
     }
+    SandboxExecution {
+        string id PK
+        string conversationId FK
+        string status
+    }
+    McpServer {
+        string name PK
+        string sessionId FK
+        string transport
+    }
+    McpTool {
+        string name PK
+        string server FK
+    }
     Span {
         string id PK
         string sessionId FK
@@ -139,8 +144,8 @@ erDiagram
 ```
 
 There is no traditional domain database.
-Session state lives in JSONL files (`SessionManager`), SQLite is an optional session repository backend, and pico conversations/tasks/documents live in the durable runtime store.
-The full detailed database schema (types, constraints, indexes) lives in `schema.dbml` when the project uses a database.
+Session state lives in JSONL files (`SessionManager`), and durable conversation/task/document state lives in the `pi-durable` SQLite store (`packages/durable/src/storage/sqlite/`, with migrations and storage backends).
+There are no protocol-level session entities: the former `hello`/`SessionLease`/snapshot model is gone with the deleted remote-session stack.
 
 ## Key Components
 
@@ -159,15 +164,16 @@ The full detailed database schema (types, constraints, indexes) lives in `schema
 | Built-in tools | `read`, `bash`, `edit`, `write` (default) and `grep`, `find`, `ls` (read-only set) | TypeScript |
 | `InteractiveMode` | Full TUI: editor, message list, footer/header, slash-command UIs, widgets, overlays | pi-tui |
 | Run modes | Interactive (default), print (`-p`), JSON (`--mode json`), RPC (`--mode rpc`), SDK | TypeScript |
-| `pi-protocol` | Runtime-neutral schemas, types, CBOR encoding, and byte-stream framing for the pi protocol (length-prefixed framed messages, `hello`/request-response envelopes, v2) | TypeScript, typebox |
-| `PiClient` (pi-client) | Transport-neutral remote session client: `ByteTransport` interface, `SessionLease` ownership (exclusive/shared), `acquireSession`/`attachSession`/`createSession`, snapshot subscription | TypeScript, built on pi-protocol |
-| `PiServer` (pi-server) | Token-authenticated session server: listeners, `LiveSessionManager`, session/snapshot publication, `createUnixServer` preset, `testing` harness | TypeScript, built on pi-protocol |
-| Server `legacy`/supervisor (pi-server) | Removed: the former child-process supervisor (`server` CLI), Unix socket IPC, Radius presence, and RPC stream bridge are gone | N/A (deleted) |
-| `pi-session-backend-sqlite-node` | `node:sqlite` adapter (`SqliteDatabase`), SQLite session repository, migrations, materialized views, optional FTS search for pi-agent-core sessions | TypeScript, node:sqlite |
+| `pi-codemode` | Sandboxed JavaScript execution where the only capability is calling injected tools: QuickJS/WASM sandbox (`quickjs-wasi`), inline/remote/host runtimes, declaration rendering, `codemode-store` cross-call state | TypeScript + WebAssembly (QuickJS), Cloudflare worker target |
+| `src/extensions/codemode/` (coding-agent) | `codemode` tool wiring: model-facing tool definition, script execution through the agent loop tool pipeline, worker scheduling, result rendering | TypeScript, built on pi-codemode + pi-agent-core |
+| `pi-mcp` | Standalone MCP client: JSON-RPC protocol types, `McpClient`, stdio and StreamableHTTP transports, OAuth providers, in-memory transport for tests | TypeScript |
+| `src/extensions/mcp/` (coding-agent) | MCP integration: server config, connection/transport/OAuth runtime (lazily loaded), tool/resource adaptation, CLI and UI surfaces | TypeScript, built on pi-mcp |
+| `pi-env` | Remote execution environments for durable: small Rust daemon (`daemon/Cargo.toml`, deployed over SSH with host-key verification), `Connection` session management, `RemoteExecutionEnv`/`LocalExecutionEnv`, remote terminal and file watching | TypeScript client + Rust daemon, SSH |
+| `pi-durable` | Durable conversation/task/document runtime: harness (agent, compaction, generation, tool tasks, live docs, inbox, task graph), `ExecutionEnv` abstraction (node + remote), SQLite storage with migrations | TypeScript, node:sqlite |
+| `pi-durable` SQLite storage | Conversation/entry/task/submission/document persistence: `SqliteDatabase`, `applySqliteMigrations`, versioned schema under `packages/durable/src/storage/sqlite/` | TypeScript, node:sqlite |
 | `pi-evals` | Behavioral model-backed evals: adapts a real `AgentSession` to `vitest-evals`, isolated temp project/agent dirs, native pi session artifacts | TypeScript, vitest-evals |
 | `chord` | Facet/plugin/service runtime: keyed and singleton registrations, replicated state via publish, remote-service boundary, standalone use outside the coding agent | TypeScript |
-| `durable`/`pico` | Durable conversation/task/document runtime: `MemoryStorage`, `ROOT_CONVERSATION_ID`, versioned `docs/pico-v5*` design notes | TypeScript |
-| `telemetry` | Structured observability primitives: `TelemetryContext`/`startSpan`, `TelemetrySpan`, typed event/attribute schema utilities, memory + noop backends | TypeScript |
+| `pi-telemetry` | Structured observability primitives: `TelemetryContext`/`startSpan`, `TelemetrySpan`, typed event/attribute schema utilities, memory + noop backends | TypeScript |
 
 ## Data Flow
 
@@ -179,33 +185,34 @@ If the agent is mid-stream, the message is queued as steering (delivered after t
 `AgentSession` delegates to the pi-agent-core `Agent`, whose `agentLoop` calls the injectable `StreamFn`.
 `StreamFn` (default `streamSimple` from pi-ai) resolves auth via `ModelRegistry`, applies retry/timeout/transport settings and provider attribution headers, then streams events from the provider SDK.
 The agent streams text/thinking/toolcall deltas; tool calls are validated and executed (sequential or parallel), emitting `tool_call`/`tool_result` events extensions can observe or mutate.
+A `codemode` tool call takes a distinct path: the model-written script runs inside the pi-codemode QuickJS/WASM sandbox, nested tool calls flow back through the agent loop tool pipeline (`ctx.executeTool`) with validation, hooks, and permission checks applied, and only the script output (plus `codemode-store` writes) reaches the model.
+An MCP tool call takes another distinct path: the coding-agent MCP extension runtime forwards the call through the pi-mcp `McpClient` over the configured stdio or StreamableHTTP transport (with OAuth when required), then adapts the MCP result back into the agent tool-result shape.
 After the agent stops, `AgentSession` loops: handles retryable errors, compaction triggers, and queued steering/follow-up messages via `agent.continue()` until queues drain.
 Throughout, `AgentSession` appends entries (messages, model changes, compaction summaries, branch summaries) to the `SessionManager` JSONL file.
+Durable pico conversations/tasks/documents persist in the pi-durable SQLite store alongside the session, and file/shell work under a remote target executes through the pi-env daemon over SSH via `RemoteExecutionEnv` rather than local Node syscalls.
 Telemetry spans and typed events wrap the loop (memory backend in tests, noop by default).
-Durable pico conversations/tasks/documents persist alongside the session when the durable runtime is attached.
 Each mode renders the streamed events: `InteractiveMode` renders incrementally via pi-tui; print writes final text or one JSON object per event; RPC forwards `AgentSessionEvent`s as JSONL on stdout.
-In remote-session mode, the coding agent attaches a `PiClient` to a `PiServer` over a `ByteTransport` (e.g. Unix socket): the client authenticates via `hello` token, acquires exclusive/shared `SessionLease`s, sends framed CBOR request/response envelopes, and renders authoritative server/session snapshots (progress events are transient and never mutated optimistically).
 
 ## Infrastructure
 
-Hosting is local-first: the CLI runs on the developer machine, remote sessions run over Unix sockets or pluggable byte transports, and persistence is JSONL files with SQLite as an optional session backend.
+Hosting is local-first: the CLI runs on the developer machine, remote file/shell work goes through the pi-env SSH daemon, and persistence is JSONL session files plus the pi-durable SQLite store.
 CI, release, and tooling details live in `infrastructure.md`.
 Monitoring, telemetry backends, and alerting live in `observability.md`.
 
 ## Architecture Decisions
 
-- **Minimal core, maximal extension surface:** No built-in MCP, sub-agents, plan mode, or permission popups. Extensions provide these. (Maintainer philosophy in `CONTRIBUTING.md`.)
+- **Minimal core, maximal extension surface:** No built-in sub-agents, plan mode, or permission popups. Extensions provide these. (Maintainer philosophy in `CONTRIBUTING.md`.)
 - **Provider-centric LLM access (pi-ai):** The `Models` collection routes by owning provider; legacy global registry preserved in `/compat` for migration.
 - **Lazy SDK loading:** Provider factories import only catalogs; provider SDKs load on first request via `.lazy.ts` wrappers.
 - **Transport-agnostic agent:** `pi-agent-core` calls an injectable `StreamFn`, enabling direct (`streamSimple`), proxy (`streamProxy`), or custom backends.
 - **Custom TUI:** `pi-tui` is hand-written (imperative component model + differential renderer), not React/Ink.
 - **Failures encoded, not thrown:** LLM stream failures are encoded as final events with `stopReason: "error"|"aborted"`; agent run failures become synthetic failure assistant messages.
-- **Transport-neutral remote sessions:** `pi-client` never imports Node-specific code; all byte movement goes through a small `ByteTransport` interface, so WebSocket, Unix socket, or custom transports all work. `pi-protocol` decoders accept arbitrary fragmentation/coalescing for the same reason.
-- **Authoritative snapshots:** in the pi protocol, server and session snapshots are authoritative; progress events are transient UI hints and are never reduced into authoritative state.
-- **Session lease ownership:** exclusive/shared `SessionLease`s gate who may mutate or observe a remote session (exclusive acquisition fails while any lease exists).
+- **Codemode isolation:** model-written code runs only inside the QuickJS/WASM sandbox and its sole capability is calling injected tools, so scripts cannot touch the host except through the agent loop tool pipeline with its validation, hooks, and permission checks.
+- **Standalone MCP client:** `pi-mcp` has no coding-agent dependency and owns the JSON-RPC protocol, transports, and auth, so the coding-agent MCP extension is a thin adaptation layer (config, runtime, tool/resource mapping, UI) over a reusable client.
+- **Remote execution behind ExecutionEnv:** local and remote file/shell work share the `ExecutionEnv` interface, and `RemoteExecutionEnv` delegates syscalls to the Rust pi-env daemon over SSH, keeping platform rules (paths, errors, results) in one client-side implementation.
 - **Lockstep versioning:** All packages share one version; `patch` = fixes + additions, `minor` = breaking changes, no major releases.
-- **Local-first persistence:** JSONL is the session source of truth; SQLite is an interchangeable repository backend, not a second source of truth.
+- **Local-first persistence:** JSONL is the session source of truth; the pi-durable SQLite store is the durable conversation/task/document source of truth alongside it, not a second copy of the session log.
 - **Standalone chord runtime:** chord facets/plugins/services work without the coding agent and cross process boundaries only through the remote-service boundary with replicated state via publish.
-- **Durable pico over ephemeral chat:** long-lived conversation/task/document state lives in the durable runtime (`MemoryStorage` today), separate from the append-only session log.
+- **Durable pico over ephemeral chat:** long-lived conversation/task/document state lives in the durable runtime (SQLite storage today), separate from the append-only session log.
 
 Formal ADRs live under `.sdlc/knowledge/decisions/`.

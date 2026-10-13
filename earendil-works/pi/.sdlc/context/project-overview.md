@@ -4,8 +4,8 @@
 ## Purpose
 
 Pi is a minimal, self-extensible terminal coding agent harness.
-The core is deliberately small (four built-in tools, no sub-agents, no plan mode, no MCP, no permission popups) and is designed to be aggressively extended via TypeScript extensions, skills, prompt templates, themes, and pi packages.
-The monorepo ships a unified multi-provider LLM API (`pi-ai`), a stateful agent runtime (`pi-agent-core`), a custom terminal UI framework with differential rendering (`pi-tui`), the interactive coding agent CLI built on top of the others (`pi-coding-agent`), the foundations for remote sessions: a transport-neutral CBOR protocol (`pi-protocol`), a transport-neutral remote session client (`pi-client`), a session server (`pi-server`), a SQLite session storage backend (`pi-session-backend-sqlite-node`), and a model-backed evals harness (`pi-evals`), plus an app-composition runtime with facets, services, and replicated state (`chord`, standalone with no Pi dependencies), a durable conversation, task, and document runtime with in-memory storage (`pi-durable`), and vendor-neutral telemetry contracts and spans (`pi-telemetry`).
+The core is deliberately small (four built-in tools, no sub-agents, no plan mode, no permission popups) and is designed to be aggressively extended via TypeScript extensions, skills, prompt templates, themes, and pi packages.
+The monorepo ships a unified multi-provider LLM API (`pi-ai`), a stateful agent runtime (`pi-agent-core`), a custom terminal UI framework with differential rendering (`pi-tui`), the interactive coding agent CLI built on top of the others (`pi-coding-agent`), a sandboxed script runtime where model-written JavaScript calls injected tools (`pi-codemode`), a standalone Model Context Protocol client (`pi-mcp`), remote execution environments for Durable over SSH (`pi-env`), a model-backed evals harness (`pi-evals`), plus an app-composition runtime with facets, services, and replicated state (`chord`, standalone with no Pi dependencies), a durable conversation, task, and document runtime with in-memory, JSONL, and SQLite storage (`pi-durable`), and vendor-neutral telemetry contracts and spans (`pi-telemetry`).
 
 ## Key Stakeholders
 
@@ -21,22 +21,23 @@ The monorepo ships a unified multi-provider LLM API (`pi-ai`), a stateful agent 
 
 **In scope:**
 
-- Twelve workspace packages: `pi-ai`, `pi-agent-core`, `pi-tui`, `pi-coding-agent`, `pi-protocol`, `pi-client`, `pi-server`, `pi-session-backend-sqlite-node`, `pi-evals`, `chord`, `pi-durable`, `pi-telemetry`.
+- Eleven workspace packages: `pi-ai`, `pi-agent-core`, `pi-tui`, `pi-coding-agent`, `pi-codemode`, `pi-mcp`, `pi-env`, `pi-evals`, `chord`, `pi-durable`, `pi-telemetry`.
 - A terminal coding agent with read, bash, edit, and write tools plus session management.
 - An extension platform (custom tools, commands, events, UI, providers) that keeps the core minimal.
 - Multi-provider LLM access across 30+ providers with automatic auth resolution, token/cost tracking, tool-calling, and streaming.
 - An embeddable SDK and multiple run modes (interactive TUI, print, JSON, RPC).
-- Remote sessions: a CBOR wire protocol, a transport-neutral client, a token-authenticated session server, and a SQLite session backend.
-- The legacy p1-orchestrator code formerly under `pi-server` (`server/src/legacy`) is removed and out of scope.
+- Built-in MCP integration via the `mcp` coding-agent extension backed by the standalone `pi-mcp` client (stdio, Streamable HTTP, and in-memory transports), with per-server tool exposure modes and `/mcp` management.
+- Sandboxed model-written scripting via the `codemode` coding-agent extension backed by `pi-codemode` (QuickJS VM compiled to WebAssembly, worker-thread execution on Node/Bun).
+- Remote execution for Durable via `pi-env`: a small Rust daemon deployed over SSH plus a `RemoteExecutionEnv` client whose results match local execution.
+- Durable execution via `pi-durable`: conversation, task, and document runtimes with MemoryStorage, JSONL, and SQLite (`src/storage/sqlite/`) backends.
 - Behavioral, model-backed evals for measuring end-to-end workflow behavior.
 - App composition via `chord`: facets, services, and replicated state as a standalone runtime with no Pi dependencies.
-- Durable execution via `pi-durable`: conversation, task, and document runtimes with MemoryStorage.
 - Vendor-neutral telemetry contracts and spans via `pi-telemetry`.
 - Supply-chain hardening: pinned deps, lockfile governance, generated npm shrinkwrap, release smoke tests.
 
 **Out of scope:**
 
-- Built-in MCP support, sub-agents, plan mode, and permission popups (extensions may provide these).
+- Built-in sub-agents, plan mode, and permission popups (extensions may provide these).
 - Chat/Slack automation (lives in the separate `earendil-works/pi-chat` repo).
 - An in-process sandbox or permission system (containerization is delegated to external sandboxes like Gondolin, Docker, or OpenShell).
 - Backward compatibility not explicitly requested by the maintainer.

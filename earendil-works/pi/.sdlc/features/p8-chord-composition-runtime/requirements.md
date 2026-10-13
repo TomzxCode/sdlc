@@ -31,7 +31,7 @@ Chord is a standalone application-composition runtime that assembles application
 | FR-7 | Must | The system shall expose remotely consumable services through an application-supplied transport carrying strict-JSON calls and subscriptions. |
 | FR-8 | Must | The system shall track and coalesce JSON delta operations with durable base batches and validation of untrusted operations at apply time. |
 | FR-9 | Should | The system shall reload facets by replacing singletons without an unavailable interval and giving keyed replacements fresh generations. |
-| FR-10 | Should | The system shall bundle facet entries into content-addressed artifacts and load them with integrity verification in an isolated module scope. |
+| FR-10 | Should | The system shall load facet modules through a configured loader that shares one copy of each facet directory per load and re-imports fresh copies on reload. |
 | FR-11 | Should | The system shall provide a Go-like context carrying cancellation and invocation-scoped values through operations. |
 
 ## Non-Functional Requirements
@@ -145,10 +145,10 @@ Chord is a standalone application-composition runtime that assembles application
 
     ```gherkin
     @FR-10
-    Scenario: bundles verify integrity and isolate module scope
-      Given a content-addressed facet bundle built from a plugin package
-      When the loader verifies SHA-256 and compiles the entry in a VM scope
-      Then corrupt entries fail to load and host externals resolve through the restricted require
+    Scenario: loader shares one copy per load and reloads fresh copies
+      Given facet modules loaded through the Node loader
+      When facets import from each other's directories and the host reloads
+      Then one load shares one copy of shared modules, reload imports fresh copies, and modules without a facet default export are rejected
     ```
 
 - [x] **FR-11**

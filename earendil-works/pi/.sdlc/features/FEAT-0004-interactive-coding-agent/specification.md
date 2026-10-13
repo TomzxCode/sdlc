@@ -141,3 +141,32 @@ main() -> resolveAppMode(args)
 - TUI rendering internals (FEAT-0003).
 - Extension/skills API surface (FEAT-0005).
 - Session format and branching internals (FEAT-0006).
+
+## Sync drift: 2026-10-13
+
+Full sync vs `packages/coding-agent/src`. No body edits (status done); deltas recorded here.
+
+1. **Tool sets table incomplete.** `| Default (4) | read, bash, edit, write |`
+and read-only set are correct, but sessions also register `codemode`
+(`src/extensions/codemode/tool.ts`, exposure `model-only`, QuickJS sandbox,
+`// @options:` header, `store()`/`load()` persisted as `codemode-store`
+entries), `tool_search` (`src/extensions/tool-search/tool.ts`, BM25 over
+`codemode`/`deferred` tools, loads matches into the next model call), MCP
+tools `mcp__<server>__<tool>` with exposures `codemode` (default) /
+`deferred` / `direct` / `hidden` plus `toolExposure` overrides
+(`src/extensions/mcp/tools.ts`, `config.ts`), and MCP resource tools
+(`resources.ts`). `builtInExtensions` (`src/extensions/index.ts`) lists
+llama.cpp, codemode, tool-search, mcp as built-in (last three replaceable).
+2. **Architecture diagram omits the extension layer.** Actual startup is
+`main()` -> `AgentSessionRuntime` + `AgentSession` -> extension runner loading
+built-in (codemode/tool-search/mcp/llama) then project/global/package
+extensions; `before_agent_start` gains the `mcp_servers` system-prompt section
+(`renderServersSection`), and `tool_call` readiness waits apply
+(`src/extensions/mcp/index.ts`). `AgentSession`, `AgentSessionRuntime`,
+`SessionManager`, `ModelRegistry` paths verified; modes verified
+(`modes/print-mode.ts`, `modes/json-event.ts`, `modes/rpc/`, `modes/interactive/`);
+SDK factory `createAgentSession()` (`core/sdk.ts`) plus
+`examples/sdk/14-codemode-mcp.ts` verified.
+3. **No PiClient / pi-env drift.** `packages/{protocol,client,server}` are gone
+(verified absent) and no spec section claims remote-session attach; `grep
+pi-env packages/coding-agent` is empty. Nothing to correct.

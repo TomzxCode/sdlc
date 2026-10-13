@@ -11,7 +11,7 @@ status: done
 It implements the Pico model in which a Session atomically commits immutable entries, full task records, and Chord-tracked documents.
 The package currently ships the durable record contracts, the `Storage` persistence boundary, and the detached in-memory `MemoryStorage` reference implementation.
 The root conversation always uses the reserved `ROOT_CONVERSATION_ID` (`1`), and fresh IDs are minted from `2` upward.
-The normative design sequence lives in `packages/durable/docs/pico-v5.md`, `pico-v5-handoff.md`, and `pico-v5-chord-usage.md`.
+The normative design lives in `packages/durable/docs/spec.md`.
 
 ## Stakeholders
 

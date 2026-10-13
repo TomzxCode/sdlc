@@ -93,3 +93,31 @@ None identified yet.
 
 1. Should the experimental first-time setup flow graduate to default behavior, and on what timeline?
 2. What is the policy for promoting a widely-used extension into a built-in tool or command?
+
+## Sync drift: 2026-10-13
+
+Full sync vs `packages/coding-agent/src`. No body edits (status done); deltas recorded here.
+
+1. **Constraints "no built-in MCP" is stale.** Code ships built-in replaceable
+extensions in `src/extensions/`: `mcp/` (`mcp/index.ts`, `config.ts`,
+`runtime.ts`, `tools.ts`, `resources.ts`, `oauth.ts`, `cli.ts`, `ui.ts`),
+`codemode/` (`tool.ts`, `execute.ts`, `worker.ts`, `renderer.ts`), and
+`tool-search/` (`tool.ts`), wired via `src/extensions/index.ts`
+`builtInExtensions` (llama.cpp, codemode, tool-search, mcp). Sub-agents /
+plan-mode / permission popups remain extension-provided (see
+`examples/extensions/subagent/`, `plan-mode/`, `permission-gate.ts`), so only
+the "no built-in MCP" clause (and by extension codemode/tool-search) drifts.
+2. **FR-02 / Overview miss `codemode`, `tool_search`, `mcp__<server>__<tool>`.**
+Core default stays four tools (`read`, `bash`, `edit`, `write`) plus the
+read-only set, but sessions additionally expose the `codemode` model-only tool
+(QuickJS sandbox batching nested calls), the `tool_search` model-only BM25
+discovery tool, MCP tools (`mcp__*`, default exposure `codemode`, plus
+`deferred`/`direct`/`hidden` and per-tool `toolExposure`), and MCP resource
+tools (`list_mcp_resources`, `list_mcp_resource_templates`,
+`read_mcp_resource`). A future requirements revision should extend FR-02 or
+add an FR for built-in MCP/codemode/tool-search exposure modes.
+3. **No PiClient remote-attach drift.** `packages/protocol`, `packages/client`,
+`packages/server` do not exist; artifacts make no remote-session-attach claim.
+Nothing to correct.
+4. **No pi-env integration in scope.** `grep pi-env packages/coding-agent`
+returns no matches; no artifact claims it. Nothing to correct.

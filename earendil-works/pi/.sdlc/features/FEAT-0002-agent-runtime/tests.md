@@ -7,7 +7,8 @@ status: done
 
 ## Scope
 
-Covers `pi-agent-core` agent loop, tool execution, message queues, abort, events, and the `AgentHarness` layer including compaction, skills, sessions, and system prompts.
+Covers `pi-agent-core` agent loop, tool execution, message queues, abort, events, and proxy streaming.
+Durable sessions, compaction, skills, and system prompts are covered in the `@earendil-works/pi-durable` test suite.
 
 ## Unit Tests
 
@@ -16,23 +17,14 @@ Test files under `packages/agent/test/` cover:
 - Abort and cancellation flow
 - Tool execution (sequential/parallel)
 - Message queue steering and follow-up
-- AgentHarness session lifecycle (harness/session.test.ts, harness/agent-harness.test.ts, harness/agent-harness-stream.test.ts)
-- Compaction (harness/compaction.test.ts)
-- Skills loading and injection (harness/skills.test.ts)
-- Prompt templates (harness/prompt-templates.test.ts)
-- System prompt building (harness/system-prompt.test.ts)
-- Resource formatting (harness/resource-formatting.test.ts)
-- Node execution environment (harness/nodejs-env.test.ts)
-- Storage layer (harness/storage.test.ts)
-- Session UUID generation (harness/session-uuid.test.ts)
-- Truncation utilities (harness/truncate.test.ts)
-- Repo-level logic (harness/repo.test.ts)
+- Proxy streaming (proxy.test.ts)
+- End-to-end loop behavior (e2e.test.ts)
+- Shared fixtures (utils/)
 
 ## Test Infrastructure
 
 - Injectable `StreamFn` with controlled behavior (mock stream event sequences)
-- In-memory session storage for deterministic testing
-- `NodeExecutionEnv` for filesystem and shell tool testing
+- Direct `Agent` construction with caller-supplied tools and queue modes
 
 ## Coverage Matrix
 
@@ -46,12 +38,12 @@ Test files under `packages/agent/test/` cover:
 | FR-06 (Message queues) | agent.test.ts |
 | FR-07 (Abort) | agent.test.ts |
 | FR-08 (Event taxonomy) | agent-loop.test.ts |
-| FR-09 (AgentHarness) | harness/agent-harness.test.ts |
+| FR-09 (AgentHarness) | (moved to `@earendil-works/pi-durable` in 1.0.0; covered in its test suite) |
 | FR-10 (Extensible AgentMessage) | agent.test.ts |
-| FR-11 (Proxy streaming) | harness/agent-harness-stream.test.ts |
-| FR-12 (Compaction) | harness/compaction.test.ts |
-| FR-13 (Branch summarization) | (covered in coding-agent test suite) |
-| FR-14 (NodeExecutionEnv) | harness/nodejs-env.test.ts |
+| FR-11 (Proxy streaming) | proxy.test.ts |
+| FR-12 (Compaction) | (moved to `@earendil-works/pi-durable` in 1.0.0; covered in its test suite) |
+| FR-13 (Branch summarization) | (covered in pi-durable test suite) |
+| FR-14 (NodeExecutionEnv) | (moved to `@earendil-works/pi-durable` in 1.0.0; covered in its test suite) |
 | NFR-01 (Single concurrent run) | agent.test.ts |
 | NFR-02 (Failure as assistant message) | agent.test.ts |
 | NFR-04 (Platform-agnostic core) | (module structure) |

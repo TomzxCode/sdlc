@@ -7,16 +7,17 @@ status: done
 
 ## Overview
 
-The package implements the Pico durable-record layer as pure TypeScript contracts plus one detached in-memory store.
+The package implements the Pico durable-record layer as TypeScript contracts with `MemoryStorage` and `SqliteStorage` backends behind the `Storage` boundary, plus the Session mutation line and the `ExecutionEnv` interface.
 Record types encode every lifecycle discriminator as a union so invalid states fail at compile time.
 `MemoryStorage` keeps sorted per-table indexes and clones across the ownership boundary so it behaves like a serialization-backed store.
 
 ## Architecture
 
 `types.ts` owns all record contracts and the `Storage` interface.
-`memory-storage.ts` implements `Storage` with `Map` tables and sorted ID arrays.
-`index.ts` re-exports the public surface (`MemoryStorage`, `ROOT_CONVERSATION_ID`, and the record types).
-The Session (not yet in this package) serializes commits and supplies semantic validity.
+`storage/memory.ts` implements `Storage` with `Map` tables and sorted ID arrays.
+`storage/sqlite/` implements the persistent `SqliteStorage` over a portable `SqliteDatabase` facade (node and cloudflare adapters).
+`session/` owns the Session mutation line (`createSession`); `index.ts` re-exports the public surface.
+The Session serializes commits and supplies semantic validity.
 
 ```mermaid
 flowchart LR
@@ -146,11 +147,11 @@ sequenceDiagram
 
 1. A future persistent backend may interpret cursor shape or commit ordering differently than `MemoryStorage`.
 2. Prototype-safe cloning adds per-record cost that needs measuring once real workloads exist.
-3. Document deltas and sources currently live outside this package, so the full Pico commit path is not yet exercisable here.
+3. Document deltas persist in-package (`document_revisions`, `DocumentContent` base/delta); Session commits exercise the full commit path.
 
 ## Out of Scope
 
-- The Session mutation line and task scheduler.
-- Persistent storage backends such as SQLite.
-- Chord document delta mechanics, covered by the Chord package and `pico-v5-chord-usage.md`.
+- Harness scheduling policies beyond the Session mutation line (`src/session/`, `src/harness/`).
+- Persistent storage backends beyond the in-package `SqliteStorage` (`src/storage/sqlite/`, node and cloudflare adapters).
+- Chord document delta mechanics, covered by the Chord package.
 - HTTP endpoints and OpenAPI contracts.

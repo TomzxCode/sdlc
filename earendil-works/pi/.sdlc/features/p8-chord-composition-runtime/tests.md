@@ -8,8 +8,8 @@ session_link: "backfilled-from-shipped-code"
 
 ## Scope
 
-The suite exercises facets, singleton and keyed services, replicated state, delta tracking, the remote-service wire boundary, facet bundling and loading, context, and strict-JSON validation.
-The suite covers ten test files under packages/chord/test with roughly one hundred eighty individual cases.
+The suite exercises facets, services, replicated state, delta tracking, the remote-service wire boundary, facet loading and reload, context, and strict-JSON validation.
+The suite covers thirty test files under packages/chord/test with roughly four hundred individual cases.
 Out of scope is any real transport, Pi host integration, and performance benchmarking beyond the delta traversal bench.
 
 ## Unit Tests
@@ -42,7 +42,7 @@ Out of scope is any real transport, Pi host integration, and performance benchma
 | ID | Description | Steps | Expected Outcome |
 |---|---|---|---|
 | TC-14 | Package boundary keeps Chord free of Pi dependencies | Run the boundary test over the Chord tree | No import reaches another Pi workspace package or outside file |
-| TC-15 | Facet bundles build, load, reload, and reject corrupt entries | Bundle a plugin package then load its entries | Fresh reloadable generations load and corrupt entries fail fast |
+| TC-15 | Facet modules load, share one copy per load, and reload fresh copies | Load facet fixtures through the Node loader in a child process | Shared directory imports resolve to one copy, reload re-imports, and invalid default exports are rejected |
 
 ## Edge Cases and Failure Scenarios
 
@@ -50,13 +50,13 @@ Out of scope is any real transport, Pi host integration, and performance benchma
 |---|---|---|
 | TC-9E | Missing dependencies, cycles, duplicate providers, async setup | Host rejects the graph before binding any service |
 | TC-11E | Replacement activation or post-cutover cleanup fails | Old generation stays active or the host terminates deterministically |
-| TC-15E | Invalid entry configuration or corrupt bundle bytes | Build or load fails without touching the previous output generation |
+| TC-15E | Missing loader or invalid facet module | Load without a configured loader, or a module without a facet default export | Load fails with a descriptive error and no facet is installed |
 
 ## Test Infrastructure
 
 - Vitest runs the suite from packages/chord with a loopback service transport helper.
 - A dedicated retention worker exercises tracker proxies under garbage-collection pressure.
-- Content-addressed bundle fixtures are built with esbuild and loaded through the Node VM loader.
+- Facet loader fixtures run in a child process through the Node loader with its reload query hook.
 
 ## Coverage Matrix
 

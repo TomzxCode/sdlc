@@ -95,5 +95,5 @@ None identified yet.
 
 ## Open Questions
 
-1. What is the stabilization criteria for the `ExtensionAPI` (currently documented in a 104KB extensions.md), and which parts are considered stable versus experimental?
+1. What is the stabilization criteria for the `ExtensionAPI` (currently documented in extensions.md), and which parts are considered stable versus experimental?
 2. How should extension-provided permissions/sandboxing hooks interact with the documented external-sandbox patterns?

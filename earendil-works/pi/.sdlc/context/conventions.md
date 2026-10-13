@@ -15,26 +15,24 @@
 
 ```
 packages/
-  ai/             # pi-ai: src/, test/, scripts/ (model generators), providers/, api/, auth/
-  agent/          # pi-agent-core: src/ (core), src/harness/, test/
-  tui/            # pi-tui: src/, src/components/, test/, native/
-  coding-agent/   # pi-coding-agent: src/core/, src/modes/, src/utils/, src/cli/, src/client/,
-                  #   docs/, test/ (flat suite + suite/ + suite/regressions/),
-                  #   examples/ (sdk/, extensions/)
-  protocol/       # pi-protocol: src/cbor/, src/, test/
-  client/         # pi-client: src/, test/
-  server/         # pi-server: src/, src/transports/, src/testing/, test/
-  session-backends/ # pi-session-backend-sqlite-node: sqlite-node/src/sqlite/ (storage/, migrations/), sqlite-node/test/
-  chord/          # @earendil-works/chord: src/ (context/, delta/, facets/, node/), test/
-  durable/        # pi-durable: src/, test/
+  ai/             # @earendil-works/pi-ai: src/ (api/, auth/, compat/, providers/, utils/), test/, scripts/ (model generators)
+  agent/          # pi-agent-core: src/ (flat: agent-loop, agent, proxy), test/ (+ test/utils/)
+  tui/            # pi-tui: src/, src/components/, test/, native/ (darwin/, linux/, win32/)
+  coding-agent/   # pi-coding-agent: src/ (core/, modes/, cli/, utils/, extensions/), docs/, test/ (flat suite + suite/ + suite/regressions/), examples/ (sdk/, extensions/)
+  chord/          # @earendil-works/chord: src/ (context/, delta/, plus flat node/cluster/host modules), test/
+  durable/        # pi-durable: src/ (storage/sqlite, session/, codemode/, env/, harness/, testing/), test/ (incl. sqlite-storage, sqlite-migrations, sqlite-facade tests)
   telemetry/      # pi-telemetry: src/, src/testing/, test/
-  evals/          # pi-evals: src/, src/vitest-evals/, test/, scripts/
+  evals/          # @earendil-works/pi-evals: src/ (cli, docker, harness, plan, report), test/, docker/, evals/, vitest.test.config.ts + vitest.evals.config.ts
+  codemode/       # @earendil-works/pi-codemode: src/ (runtime/, portable.ts, cloudflare.ts, declarations.ts), test/, examples/cloudflare/
+  env/            # @earendil-works/pi-env: src/ (connection, remote-env, terminal, ssh, watch), test/, daemon/ (Rust crate: src/ with exec/pty/fs/scan/watch), docs/ (protocol.md, semantics.md)
+  mcp/            # standalone MCP client: src/ (protocol/, transports/, oauth/, testing/), test/, LICENSES/
 scripts/          # repo-level: release, shrinkwrap, version-sync, pinned-dep/TS-import checks
 .github/workflows/  # CI
 ```
 
 Each package owns its own `package.json`, `tsconfig*.json`, `CHANGELOG.md`, and tests.
-The root `package.json` defines npm workspaces and the orchestration scripts (`build`, `check`, `test`, `release:*`).
+The root `package.json` defines npm workspaces as `packages/*`, `apps/*`, plus the five `packages/coding-agent/examples/extensions/*` entries.
+The `apps/*` workspace glob is declared but no `apps/` directory currently exists in the repo.
 All `.sdlc/` artifacts live at the repo root under `.sdlc/`.
 
 ## Coding Standards
@@ -54,9 +52,9 @@ All `.sdlc/` artifacts live at the repo root under `.sdlc/`.
 
 Conventional Commits with package scopes.
 
-- Format: `{feat,fix,docs,chore}[(ai,agent,tui,coding-agent,protocol,client,server,storage,evals)]: <concise informative message>` (optionally multi-line).
-- Scopes are the short package names: `ai`, `agent`, `tui`, `coding-agent`, `protocol`, `client`, `server`, `storage`, `evals`.
-- No agreed scope token exists yet for the new packages `chord`, `durable`, `telemetry`, and `session-backends`; confirm before using one in a commit message.
+- Format: `{feat,fix,docs}[(ai,tui,agent,coding-agent)]: <concise informative message>` (optionally multi-line).
+- This scope list is unchanged in AGENTS.md: still only `ai`, `tui`, `agent`, `coding-agent`.
+- No agreed scope token exists yet for `chord`, `durable`, `telemetry`, `evals`, `codemode`, `env`, or `mcp`; confirm before using one in a commit message.
 - No emojis in commits, issues, PR comments, or code.
 - `fixes #<n>` / `closes #<n>` repeat the keyword per issue for auto-close (`closes #1, closes #2`, not `closes #1, #2`).
 - Release commits: `Release vX.Y.Z` and `Add [Unreleased] section for next cycle` are produced by the release script.
@@ -81,8 +79,9 @@ Conventional Commits with package scopes.
 
 ## Testing Standards
 
-- **Frameworks:** Vitest for `ai`, `agent`, `coding-agent`, `protocol`, `client`, `server`, `evals`, `chord`, `durable`, `telemetry`, and `session-backends/sqlite-node`; Node's built-in `node --test` for `tui`.
-- The former `pi-storage-sqlite-node` package no longer exists at `packages/storage`; its successor `pi-session-backend-sqlite-node` lives at `packages/session-backends/sqlite-node` and owns its tests under `sqlite-node/test/`.
+- **Frameworks:** Vitest (`vitest --run`) for `ai`, `agent`, `coding-agent`, `chord`, `durable`, `telemetry`, `codemode`, `env`, and `mcp`; `evals` runs Vitest with an explicit config (`vitest run --config vitest.test.config.ts`); Node's built-in `node --test` for `tui`.
+- `vitest.config.ts` files exist in `agent`, `ai`, `codemode`, `coding-agent`, `durable`, `env`, and `mcp`; `evals` uses `vitest.test.config.ts` (unit) plus `vitest.evals.config.ts`, while `chord`, `telemetry`, and `tui` carry no `vitest.config.ts` at the package root.
+- SQLite storage tests live under `packages/durable/test/` (`sqlite-storage.test.ts`, `sqlite-migrations.test.ts`, `sqlite-facade.test.ts`, `sqlite-cloudflare.test.ts`) against `packages/durable/src/storage/sqlite`.
 - **Never run the full vitest suite directly** (it includes e2e tests activated by endpoint/auth env vars). Run non-e2e tests via `./test.sh`, or specific files: `node ../../node_modules/vitest/dist/cli.js --run test/specific.test.ts`.
 - **coding-agent tests** use `test/suite/harness.ts` + the faux provider. No real provider APIs, keys, or paid tokens.
 - **Issue regressions** go under `packages/coding-agent/test/suite/regressions/` named `<issue-number>-<short-slug>.test.ts`.
