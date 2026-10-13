@@ -26,7 +26,7 @@ Order rows by priority: Must first, then Should, then May.
 | ID | Priority | Requirement |
 |---|---|---|
 | FR-01 | Must | The system shall expose a `Models` collection that routes model lookups and streams by owning provider. |
-| FR-02 | Must | The system shall support the major wire protocols: Anthropic Messages, OpenAI Responses, OpenAI Completions, Google Generative AI, Google Vertex, Mistral Conversations, and Bedrock Converse Stream. |
+| FR-02 | Must | The system shall support the major wire protocols: Anthropic Messages, OpenAI Responses, OpenAI Completions, Google Generative AI, Google Vertex, Mistral Conversations, Bedrock Converse Stream, Azure OpenAI Responses, OpenAI Codex Responses, Pi Messages, Cloudflare Workers AI, Typesafe System-One, OpenRouter Images, and llama.cpp classification. |
 | FR-03 | Must | The system shall stream assistant responses as an async-iterable event stream emitting `start`, text/thinking/toolcall deltas, `done`, and `error` events. |
 | FR-04 | Must | The system shall encode all stream failures as terminal events with `stopReason: "error" \| "aborted"` and never throw out of a stream. |
 | FR-05 | Must | The system shall resolve provider authentication via a credential store first (OAuth or API key), falling back to ambient env-var resolution only when nothing is stored. |

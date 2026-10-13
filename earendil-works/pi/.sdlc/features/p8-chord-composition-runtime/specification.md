@@ -66,7 +66,7 @@ flowchart LR
 ## API Contracts
 
 There is no HTTP surface in this feature, so no api.yaml exists.
-The normative contract is the TypeScript surface exported from the package root plus the context, delta, bundler, and node entry points.
+The normative contract is the TypeScript surface exported from the package root plus the context, delta, and node entry points.
 
 ## Sequences
 
@@ -96,7 +96,7 @@ sequenceDiagram
 | Package coupling | Standalone with zero Pi workspace dependencies | Lets unrelated applications adopt Chord without the Pi monorepo |
 | Remote boundary | Transport-independent wire grammar with application-supplied adapters | Keeps Chord neutral on framing, routing, and envelopes while enforcing strict JSON |
 | State replication | Proxy-tracked mutations with per-stream path codecs | Preserves string and array operations compactly while isolating client streams |
-| Module loading | esbuild bundles verified by SHA-256 and compiled with node VM | Gives content-addressed reloadable generations without Node module-cache coupling |
+| Module loading | Node loader importing facet modules with a reload query hook | Shares one copy of each facet directory per load and re-imports fresh copies on reload, without isolation or eviction |
 | Context model | Explicit Go-like context parameter on operations | Carries cancellation and scoped values without Chord depending on either domain |
 
 ## Risks and Unknowns

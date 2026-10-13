@@ -7,16 +7,16 @@ status: done
 
 ## Scope
 
-Tests cover the `pi-harness` adapter, the `vitest-evals` harness primitives (harness-table, artifacts, summary), and the harness contract.
-Model-backed eval runs themselves (smoke, extensions) are on-demand and excluded from the default unit suite.
+Tests cover the `src/harness.ts` adapter (model selection, environment isolation, documentation variants), the comparison runner (`src/plan.ts` task planning, `src/report.ts` observation pairing and lift summary), and the harness contract.
+Model-backed eval runs themselves (smoke, documentation-audit, `*.docs.eval.ts`) are on-demand and excluded from the default unit suite.
 
 ## Unit Tests
 
 | ID | Description | Input | Expected Output |
 |---|---|---|---|
-| TC-1 | `pi-harness` adapts an `AgentSession` to the harness interface | Harness options | A valid harness instance |
-| TC-2 | Harness table summarizes multiple harness configurations | Table of harnesses | Correct summary output |
-| TC-3 | Artifact collection attaches session artifacts | Completed run | Artifacts recorded |
+| TC-1 | `src/harness.ts` adapts an `AgentSession` to the harness interface | Harness options | A valid harness instance |
+| TC-2 | Task planning expands cases into `(case, variant, model, run)` arms | Discovered cases | Correct planned cohort |
+| TC-3 | Observation reading attaches session artifacts and aggregates lift | Completed run | Artifacts recorded, paired summary |
 
 ## Integration Tests
 
@@ -34,8 +34,8 @@ Model-backed eval runs themselves (smoke, extensions) are on-demand and excluded
 ## Test Infrastructure
 
 - Ran with Vitest (`packages/evals/test/`):
-  - `pi-harness.test.ts`, `vitest-evals/artifacts.test.ts`, `vitest-evals/harness-table.test.ts`, `vitest-evals/summary.test.ts`.
-- Core evals live in `src/` (`smoke.eval.ts`, `extensions.eval.ts`) and run via `npm run eval` with a provider/model.
+  - `harness.test.ts`, `plan.test.ts`, `report.test.ts`, `comparison.test.ts`, `configured-runtime.test.ts`, `acme-server.test.ts`.
+- Host evals live in `evals/` (`smoke.eval.ts`, `documentation-audit.eval.ts`) and documentation-lift evals in `evals/*.docs.eval.ts`; run via `npm run eval` (host) / `npm run eval:docs` (comparison) with a provider/model.
 
 ## Coverage Matrix
 

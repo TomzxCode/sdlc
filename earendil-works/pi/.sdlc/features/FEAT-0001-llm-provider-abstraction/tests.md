@@ -14,9 +14,9 @@ Covers `pi-ai` provider abstraction, streaming, auth, token tracking, model cata
 Test files under `packages/ai/test/` cover:
 - Provider factories and auth resolution (providers.test.ts, oauth-auth.test.ts, oauth-device-code.test.ts, env-api-keys.test.ts, google-vertex-api-key-resolution.test.ts)
 - Streaming protocol (stream.test.ts, anthropic-sse-parsing.test.ts, openai-completions-*.test.ts, openai-responses-*.test.ts)
-- Tool calling (tool-call-id-normalization.test.ts, tool-call-without-result.test.ts, deferred-tools.test.ts)
+- Tool calling (tool-call-id-normalization.test.ts, tool-call-without-result.test.ts)
 - Token/cost tracking (tokens.test.ts, total-tokens.test.ts, cache-retention.test.ts, anthropic-cache-write-1h-cost.test.ts)
-- Model catalog (providers.test.ts, firework-models.test.ts, together-models.test.ts, bedrock-models.test.ts, xiaomi-models.test.ts)
+- Model catalog (providers.test.ts, fireworks-models.test.ts, together-models.test.ts, bedrock-models.test.ts, xiaomi-models.test.ts)
 - Cross-provider handoff (cross-provider-handoff.test.ts)
 - Error handling (error-body.test.ts, provider-error-body-passthrough.test.ts, retry.test.ts, abort.test.ts)
 - Image support (image-tool-result.test.ts, images.test.ts, images-models.test.ts)
@@ -58,7 +58,7 @@ E2E tests with live provider credentials (enabled when env vars are present) cov
 | FR-06 (OAuth flows) | oauth-auth.test.ts, oauth-device-code.test.ts |
 | FR-07 (TypeBox tool schemas) | tool-call-id-normalization.test.ts, validation.test.ts |
 | FR-08 (Lazy SDK loading) | lazy-module-load.test.ts |
-| FR-09 (Model catalog generation) | providers.test.ts, bedrock-models.test.ts, firework-models.test.ts |
+| FR-09 (Model catalog generation) | providers.test.ts, bedrock-models.test.ts, fireworks-models.test.ts |
 | FR-10 (Token/cost tracking) | tokens.test.ts, total-tokens.test.ts |
 | FR-11 (Cross-provider handoff) | cross-provider-handoff.test.ts |
 | FR-12 (Compat flags) | various anthropic/openai compat test files |

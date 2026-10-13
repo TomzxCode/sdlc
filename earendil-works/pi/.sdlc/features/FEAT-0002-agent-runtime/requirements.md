@@ -8,7 +8,8 @@ status: done
 ## Overview
 
 `pi-agent-core` provides the stateful agent runtime that sits between the LLM abstraction (`pi-ai`) and application UIs.
-It owns the transcript, runs the prompt-stream-tool-continue loop, executes tools (sequentially or in parallel), manages message queues (steering and follow-up), and exposes a higher-level `AgentHarness` with sessions, compaction, skills, and provider hooks.
+It owns the transcript, runs the prompt-stream-tool-continue loop, executes tools (sequentially or in parallel), and manages message queues (steering and follow-up).
+Durable sessions, compaction, skills, system-prompt building, and the `NodeExecutionEnv` moved to `@earendil-works/pi-durable` in 1.0.0 and are out of scope for this package.
 
 ## Stakeholders
 
@@ -26,18 +27,18 @@ Order rows by priority: Must first, then Should, then May.
 |---|---|---|
 | FR-01 | Must | The system shall provide an `Agent` class owning the transcript, tools, model, and thinking level, with `prompt`, `continue`, `abort`, and `subscribe` methods. |
 | FR-02 | Must | The system shall run an agent loop that streams an assistant response, extracts tool calls, executes them, and continues until no more tool calls or queued messages remain. |
-| FR-03 | Must | The system shall call an injectable `StreamFn` (default pi-ai `streamSimple`) to reach the LLM, keeping the runtime transport-agnostic. |
+| FR-03 | Must | The system shall call an injectable `StreamFn` (explicit per call, or installed via `setDefaultStreamFn`) to reach the LLM, keeping the runtime transport-agnostic. |
 | FR-04 | Must | The system shall execute tool calls either sequentially or in parallel based on config and per-tool `executionMode`, emitting `tool_execution_*` events in completion order while persisting tool results in source order. |
 | FR-05 | Must | The system shall validate tool arguments before execution and support `beforeToolCall`/`afterToolCall` hooks that can block, override, or terminate a tool call. |
 | FR-06 | Must | The system shall support message queues for steering (delivered after the current tool batch) and follow-up (delivered after the agent stops). |
 | FR-07 | Must | The system shall support abort via an `AbortController` whose signal flows to `streamFn` and tool `execute`. |
 | FR-08 | Must | The system shall emit a stable event taxonomy: `agent_start/end`, `turn_start/end`, `message_start/update/end`, `tool_execution_start/update/end`. |
-| FR-09 | Must | The system shall provide an `AgentHarness` wrapping `Agent` with sessions, compaction, skills, system-prompt building, and provider hooks. |
+| FR-09 | Must | The system shall consume durable sessions, compaction, skills, system-prompt building, and provider hooks from `@earendil-works/pi-durable` instead of providing its own `AgentHarness` (removed in 1.0.0). |
 | FR-10 | Must | The system shall support app-extensible `AgentMessage` types via declaration merging, with `convertToLlm` bridging to pi-ai messages and an optional `transformContext` hook. |
 | FR-11 | Should | The system shall provide a `streamProxy` function for routing LLM calls through a server with bandwidth-reduced events. |
-| FR-12 | Should | The system shall include compaction utilities (`compact`, `shouldCompact`, `estimateTokens`, `findCutPoint`). |
-| FR-13 | Should | The system shall include branch-summarization utilities. |
-| FR-14 | Should | The system shall provide a `NodeExecutionEnv` (filesystem + shell) via the `./node` entrypoint. |
+| FR-12 | Should | The system shall consume compaction utilities from `@earendil-works/pi-durable` instead of providing its own (removed in 1.0.0). |
+| FR-13 | Should | The system shall consume branch-summarization utilities from `@earendil-works/pi-durable` instead of providing its own (removed in 1.0.0). |
+| FR-14 | Should | The system shall consume the `NodeExecutionEnv` (filesystem + shell) from `@earendil-works/pi-durable` instead of providing its own `./node` entrypoint (removed in 1.0.0). |
 
 ## Non-Functional Requirements
 
@@ -49,7 +50,7 @@ Order rows by priority: Must first, then Should, then May.
 | NFR-02 | Must | Reliability | Run failures shall be surfaced as a synthetic failure assistant message with `stopReason: "aborted" \| "error"` followed by `agent_end`. |
 | NFR-03 | Must | Correctness | The run shall not be considered idle until `agent_end` listeners have settled. |
 | NFR-04 | Must | Portability | Core modules shall be platform-agnostic; Node-specific code shall live behind the `./node` entrypoint. |
-| NFR-05 | Should | Maintainability | A stable, backend-independent error taxonomy (`FileErrorCode`, `ExecutionErrorCode`, `CompactionErrorCode`, `SessionErrorCode`) shall be used for fallible operations. |
+| NFR-05 | Should | Maintainability | Fallible-operation error taxonomies shall live in `@earendil-works/pi-durable`, while this package surfaces run failures only as synthetic assistant messages per NFR-02. |
 
 ## Constraints
 

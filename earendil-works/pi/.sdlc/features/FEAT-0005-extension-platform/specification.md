@@ -50,6 +50,13 @@ Skills & Prompt Templates
 | Shortcuts | `ExtensionShortcut` | Register key bindings |
 | Flags | `ExtensionFlag` | Register CLI flags |
 | Session control | `ExtensionContextActions` | setActiveTools, setModel, compact, fork, abort |
+| Providers | `registerProvider`, `unregisterProvider` | Add or remove LLM providers |
+| MCP | `registerMcpServer`, `unregisterMcpServer` | Add or remove MCP servers |
+| Renderers | `registerToolRenderer` | Override tool result rendering |
+
+Built-in extensions (`packages/coding-agent/src/extensions/`): `llama.cpp`, plus
+replaceable `codemode`, `tool-search`, and `mcp` (a user extension registering the
+same tool or `/mcp` command takes over instead of running alongside the built-in).
 
 ### Event surface (categories)
 

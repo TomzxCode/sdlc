@@ -57,3 +57,25 @@ Test files under `packages/coding-agent/test/` cover:
 | FR-11 (Themes) | theme-detection.test.ts, theme-export.test.ts |
 | FR-12 (Update/telemetry) | version-check.test.ts |
 | NFR-02 (Hot-swap runtime) | agent-session-runtime-events.test.ts, suite/agent-session-runtime.test.ts |
+
+## Sync drift: 2026-10-13
+
+Full sync vs `packages/coding-agent/test`. No body edits (status done); deltas recorded here.
+
+1. **Missing MCP coverage.** Not listed but present: `mcp-extension.test.ts`,
+`mcp-oauth-store.test.ts`, `mcp-oauth-refresh.test.ts`, `mcp-command.test.ts`,
+`mcp-manager-view.test.ts`, suite `agent-session-mcp.test.ts`,
+`agent-session-mcp-oauth.test.ts` (+ `mcp-oauth-server.ts` helper), and suite
+regression `10285-mcp-tool-renderers.test.ts`.
+2. **Missing codemode / tool-search coverage.** Not listed but present:
+`codemode-renderer.test.ts`, `codemode-worker-config.test.ts`,
+`tool-search.test.ts`, suite `agent-session-codemode.test.ts`, suite
+`agent-session-tool-orchestration.test.ts`, SDK example
+`examples/sdk/14-codemode-mcp.ts`.
+3. **Harness / regressions description still accurate.** `test/suite/harness.ts`
+(managed AgentSession + faux provider, in-memory session manager) verified;
+`test/suite/regressions/` holds ~80 regression files (naming
+`<issue>-<slug>.test.ts`), consistent with the artifact's characterization.
+4. **Listed RPC files verified present.** `rpc.test.ts`, `rpc-jsonl.test.ts`,
+`rpc-client-clone.test.ts`, `rpc-client-process-exit.test.ts`,
+`rpc-prompt-response-semantics.test.ts` all exist; no correction needed.

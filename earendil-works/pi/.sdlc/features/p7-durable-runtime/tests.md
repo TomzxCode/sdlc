@@ -7,9 +7,9 @@ status: done
 
 ## Scope
 
-This plan covers the Pico record contracts and `MemoryStorage` behavior in `packages/durable`.
-It is derived from `test/memory-storage.test.ts` (twelve behavior cases) and `test/types.test.ts` (one compile-time discriminator case).
-Out of scope are the Session mutation line, persistent backends, and Chord delta mechanics.
+This plan covers the Pico record contracts and `Storage` behavior in `packages/durable`.
+It is derived from the shared storage conformance suite (`src/testing/storage-conformance.ts`, registered for the memory, SQLite, and JSONL backends), `test/memory-storage.test.ts` (retained-state case), and `test/types.test.ts` (three compile-time discriminator cases).
+Out of scope are the Session mutation line, the Harness agent loop, and Chord delta mechanics.
 
 ## Unit Tests
 
@@ -27,7 +27,7 @@ Out of scope are the Session mutation line, persistent backends, and Chord delta
 | TC-10 | Request IDs index per conversation and input records replace fully | Same key in two conversations plus placed transition | Per-conversation lookup resolves, replacement visible by ID and by key. |
 | TC-11 | Global ID namespace rejects cross-table reuse and exhausted minting | Explicit ID 100, cross-table task write, `MAX_SAFE_INTEGER` entry | Cross-table write throws `already belongs to entry`, minting past the safe integer throws. |
 | TC-12 | Closed storage rejects every operation | Commit and reads after `close` | Commit, lookup, and mint all throw `closed`. |
-| TC-13 | Type discriminators accept valid shapes and reject invalid ones | Omit, replace, pending, terminal, document, outcome, and input shapes | Valid shapes compile, thirteen invalid shapes each raise `@ts-expect-error`. |
+| TC-13 | Type discriminators accept valid shapes and reject invalid ones | Omit, replace, pending, terminal, document, outcome, and input shapes | Valid shapes compile, twenty-nine invalid shapes each raise `@ts-expect-error`. |
 
 ## Integration Tests
 
@@ -54,9 +54,9 @@ Out of scope are the Session mutation line, persistent backends, and Chord delta
 ## Test Infrastructure
 
 - Vitest suite in `packages/durable/test/` using `BACKGROUND_CONTEXT` as the storage context.
-- Small local factories for pending tasks and entries keep each case isolated with a fresh `MemoryStorage`.
-- Type-level assertions use `expectTypeOf` plus `@ts-expect-error` for the thirteen invalid shapes.
-- Targeted runs avoid the full suite: `node ../../node_modules/vitest/dist/cli.js --run test/memory-storage.test.ts`.
+- The shared conformance suite runs every behavior case against each backend through its provider-constructed instance (`registerStorageConformance`).
+- Type-level assertions use `expectTypeOf` plus `@ts-expect-error` for the twenty-nine invalid shapes.
+- Targeted runs avoid the full suite (from `packages/durable`): `npx vitest --run test/memory-storage.test.ts`.
 
 ## Coverage Matrix
 

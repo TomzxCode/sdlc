@@ -7,21 +7,13 @@ status: done
 
 ## Overview
 
-`pi-agent-core` is split into a low-level layer (`Agent`, `agentLoop`) and a high-level `AgentHarness`.
+`pi-agent-core` provides the low-level layer (`Agent`, `agentLoop`) plus the proxy stream (`streamProxy`) and shared types.
 The low-level layer is transport-agnostic and delegates LLM calls to an injectable `StreamFn`.
-The harness adds durable session storage, compaction, skills, system prompts, and a rich provider/session hook surface.
+Durable session storage, compaction, skills, system prompts, and the provider/session hook surface live in `@earendil-works/pi-durable` (moved out in 1.0.0).
 
 ## Architecture
 
 ```
-+---------------------------------------------------+
-|                  AgentHarness                     |
-|  sessions, compaction, skills, system-prompt,     |
-|  provider/session hooks (before_provider_request, |
-|  tool_call, session_before_compact, ...)          |
-+-------------------------+-------------------------+
-                          | owns
-                          v
 +---------------------------------------------------+
 |                    Agent                          |
 |  transcript, tools, model/thinking, message       |
@@ -36,7 +28,7 @@ The harness adds durable session storage, compaction, skills, system prompts, an
                           | calls
                           v
                 +---------------------+
-                |   StreamFn (inject) |  default: pi-ai streamSimple
+                |   StreamFn (inject) |  explicit or setDefaultStreamFn
                 +---------------------+  alt: streamProxy (server)
 ```
 
@@ -88,18 +80,21 @@ A union of pi-ai `Message` types plus app-injected custom message types via decl
 
 **Request**: `AgentMessage[]` for `prompt`; none for `continue` (resumes from current context; last message must be user/toolResult).
 
-**Response**: an async subscription; results arrive via `subscribe()` events. Throws if an agent is already running.
+**Response**: a promise that settles after the run and its awaited `agent_end` listeners settle.
+Results arrive via `subscribe()` events.
+Throws if an agent is already running.
 
 ### StreamFn
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | model | Model | yes | Target model |
-| context | Context | yes | Messages, tools, system prompt, reasoning |
-| apiKey | ModelAuth | optional | Explicit auth |
-| signal | AbortSignal | optional | Cancellation |
+| context | TranscriptContext | yes | Normalized transcript carrying system messages and tool declarations |
+| options | SimpleStreamOptions | optional | Auth, signal, transport, budgets, and provider observability hooks |
 
-**Response**: an `AssistantMessageEventStream`. Must never throw; failures are terminal stream events.
+**Response**: an `AssistantMessageEventStream`.
+Failures must be encoded as terminal stream events rather than thrown.
+Callers pass `streamFn` explicitly or install one via `setDefaultStreamFn`.
 
 ## Sequences
 
@@ -140,7 +135,7 @@ run executor throws
 | Message extensibility | Declaration-merged `AgentMessage` | Apps add custom types without forking; `convertToLlm` is the bridge |
 | Parallel tool execution | Completion-order events, source-order results | Parallelism for speed, deterministic transcript ordering |
 | Idle definition | After `agent_end` listeners settle | Listeners can perform async cleanup before idle |
-| Core vs Node | `./node` entrypoint | Keeps core platform-agnostic; Node fs/shell isolated |
+| Core vs durable | Harness, sessions, compaction, skills, and Node fs/shell live in `@earendil-works/pi-durable` | Keeps this package platform-agnostic and limited to `Agent`, the agent loop, the proxy stream, and types |
 
 ## Risks and Unknowns
 

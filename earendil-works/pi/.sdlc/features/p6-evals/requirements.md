@@ -30,7 +30,7 @@ Order rows by priority: Must first, then Should, then May.
 | FR-03 | Must | The system shall attach native Pi session artifacts to eval results. |
 | FR-04 | Must | The system shall be runnable from the repo root via `npm run eval` with a provider/model default. |
 | FR-05 | Should | The system shall support filtering evals by file or by test name (Vitest forwarding). |
-| FR-06 | Should | The system shall ship a set of core evals (e.g. smoke, extensions). |
+| FR-06 | Should | The system shall ship a set of core evals (e.g. smoke, documentation-audit, `*.docs.eval.ts`). |
 | FR-07 | Should | The system shall allow harnesses to configure their own model, overriding the default. |
 
 ## Non-Functional Requirements
@@ -65,7 +65,7 @@ Order rows by priority: Must first, then Should, then May.
     - **Then** evals execute with that default.
 - [ ] **FR-05**
     - **Given** many evals
-    - **When** `npm run eval -- src/extensions.eval.ts` or `-t "<name>"` is used
+    - **When** `npm run eval:host -w packages/evals -- evals/documentation-audit.eval.ts` or `-t "<name>"` is used
     - **Then** only the matching evals run.
 
 ## Conflicts

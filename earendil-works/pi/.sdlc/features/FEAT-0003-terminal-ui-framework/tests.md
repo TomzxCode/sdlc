@@ -25,6 +25,7 @@ Test files under `packages/tui/test/` cover:
 - String utilities (truncate-to-width.test.ts, wrap-ansi.test.ts, tab-width.test.ts, word-navigation.test.ts)
 - Stdin buffer (stdin-buffer.test.ts)
 - Regression tests (regression-overlay-cjk-boundary.test.ts, regression-regional-indicator-width.test.ts, bug-regression-isimageline-startswith-bug.test.ts)
+- Additional coverage: alt-screen rendering (tui-alt-screen.test.ts), layout (layout.test.ts), colors/OKLab (colors.test.ts), LaTeX (latex.test.ts), settings list (settings-list.test.ts), mouse components (mouse-components.test.ts), program status (program-status.test.ts), wheel scroll (wheel-scroll.test.ts), IME/cell-size input (tui-cell-size-input.test.ts), style-leak (tui-overlay-style-leak.test.ts), shrink (tui-shrink.test.ts), visible width (visible-width.test.ts), slice-by-column ANSI order (regression-slice-by-column-ansi-order.test.ts), SIGWINCH kill EACCES (regression-sigwinch-kill-eacces.test.ts), native platform/module-path/clipboard (native-platform.test.ts, native-module-path.test.ts, native-clipboard-linux.test.ts), editor history keybindings (editor-history-keybindings.test.ts), skill slash autocomplete (autocomplete-skill-slash.test.ts)
 
 ## Integration Tests
 
@@ -62,7 +63,9 @@ Terminal tests run against `VirtualTerminal` for deterministic render assertions
 | FR-11 (Terminal images) | terminal-image.test.ts |
 | FR-12 (IME support) | (covered by tui-render cursor positioning) |
 | FR-13 (Keybindings manager) | keybindings.test.ts |
+| FR-14 (Color scheme detection) | terminal-colors.test.ts |
 | FR-15 (Fuzzy match/autocomplete) | fuzzy.test.ts, autocomplete.test.ts |
+| FR-16 (Native addons) | native-platform.test.ts, native-module-path.test.ts, native-clipboard-linux.test.ts |
 | NFR-01 (Width validation) | tui-render.test.ts |
 | NFR-03 (SGR resets per line) | tui-render.test.ts |
 | NFR-04 (Virtual terminal testing) | terminal.test.ts |

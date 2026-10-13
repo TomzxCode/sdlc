@@ -1,5 +1,47 @@
----
-agents_ref: "efeebba715e7141c09210195be46afad8ca262f5"
+# SDLC Sync Metadata
+# Tracks which version of agents was used for the last sync.
+# Used by sync-sdlc to detect process/template changes and migrate existing files.
+agents_ref: "993718a297d6b3a4eff7755ef3c8ff5584129202"
 agents_remote: "https://github.com/tomzx/agents"
-last_synced: "2026-09-20"
----
+last_synced: "2026-10-13"
+code_ref: "7d75a0e3eb273dff753d49c066ea29fbe7b3b6f6"
+code_index:
+  "FEAT-0001-llm-provider-abstraction":
+    - packages/ai/
+  "FEAT-0002-agent-runtime":
+    - packages/agent/
+  "FEAT-0003-terminal-ui-framework":
+    - packages/tui/
+  "FEAT-0004-interactive-coding-agent":
+    - packages/coding-agent/src/core/
+    - packages/coding-agent/src/modes/
+    - packages/coding-agent/src/cli/
+  "FEAT-0005-extension-platform":
+    - packages/coding-agent/src/extensions/
+    - packages/coding-agent/docs/
+    - packages/coding-agent/examples/
+  "FEAT-0006-session-persistence-branching":
+    - packages/coding-agent/src/core/session-manager.ts
+    - packages/coding-agent/src/core/agent-session-runtime.ts
+  "p1-orchestrator": []
+  "p2-remote-session-protocol": []
+  "p3-remote-session-client": []
+  "p4-session-server": []
+  "p5-sqlite-session-storage": []
+  "p6-evals":
+    - packages/evals/
+  "p7-durable-runtime":
+    - packages/durable/
+  "p8-chord-composition-runtime":
+    - packages/chord/
+  "p9-telemetry-contracts":
+    - packages/telemetry/
+  "p10-codemode-sandbox":
+    - packages/codemode/
+    - packages/coding-agent/src/extensions/codemode/
+  "p11-remote-execution-env":
+    - packages/env/
+    - packages/durable/src/env/
+  "p12-mcp-client":
+    - packages/mcp/
+    - packages/coding-agent/src/extensions/mcp/
