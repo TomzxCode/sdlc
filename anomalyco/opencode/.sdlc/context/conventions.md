@@ -12,11 +12,13 @@
 
 ## Directory Structure
 
-- Monorepo rooted at `packages/*`, with workspaces also covering `packages/console/*`, `packages/stats/*`, `packages/sdk/js`, and `packages/slack`.
-- Core logic and server live in `packages/opencode/src/` (e.g. `session/`, `server/`, `tool/`, `provider/`, `config/`, `plugin/`, `system-context`).
-- TUI code lives in `packages/opencode/src/cli/cmd/tui/` alongside the `packages/tui` package.
-- Shared web UI components live in `packages/app`; Electron wrapping in `packages/desktop`.
-- Canonical project specs live under `specs/` (`project.md`, `v2/`, `storage/`, `tui-package.md`).
+- Monorepo rooted at `packages/*`, with workspaces also covering `services/*`, `packages/console/*`, and `packages/stats/*`.
+- Core runtime lives in `packages/core/src/` (e.g. `session/`, `config/`, `database/`, `plugin/`, tools, agents, providers).
+- CLI entry lives in `packages/cli/src/` (TUI launch, ACP server, run commands, server process).
+- HTTP API implementation lives in `packages/server/src/` (per-domain `handlers/`); the public contract lives in `packages/protocol/src/` (HttpApi groups).
+- Shared Effect Schemas live in `packages/schema`; LLM provider clients live in `packages/ai`.
+- TUI code lives in `packages/tui`; shared web UI shell in `packages/app`; Electron wrapping in `packages/desktop`; session components in `packages/session-ui`.
+- Canonical session specs live under `specs/v2/`; the full Session Core contract also lives in `AGENTS.md`.
 - Project-specific opencode config and built-in agents/tools/skills live under `.opencode/`.
 - Infra (SST) definitions live under `infra/`; CI under `.github/workflows/`.
 
@@ -41,7 +43,7 @@
 
 - Conventional Commits: `type(scope): summary`.
 - Valid types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`.
-- Scopes are optional but encouraged: package or area (`core`, `opencode`, `tui`, `app`, `desktop`, `sdk`, `plugin`, `llm`, `server`, `stats`).
+- Scopes are optional but encouraged: package or area (`core`, `cli`, `tui`, `app`, `desktop`, `sdk`, `plugin`, `ai`, `server`, `stats`).
 - Examples: `fix(tui): simplify thinking toggle styling`, `chore: generate` (used for SDK/codegen regen), `refactor(core): simplify session input promotion`.
 
 ## Branching
