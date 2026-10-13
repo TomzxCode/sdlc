@@ -11,7 +11,7 @@ block-beta
   columns 5
   claude["Claude Code adapter"]:1
   codex["Codex adapter"]:1
-  cliagents["CLI agents\nCursor / Gemini / pi / opencode / Kimi"]:1
+  cliagents["CLI agents\nCursor / Gemini / grok / pi / opencode / Kimi"]:1
   httpbots["HTTP / webhook bots"]:1
   claw["OpenClaw gateway"]:1
   plugins["External adapter plugins (loaded via ~/.paperclip/adapter-plugins.json)"]:5
@@ -219,12 +219,13 @@ erDiagram
 | `packages/adapters/` | Adapter package implementations (claude-local, codex-local, cursor-local, cursor-cloud, gemini-local, grok-local, kimi-local, opencode-local, pi-local, hermes, hermes-gateway, openclaw-gateway; shared ACPX engine lives in `packages/adapter-utils/`) | TypeScript |
 | `packages/adapter-utils/` | Shared adapter utilities | TypeScript |
 | `packages/plugins/` | Plugin system: SDK, create-paperclip-plugin, sandbox providers, example plugins | TypeScript |
-| `packages/mcp-server/` | MCP server package | TypeScript |
+| `packages/mcp-server/`, `packages/google-sheets-mcp-server/`, `packages/kv-demo-mcp-server/` | MCP servers (control-plane stdio, Google Sheets, KV demo) | TypeScript |
+| `packages/paperclip-runner/`, `packages/paperclip-eval-kernel/` | Native runner protocol, process supervision, and provider-neutral eval matrix orchestration (Rust production runner under `packages/paperclip-runner/runner/`) | TypeScript, Rust |
 | `packages/skills-catalog/`, `packages/teams-catalog/` | Skills and teams catalogs | TypeScript |
 | `skills/` | Paperclip runtime/operational skills (not part of the app catalog) | Markdown, scripts |
-| `server/src/realtime/` | WebSocket real-time events (live dashboards, terminal sessions) | TypeScript, WebSocket |
+| `server/src/realtime/` | WebSocket real-time events (live dashboards, terminal sessions, runner PRP) | TypeScript, WebSocket |
 | `server/src/services/tool-access.ts`, `tool-gateway.ts` | Third-party tool/connection integration (OAuth, MCP/SSE gateways, access policies, runtime slots) | TypeScript |
-| `server/src/secrets/` | Secrets provider implementations (local-encrypted, AWS, GCP, Vault) and provider registry | TypeScript |
+| `server/src/secrets/` | Secrets provider implementations (local-encrypted and AWS live; GCP and Vault are registered but unavailable stubs) and provider registry | TypeScript |
 | `server/src/auth/` | Auth middleware (bearer token, session, board/agent resolution) | TypeScript |
 | `server/src/services/pipelines.ts` | Pipeline management (stages, cases, automation, transitions, events) | TypeScript |
 | `server/src/services/company-transfer-runs.ts`, `company-import-transfers.ts`, `cloud-instance.ts`, `paperclip-cloud-connector.ts` | Cross-instance company transfer/sync and Paperclip Cloud connector | TypeScript |

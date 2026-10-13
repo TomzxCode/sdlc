@@ -11,7 +11,7 @@ The pipeline system provides structured stage-based workflow management for trac
 
 ## Architecture
 
-The pipeline system lives in `server/src/services/pipelines.ts` (5158 lines) with aggregation support in `pipelines-aggregation.ts` and conversation context in `pipeline-conversation-context.ts`. UI pages at `ui/src/pages/Pipelines.tsx` and `PipelineSettings.tsx`. Route file at `server/src/routes/pipelines.ts` (2913 lines). The system uses Drizzle for DB access and integrates with the heartbeat/issue assignment wakeup system for automation.
+The pipeline system lives in `server/src/services/pipelines.ts` (5179 lines) with aggregation support in `pipelines-aggregation.ts` and conversation context in `pipeline-conversation-context.ts`. UI pages at `ui/src/pages/Pipelines.tsx` and `PipelineSettings.tsx`. Route file at `server/src/routes/pipelines.ts` (2798 lines). The system uses Drizzle for DB access and integrates with the heartbeat/issue assignment wakeup system for automation.
 
 ## Data Models
 

@@ -18,7 +18,7 @@ Tests cover tool access policy validation, app gallery functionality, connection
 | TC-3 | Human-friendly connection name formatting | Connection object | Formatted display string |
 | TC-4 | App gallery search/filter works correctly | Search query | Filtered app list |
 
-Files: `packages/shared/src/validators/tool-access.test.ts`, `packages/shared/src/tool-app-gallery.test.ts`, `packages/shared/src/humanize-connection.test.ts`
+Files: `packages/shared/src/validators/tool-access.test.ts`, `packages/shared/src/humanize-connection.test.ts`
 
 ## Integration Tests
 
@@ -31,7 +31,7 @@ Files: `packages/shared/src/validators/tool-access.test.ts`, `packages/shared/sr
 | TC-9 | Tool policies tab renders correctly | Company has tool policies | Policy list with edit capabilities |
 | TC-10 | Tool runtime tab displays correctly | Company has runtime slots | Runtime slot list with status |
 
-Files: `ui/src/pages/apps/Browse.test.tsx`, `ui/src/pages/apps/AppDetail.test.tsx`, `ui/src/pages/apps/Connections.test.tsx`, `ui/src/pages/apps/AppsConnect.test.tsx`, `ui/src/pages/tools/PoliciesTab.test.tsx`, `ui/src/pages/tools/RuntimeTab.test.tsx`
+Files: `ui/src/pages/apps/Browse.test.tsx`, `ui/src/pages/apps/AppDetail.test.tsx`, `ui/src/pages/apps/Connections.test.tsx`, `ui/src/pages/apps/AppsConnect.test.tsx`, `ui/src/pages/tools/ToolRoleAccess.test.tsx`, `ui/src/pages/tools/ToolsAccess.test.tsx`
 
 ## Coverage Matrix
 

@@ -29,6 +29,10 @@
 | Task watchdog | A scoped execution capacity for one watched issue subtree that restores live task paths; not board authority and not active-run output monitoring. |
 | Plugin | Instance-wide out-of-process extension with capability-gated host services, jobs, tools, and UI contributions. |
 | Company portability | Export/import of entire organizations (agents, skills, projects, routines, issues) with secret scrubbing and collision handling. |
+| Decision model | A company-shared API connection (OpenAI or OpenRouter) that powers optional billed background decision features (boolean, choice, and score questions); configured in Company Settings → Connections. |
+| Fast response | An optional experimental company service that posts a short attributed acknowledgement comment on an accepted human turn while the assigned agent continues its normal execution path. |
+| Status card | An experimental company-scoped summary object that tracks issue statuses and carries a written summary. |
+| Completion contract | A versioned issue-scoped record (risk, completion authority, policy and schema versions) that governs when an issue may be treated as complete. |
 
 ## Technical Terms
 

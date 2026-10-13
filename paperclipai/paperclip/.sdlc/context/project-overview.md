@@ -11,9 +11,9 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 
 | Stakeholder | Role | Interest |
 |---|---|---|
-| Board operator (human) | Single human administrator per deployment | Full visibility and control: create companies, hire/fire agents, approve strategy, set budgets, intervene anywhere |
+| Board operator (human) | Human administrator (multiple human users per deployment with roles, memberships, and invites) | Full visibility and control: create companies, hire/fire agents, approve strategy, set budgets, intervene anywhere |
 | CEO agent | Top-level management agent | Proposes strategy, delegates work down the org tree (requires board approval before executing) |
-| Agent employees | Individual AI agents (Claude Code, Codex, Cursor, OpenClaw, HTTP bots, etc.) | Receive tasks via heartbeats, execute work, report costs, delegate to subordinates |
+| Agent employees | Individual AI agents (Claude Code, Codex, Cursor, Gemini CLI, OpenCode, OpenClaw, HTTP bots, etc.) | Receive tasks via heartbeats, execute work, report costs, delegate to subordinates |
 | Self-hosters / solo entrepreneurs | Operators running their own instance | Local-first, embedded-DB deployment; multi-company isolation; mobile-friendly management |
 | Open-source contributors | External developers | Bug fixes, small targeted improvements; plugin-based feature extension |
 
@@ -53,7 +53,7 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 - Knowledge base subsystem
 - Public template marketplace (ClipHub)
 - Multi-board governance or role-based human permission granularity
-- Automatic self-healing orchestration (auto-reassign/retry planners)
+- Full automatic self-healing orchestration beyond bounded run recovery (auto-reassign/retry planners)
 - Project/issue-level privacy ACLs and scoped assignment-only object visibility (deferred to Pro/Enterprise)
 - Realtime transport optimization (SSE/WebSockets)
 
@@ -61,8 +61,8 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 
 - Single-assignee task model with atomic checkout required for `in_progress` transition (conflict-safe, returns `409` on concurrent claims)
 - Every business record belongs to exactly one company; company boundaries enforced on every fetch/mutation
-- Monthly UTC calendar budget window; hard limit at 100% auto-pauses the agent and blocks new invocations
-- Node.js 20+, pnpm 9.15+; PostgreSQL via Drizzle (embedded PGlite when `DATABASE_URL` unset)
+- Scoped budget policies (company, agent, project, goal, issue) with warning thresholds and hard stops; a reached hard stop pauses work and blocks new invocations
+- Node.js 24.11+, pnpm 9.15+; PostgreSQL via Drizzle (embedded PostgreSQL when `DATABASE_URL` unset)
 - Agent API keys hashed at rest; plaintext shown once at creation
 - Every mutating request must write an auditable `activity_log` entry
 - Reliability targets: API p95 < 250 ms for standard CRUD at 1k tasks/company; heartbeat invoke acknowledgement < 2 s for process adapter

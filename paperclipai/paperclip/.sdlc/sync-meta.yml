@@ -1,3 +1,168 @@
-agents_ref: efeebba715e7141c09210195be46afad8ca262f5
+agents_ref: f248f3390b3eb828f852ef42dbb4cad98ae5724e
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-09-20
+last_synced: 2026-10-13
+code_ref: d837b65be821d80c8083f150441b84913723f960
+code_index:
+  "FEAT-0001-company-management":
+    - server/src/routes/companies.ts
+    - server/src/routes/company-import-paths.ts
+    - server/src/services/companies.ts
+    - server/src/services/company-portability.ts
+    - server/src/services/company-import-transfers.ts
+    - packages/db/src/schema/companies.ts
+  "FEAT-0002-org-chart-agents":
+    - server/src/routes/agents.ts
+    - server/src/services/agents.ts
+    - server/src/services/agent-hiring.ts
+    - server/src/services/agent-lifecycle.ts
+    - server/src/modules/agent-lifecycle/
+    - packages/db/src/schema/agents.ts
+    - packages/db/src/schema/agent_api_keys.ts
+  "FEAT-0003-task-system":
+    - server/src/routes/issues.ts
+    - server/src/routes/issues-checkout-wakeup.ts
+    - server/src/services/issues.ts
+    - server/src/services/issue-liveness.ts
+    - server/src/services/issue-thread-interactions.ts
+    - packages/db/src/schema/issues.ts
+    - packages/db/src/schema/issue_comments.ts
+    - packages/db/src/schema/issue_documents.ts
+    - packages/db/src/schema/issue_work_products.ts
+    - packages/db/src/schema/issue_relations.ts
+  "FEAT-0004-heartbeat-execution":
+    - server/src/services/heartbeat.ts
+    - server/src/services/heartbeat/
+    - server/src/services/heartbeat-policy.ts
+    - server/src/services/run-cancellation.ts
+    - server/src/services/execution-continuation.ts
+    - packages/db/src/schema/heartbeat_runs.ts
+    - packages/db/src/schema/heartbeat_run_events.ts
+  "FEAT-0005-governance-approvals":
+    - server/src/routes/approvals.ts
+    - server/src/services/approvals.ts
+    - server/src/services/task-watchdogs.ts
+    - server/src/services/issue-approvals.ts
+    - packages/db/src/schema/approvals.ts
+    - packages/db/src/schema/approval_comments.ts
+    - packages/db/src/schema/issue_watchdogs.ts
+  "FEAT-0006-budget-cost-control":
+    - server/src/routes/costs.ts
+    - server/src/services/costs.ts
+    - server/src/services/budgets.ts
+    - packages/db/src/schema/cost_events.ts
+    - packages/db/src/schema/budget_policies.ts
+    - packages/db/src/schema/budget_incidents.ts
+    - packages/db/src/schema/finance_events.ts
+  "FEAT-0007-routines-schedules":
+    - server/src/routes/routines.ts
+    - server/src/services/routines.ts
+    - packages/db/src/schema/routines.ts
+  "FEAT-0008-workspaces-runtime":
+    - server/src/routes/execution-workspaces.ts
+    - server/src/routes/workspace-command-authz.ts
+    - server/src/routes/workspace-runtime-service-authz.ts
+    - server/src/services/execution-workspaces.ts
+    - server/src/services/workspace-runtime.ts
+    - packages/db/src/schema/execution_workspaces.ts
+    - packages/db/src/schema/workspace_runtime_services.ts
+    - packages/db/src/schema/project_workspaces.ts
+  "FEAT-0009-plugin-system":
+    - server/src/routes/plugins.ts
+    - server/src/services/plugin-loader.ts
+    - server/src/services/adapter-plugin-store.ts
+    - packages/db/src/schema/plugins.ts
+    - packages/db/src/schema/plugin_jobs.ts
+    - packages/plugins/
+  "FEAT-0010-secrets-management":
+    - server/src/routes/secrets.ts
+    - server/src/services/secrets.ts
+    - server/src/secrets/
+    - packages/db/src/schema/company_secrets.ts
+    - packages/db/src/schema/company_secret_versions.ts
+    - packages/db/src/schema/company_secret_bindings.ts
+  "FEAT-0011-auth-access-control":
+    - server/src/routes/auth.ts
+    - server/src/middleware/auth.ts
+    - server/src/services/authorization.ts
+    - server/src/services/agent-credentials.ts
+    - packages/db/src/schema/company_memberships.ts
+    - packages/db/src/schema/invites.ts
+    - packages/db/src/schema/principal_permission_grants.ts
+    - packages/db/src/schema/board_api_keys.ts
+  "FEAT-0012-company-skills":
+    - server/src/routes/company-skills.ts
+    - server/src/services/skills-catalog.ts
+    - server/src/services/company-skills.ts
+    - server/src/services/company-skill-policy.ts
+    - server/src/services/runtime-skill-selections.ts
+    - packages/db/src/schema/company_skills.ts
+    - packages/skills-catalog/
+  "FEAT-0013-goal-hierarchy":
+    - server/src/routes/goals.ts
+    - server/src/services/goals.ts
+    - packages/db/src/schema/goals.ts
+  "FEAT-0014-projects":
+    - server/src/routes/projects.ts
+    - server/src/services/projects.ts
+    - packages/db/src/schema/projects.ts
+    - packages/db/src/schema/project_workspaces.ts
+    - packages/db/src/schema/project_memberships.ts
+    - packages/db/src/schema/project_goals.ts
+  "FEAT-0015-activity-audit-log":
+    - server/src/routes/activity.ts
+    - server/src/services/activity.ts
+    - server/src/services/activity-log.ts
+    - packages/db/src/schema/activity_log.ts
+  "FEAT-0016-board-dashboard":
+    - server/src/routes/dashboard.ts
+    - server/src/services/dashboard.ts
+    - ui/src/pages/Dashboard.tsx
+    - ui/src/pages/DashboardLive.tsx
+  "FEAT-0017-inbox":
+    - server/src/routes/inbox-dismissals.ts
+    - packages/db/src/schema/inbox_dismissals.ts
+    - packages/db/src/schema/issue_read_states.ts
+    - packages/db/src/schema/issue_inbox_archives.ts
+  "FEAT-0018-attachments-work-products":
+    - server/src/routes/assets.ts
+    - packages/db/src/schema/assets.ts
+    - packages/db/src/schema/issue_work_products.ts
+  "FEAT-0019-environment-management":
+    - server/src/routes/environments.ts
+    - server/src/routes/summary-slots.ts
+    - server/src/services/environments.ts
+    - packages/db/src/schema/environments.ts
+    - packages/db/src/schema/environment_leases.ts
+  "FEAT-0020-team-catalog":
+    - server/src/routes/teams-catalog.ts
+    - packages/teams-catalog/
+  "p1-pipelines":
+    - server/src/routes/pipelines.ts
+    - server/src/services/pipelines.ts
+    - ui/src/pages/Pipelines.tsx
+    - ui/src/pages/PipelineSettings.tsx
+  "p2-cloud-upstreams":
+    - ui/src/pages/CompanyExport.tsx
+  "p3-tools-connections-apps":
+    - server/src/services/tool-access.ts
+    - server/src/services/tool-gateway.ts
+    - ui/src/pages/tools/
+  "p4-announcements":
+    - server/src/routes/announcements.ts
+    - server/src/services/announcements.ts
+    - server/src/services/announcement-feed.ts
+    - packages/shared/src/announcements.ts
+    - ui/src/hooks/useAnnouncement.ts
+    - ui/src/components/AnnouncementWell.tsx
+    - announcements/
+  "p5-messaging-channels":
+    - server/src/services/chat-channels.ts
+    - server/src/services/chat-channels/
+    - server/src/services/email-channels.ts
+    - server/src/services/photon/
+  "p6-search":
+    - server/src/services/company-search.ts
+    - server/src/services/company-search-extract.ts
+    - server/src/services/task-search.ts
+    - ui/src/pages/Search.tsx
+    - ui/src/api/search.ts

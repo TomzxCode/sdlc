@@ -14,11 +14,11 @@
 
 | Library | Pillar | Configuration |
 |---|---|---|
-| pino, pino-http | Logging | JSON in production, pretty-print in development, level via `PAPERCLIP_LOG_LEVEL` (`server/src/middleware/logger.ts:21-41`) |
-| @opentelemetry/api | Tracing | Normal server dependency, no-op interface until an SDK registers (`server/package.json:55`) |
-| @opentelemetry/sdk-node, auto-instrumentations-node, resources, semantic-conventions, one OTLP exporter | Tracing | Optional peer dependencies at exact pinned versions, dynamically imported only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`server/package.json:129-138`, `server/src/instrumentation.ts:304-306`) |
-| @sentry/node | Errors | Optional peer dependency pinned to `10.71.0`, loaded only when a backend DSN resolves (`server/package.json:137`, `doc/observability.md:234-244`) |
-| @sentry/browser | Errors | UI dev dependency pinned to `10.71.0`, lazy chunk fetched only after an authenticated session returns a DSN (`ui/package.json:77`, `doc/observability.md:261-266`) |
+| pino, pino-http | Logging | JSON in production, pretty-print in development, level via `PAPERCLIP_LOG_LEVEL` (`server/src/middleware/logger.ts:22-42`) |
+| @opentelemetry/api | Tracing | Normal server dependency, no-op interface until an SDK registers (`server/package.json:64`) |
+| @opentelemetry/sdk-node, auto-instrumentations-node, resources, semantic-conventions, three OTLP exporter packages (one per protocol) | Tracing | Optional peer dependencies at exact pinned versions, dynamically imported only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`server/package.json:145-153`, `server/src/instrumentation.ts:304-306`) |
+| @sentry/node | Errors | Optional peer dependency pinned to `10.71.0`, loaded only when a backend DSN resolves (`server/package.json:153`, `doc/observability.md:289-310`) |
+| @sentry/browser | Errors | UI dev dependency pinned to `10.71.0`, lazy chunk fetched only after an authenticated session returns a DSN (`ui/package.json:78`, `doc/observability.md:356-378`) |
 
 ## Log Aggregation
 
@@ -39,7 +39,7 @@
 - Plugin provider spans are parented through hand-minted W3C `traceparent` strings passed on the per-call invocation channel.
 - Native Runner task runs emit one foldable trace (schema version 2) rooted at `task.run`, covering preparation, session startup, agent turns, and settlement.
 - Sandbox startup spans use the closed `paperclip.sandbox.startup.` attribute prefix with a fixed allowlist and `ok`, `skipped`, or `failed` outcomes (`packages/adapter-utils/src/acpx-engine/startup-timing.ts:48-124`).
-- Duplex transport spans (`sandbox.duplex.channel_open`, `sandbox.duplex.request`) bind through an injected recorder whose default is a no-op (`packages/adapter-utils/src/duplex-observability.ts:21-24`, `server/src/services/duplex-observability-recorder.ts:1-23`).
+- Duplex transport spans (`sandbox.duplex.channel_open`, `sandbox.duplex.request`) bind through an injected recorder whose default is a no-op (`packages/adapter-utils/src/duplex-observability.ts:22-25` for the span names, `:251` for the no-op default, `server/src/services/duplex-observability-recorder.ts:1-23`).
 - Sampling note: no explicit sampler is configured in `server/src/instrumentation.ts`, so the effective sampling behavior was not determined from the repo.
 - Propagation note: cross-process parenting uses explicit W3C `traceparent` strings, while in-process propagation relies on auto-instrumentation defaults not enumerated from the repo.
 
@@ -49,7 +49,7 @@
 - Server events carry no request data at all (no URL, method, headers, cookies, query, or body) under the shipped configuration.
 - Browser events carry no page URL, referrer, user agent, or breadcrumbs, and `sendDefaultPii` is false with `tracesSampleRate` at 0 on both runtimes.
 - Failed Sentry imports or init fall through to one diagnostic log line and keep the process running without error monitoring.
-- The full capture set is the canonical contract in `doc/observability.md:371-450`, not repeated here.
+- The full capture set is the canonical contract in `doc/observability.md:856-974`, not repeated here.
 
 ## Alerting
 

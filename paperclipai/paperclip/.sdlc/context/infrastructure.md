@@ -16,7 +16,7 @@
 | Native runner | Rust crate in `packages/paperclip-runner` with pinned toolchain | see `packages/paperclip-runner/rust-toolchain.toml` |
 | Auth | Better Auth sessions in `authenticated` mode | `1.7.2` |
 
-- Language and runtime versions are pinned in `package.json:99-102` (`engines`, `packageManager`) and repeated in `server/package.json:165-167`, `ui/package.json:92-94`, and `cli/package.json:66-68`.
+- Language and runtime versions are pinned in `package.json:107-110` (`engines`, `packageManager`) and repeated in `server/package.json:181-183`, `ui/package.json:93-95`, and `cli/package.json:66-68`.
 - The pnpm workspace layout is declared in `pnpm-workspace.yaml:1-14` (packages, adapters, plugins, server, ui, cli).
 - TypeScript strictness and `ES2023` target live in `tsconfig.base.json:1-20`.
 - The UI stack (React, Vite, Tailwind, TanStack Query, Lexical/MDX editor) is declared in `ui/package.json:31-75`.
@@ -72,7 +72,8 @@
 | `release-verify.yml` | `workflow_call` with a ref | Runner chaos evals, typecheck, and related verification for a candidate ref |
 | `release-smoke.yml` | `workflow_dispatch` / `workflow_call` with a dist-tag | Installs the published artifact (systemd service leg plus Docker leg) and runs release smoke specs |
 | `docker.yml` | Push to `master`, `v*` / `nightly/v*` / `beta/v*` tags, `workflow_dispatch` | Multi-arch self-hosted image build and GHCR push with monotonic canary retag |
-| `docker-cloud.yml` | `workflow_dispatch` / `workflow_call` | Cloud image build for canonical master SHAs |
+| `ci-routing.yml` | `workflow_dispatch` / `workflow_call` | PR identity validation and trusted-runner selection for stacked PR CI |
+| `sentry-contract.yml` | `pull_request` / push to `master` on Sentry paths | Real Sentry SDK isolation check against the audited optional SDK |
 | `cloud-readiness.yml` | Push to `master`, `workflow_dispatch` | Cloud image, release verification, and exact-source artifact wait |
 | `cloud-migrator-artifacts.yml` | Push to `master`, `workflow_dispatch` | Exact-source `db`/`shared` bundle plus lockfile with install verification |
 | `e2e.yml` | `workflow_dispatch` | Paid allowlisted-actor E2E campaign behind the `runner-e2e-paid` environment |
@@ -98,7 +99,7 @@
 - Stable tags get a GitHub Release via `./scripts/create-github-release.sh <version>` after pushing the tag (`scripts/create-github-release.sh:13-30`).
 - Per-release notes live in `releases/` (for example `releases/v0.3.1.md`).
 - Docker self-hosted images publish from `Dockerfile`, with compose entry points in `docker/` (`docker/docker-compose.yml`, `docker/docker-compose.quickstart.yml`, `docker/quadlet`, `docker/ecs-task-definition.json`).
-- The npm channel aliases are `pnpm release`, `pnpm release:canary`, `pnpm release:stable`, `pnpm release:github`, and `pnpm release:rollback` (`package.json:36-42`).
+- The npm channel aliases are `pnpm release`, `pnpm release:canary`, `pnpm release:stable`, `pnpm release:github`, and `pnpm release:rollback` (`package.json:39-43`).
 
 ### Rollback
 
@@ -117,7 +118,7 @@
 | `GET /api/pipelines/:pipelineId/health` | Pipeline health payload | Pipeline UI and API consumers |
 | `POST /api/tool-connections/:connectionId/health-check` | Tool connection check result | Connections UI |
 
-- The canonical health router is `healthRoutes` in `server/src/routes/health.ts:120-136`, mounted so it serves `/health` under `/api` (`server/src/app.ts:40`, `server/src/app.ts:635`).
+- The canonical health router is `healthRoutes` in `server/src/routes/health.ts:120-136`, mounted so it serves `/health` under `/api` (`server/src/app.ts:71`, `server/src/app.ts:546`, `server/src/app.ts:736`).
 - Anonymous callers on `authenticated` instances get a redacted payload (liveness, deployment mode, commit, bootstrap status), while board and agent actors get full details including server info and recovery state (`server/src/routes/health.ts:45-51`, `server/src/routes/health.ts:388-435`).
 - The build commit SHA is intentionally public on every response so deploy tooling can identify the running build without authenticating (`server/src/routes/health.ts:254-258`).
 - Health logging is exempted from verbose HTTP logs (`server/src/middleware/http-log-policy.ts:4`).
@@ -126,13 +127,13 @@
 
 ## Smoke tests
 
-- The release smoke suite lives in `tests/release-smoke/` and runs with `pnpm test:release-smoke` (`package.json:84`).
+- The release smoke suite lives in `tests/release-smoke/` and runs with `pnpm test:release-smoke` (`package.json:89`).
 - Its Playwright config targets `PAPERCLIP_RELEASE_SMOKE_BASE_URL` (default `http://127.0.0.1:3232`) with Chromium, one CI retry, and screenshot plus trace on failure (`tests/release-smoke/playwright.config.ts:1-30`).
 - Current specs cover Docker auth plus onboarding (`tests/release-smoke/docker-auth-onboarding.spec.ts`).
-- The general browser E2E suite lives in `tests/e2e/` and runs with `pnpm test:e2e` (`package.json:66`).
-- Runner-specific suites live in `tests/runner-e2e/` and `tests/runner-acceptance/` with dedicated vitest configs and launch scripts (`package.json:67-78`).
-- Prompt-based evals live in `evals/promptfoo` and run with `pnpm evals:smoke` (`package.json:83`).
-- Storybook visual baselines run with `pnpm test:storybook-visual` (`package.json:64`).
+- The general browser E2E suite lives in `tests/e2e/` and runs with `pnpm test:e2e` (`package.json:68`).
+- Runner-specific suites live in `tests/runner-e2e/` and `tests/runner-acceptance/` with dedicated vitest configs and launch scripts (`package.json:69-82`).
+- Prompt-based evals live in `evals/promptfoo` and run with `pnpm evals:smoke` (`package.json:88`).
+- Storybook visual baselines run with `pnpm test:storybook-visual` (`package.json:66`).
 
 ## Hosting
 
@@ -146,7 +147,7 @@
 
 ## Secrets management
 
-- Secret vaults are pluggable with four provider ids: `local_encrypted`, `aws_secrets_manager`, `gcp_secret_manager`, and `vault` (`packages/shared/src/constants.ts:706-712`).
+- Secret vaults are pluggable with four provider ids: `local_encrypted`, `aws_secrets_manager`, `gcp_secret_manager`, and `vault` (`packages/shared/src/constants.ts:706-711`).
 - The default is the local encrypted provider (`server/src/secrets/local-encrypted-provider.ts`).
 - AWS Secrets Manager has a real provider (`server/src/secrets/aws-secrets-manager-provider.ts`), while GCP and Vault are unavailable stubs that store external references only (`server/src/secrets/external-stub-providers.ts:1-30`).
 - Provider resolution and health aggregation go through `server/src/secrets/provider-registry.ts`.

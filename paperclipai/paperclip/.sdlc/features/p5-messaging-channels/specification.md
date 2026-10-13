@@ -16,6 +16,7 @@ Email reuses the same conversation and publication tables with email-specific st
 
 Chat ingress and management live in `server/src/routes/chat-channels.ts:86`, with provider-authenticated webhooks mounted outside the board mutation guard in `server/src/routes/chat-channels.ts:502`.
 The durable core lives in `server/src/services/chat-channels.ts`, with provider modules beside it (`server/src/services/chat-discord.ts`, `server/src/services/chat-telegram-media-intake.ts`, `server/src/services/chat-teams-file-consent.ts`, `server/src/services/photon/`).
+Per-provider setup, inventory, and delivery logic is additionally consolidated under channel folders in `server/src/services/chat-channels/` (`discord/`, `github/`, `imessage-photon/`, `microsoft-teams/`, `slack/`, `speko/`, `telegram/` plus shared `activity.ts`, `provider-effects.ts`, `setup-probes.ts`, and related modules).
 Email routes live in `server/src/routes/email.ts:28`, with the durable pipeline in `server/src/services/email-channels.ts:117` and connection setup in `server/src/services/email-connections.ts`.
 The Board Concierge relay lives in `server/src/routes/board-chat.ts:65` and streams `claude` CLI output with the `paperclip-board` skill as system prompt to `ui/src/pages/BoardChat.tsx`.
 Task-facing binding summaries are derived in `server/src/services/chat-channel-binding.ts:16`, and provider deep links in `server/src/services/chat-provider-links.ts:139`.
