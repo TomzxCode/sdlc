@@ -1,0 +1,438 @@
+# OpenAPI 3 contract for Dev Server Lifecycle Management.
+# Normative API definition referenced by specification.md.
+# The router is created by createDevServerRouter and mounted at /api/dev-server
+# by the registerIntegratedDevServerRouter registrar in packages/dashboard/src/routes.ts.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Dev Server Lifecycle Management API"
+  version: 0.1.0
+  description: >
+    HTTP surface for detecting, configuring, starting, stopping, restarting and
+    previewing a project's dev server, plus a server-sent events log stream.
+    The router is mounted under /api/dev-server and reads and writes the project
+    store at .fusion/dev-server.json.
+    Within this feature the contract is additive-only: new optional fields and new
+    routes may be added, and a breaking change requires a new major version.
+paths:
+  /api/dev-server/detect:
+    get:
+      summary: List the ranked dev-server script candidates for the project
+      operationId: detectDevServerScripts
+      responses:
+        "200":
+          description: Detected candidates, ranked by confidence descending
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                required: [candidates]
+                properties:
+                  candidates:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DetectedScript"
+        "500":
+          description: Detection failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/dev-server/config:
+    get:
+      summary: Read the persisted dev-server configuration
+      operationId: getDevServerConfig
+      responses:
+        "200":
+          description: The persisted configuration, or the defaults when no file exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevServerConfig"
+        "500":
+          description: Configuration could not be read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update part of the persisted dev-server configuration
+      operationId: updateDevServerConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DevServerConfigUpdate"
+      responses:
+        "200":
+          description: The stored configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevServerConfig"
+        "400":
+          description: The body is not a JSON object, carries no known field, or carries an invalid value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Configuration could not be written
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/dev-server/status:
+    get:
+      summary: Read the current dev-server state and resolved preview URL
+      operationId: getDevServerStatus
+      responses:
+        "200":
+          description: The current state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevServerStatusResponse"
+        "500":
+          description: Status could not be read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/dev-server/start:
+    post:
+      summary: Start the dev server in a working directory
+      operationId: startDevServer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartDevServerRequest"
+      responses:
+        "200":
+          description: The state after the process started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevServerState"
+        "400":
+          description: The command or the working directory is missing or empty
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: A dev server is already running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The command could not be started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/dev-server/stop:
+    post:
+      summary: Stop the running dev server
+      operationId: stopDevServer
+      responses:
+        "200":
+          description: The state after the stop, or the unchanged state when nothing was running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevServerState"
+        "500":
+          description: The dev server could not be stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/dev-server/restart:
+    post:
+      summary: Restart the dev server with the stored command and working directory
+      operationId: restartDevServer
+      responses:
+        "200":
+          description: The state after the restart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevServerState"
+        "400":
+          description: No previous command is stored, so there is nothing to restart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The dev server could not be restarted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/dev-server/preview-url:
+    put:
+      summary: Set or clear the manual preview URL override
+      operationId: setDevServerPreviewUrl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreviewUrlRequest"
+      responses:
+        "200":
+          description: The state after the update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevServerState"
+        "400":
+          description: The URL is not a string, or does not start with http:// or https://
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The preview URL could not be written
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/dev-server/logs/stream:
+    get:
+      summary: Stream dev-server output as server-sent events
+      operationId: streamDevServerLogs
+      responses:
+        "200":
+          description: >
+            An open server-sent events stream. The stream opens with a ": connected"
+            comment, then a "history" event carrying the stored lines, then "log",
+            "stopped", "failed", and "dev-server:url-detected" events, with a
+            ": heartbeat" comment every 30 seconds.
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                const: text/event-stream
+            Cache-Control:
+              schema:
+                type: string
+                const: no-cache
+            X-Accel-Buffering:
+              schema:
+                type: string
+                const: "no"
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "500":
+          description: The stream could not be opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    DetectedScript:
+      type: object
+      additionalProperties: true
+      required: [name, command, source, confidence]
+      properties:
+        name:
+          type: string
+          description: Script name from the manifest
+          example: dev
+        command:
+          type: string
+          description: Full command string from the manifest
+          example: vite
+        source:
+          type: string
+          description: "root for the project root, otherwise a project-relative directory path"
+          example: root
+        packageName:
+          type: string
+          description: Name of the owning manifest, when it declares one
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Rank score from script-name priority, framework indicator, and the private/main heuristic
+    DevServerConfig:
+      type: object
+      additionalProperties: true
+      required:
+        - selectedScript
+        - selectedSource
+        - selectedCommand
+        - previewUrlOverride
+        - detectedPreviewUrl
+        - selectedAt
+      properties:
+        selectedScript:
+          type: [string, "null"]
+          description: Selected script name
+        selectedSource:
+          type: [string, "null"]
+          description: "Source of the selected script, root or a relative path"
+        selectedCommand:
+          type: [string, "null"]
+          description: Full command of the selected script
+        previewUrlOverride:
+          type: [string, "null"]
+          description: Manual preview URL, must be an http:// or https:// URL
+        detectedPreviewUrl:
+          type: [string, "null"]
+          description: Last auto-detected preview URL, must be an http:// or https:// URL
+        selectedAt:
+          type: [string, "null"]
+          format: date-time
+          description: When the selection was made
+    DevServerConfigUpdate:
+      type: object
+      additionalProperties: false
+      description: At least one known field must be present.
+      properties:
+        selectedScript:
+          type: [string, "null"]
+          description: Selected script name, must be a non-empty string when provided
+        selectedSource:
+          type: [string, "null"]
+          description: Source of the selected script
+        selectedCommand:
+          type: [string, "null"]
+          description: Full command of the selected script
+        previewUrlOverride:
+          type: [string, "null"]
+          description: Manual preview URL, must start with http:// or https://
+        detectedPreviewUrl:
+          type: [string, "null"]
+          description: Last auto-detected preview URL, must start with http:// or https://
+        selectedAt:
+          type: [string, "null"]
+          format: date-time
+          description: When the selection was made
+    DevServerState:
+      type: object
+      additionalProperties: true
+      required: [id, name, status, command, cwd, logHistory]
+      properties:
+        id:
+          type: string
+          description: Server entry identifier
+        name:
+          type: string
+          description: Display name
+          example: default
+        status:
+          type: string
+          enum: [starting, running, stopped, failed]
+          description: Current process status
+        command:
+          type: string
+          description: Command to execute
+        cwd:
+          type: string
+          description: Working directory of the command
+        scriptId:
+          type: string
+          description: Manifest script name the run was started from
+        packagePath:
+          type: string
+          description: Path of the manifest that owns the script
+        pid:
+          type: number
+          description: OS process id while running
+        startedAt:
+          type: string
+          format: date-time
+          description: When the process started
+        stoppedAt:
+          type: string
+          format: date-time
+          description: When the process stopped
+        exitCode:
+          type: number
+          description: Process exit code
+        detectedUrl:
+          type: string
+          description: Preview URL detected from output or probing
+        manualUrl:
+          type: string
+          description: Operator-set preview URL override
+        detectedPort:
+          type: number
+          description: Port detected from output or probing
+        logHistory:
+          type: array
+          maxItems: 500
+          items:
+            type: string
+          description: Ring buffer of recent output lines
+    DevServerStatusResponse:
+      allOf:
+        - $ref: "#/components/schemas/DevServerState"
+        - type: object
+          additionalProperties: true
+          required: [previewUrl, detectedPort, manualPreviewUrl, isRunning]
+          properties:
+            previewUrl:
+              type: [string, "null"]
+              description: The manual override when set, otherwise the detected URL
+            detectedPort:
+              type: [number, "null"]
+              description: Detected preview port
+            manualPreviewUrl:
+              type: [string, "null"]
+              description: The manual preview URL override on its own
+            isRunning:
+              type: boolean
+              description: Whether a child process is currently held
+    StartDevServerRequest:
+      type: object
+      additionalProperties: true
+      required: [command, cwd]
+      properties:
+        command:
+          type: string
+          minLength: 1
+          description: The command to run, spawned with a shell
+          example: pnpm dev
+        cwd:
+          type: string
+          minLength: 1
+          description: Working directory of the command
+        scriptId:
+          type: string
+          description: Manifest script name the run was started from
+        packagePath:
+          type: string
+          description: Path of the manifest that owns the script
+    PreviewUrlRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        url:
+          type: [string, "null"]
+          description: Preview URL, must start with http:// or https:// when not null. An empty string clears the override.
+          example: http://localhost:5173
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable failure message
+          example: command is required and must be a non-empty string
+        details:
+          type: object
+          additionalProperties: true
+          description: Optional structured context

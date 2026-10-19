@@ -1,0 +1,827 @@
+# OpenAPI 3 contract for Insights: Project Learning Extraction.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Insights: Project Learning Extraction API"
+  version: 0.1.0
+  description: >
+    HTTP surface of the Fusion insights feature.
+    It stores project insights, runs model-assisted extractions, tracks each
+    extraction as a run with an event trail, and lets an operator turn an
+    insight into a board task payload.
+    The router is mounted at /api/insights.
+    New fields may be added to any response object, so clients must tolerate
+    unknown properties.
+servers:
+  - url: /api
+paths:
+  /insights:
+    get:
+      summary: List insights
+      operationId: listInsights
+      description: >
+        Lists insights for the scoped project.
+        Results are ordered ascending by creation timestamp and then by id.
+      parameters:
+        - name: projectId
+          in: query
+          required: false
+          description: Project the request is scoped to.
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          description: Restrict to one insight category.
+          schema:
+            $ref: "#/components/schemas/InsightCategory"
+        - name: status
+          in: query
+          required: false
+          description: Restrict to one insight status.
+          schema:
+            $ref: "#/components/schemas/InsightStatus"
+        - name: runId
+          in: query
+          required: false
+          description: Restrict to insights whose last run is this run.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of rows to return. Must be an integer of at least one.
+          schema:
+            type: integer
+            minimum: 1
+        - name: offset
+          in: query
+          required: false
+          description: Number of rows to skip. Must be an integer of at least zero.
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          description: Matching insights and the total count for the same filter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightListResponse"
+        "400":
+          description: A filter or pagination value is not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/run:
+    post:
+      summary: Trigger an extraction run
+      operationId: createInsightRun
+      description: >
+        Starts an extraction run and executes it before answering.
+        The run reads the project working memory, prompts the model, merges the
+        result into the insights memory file, and upserts every insight.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInsightRunRequest"
+      responses:
+        "201":
+          description: The run that was executed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightRun"
+        "400":
+          description: The trigger, the reasoning effort, or the project scope is not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: A run for the same project and trigger is already active.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                activeRun:
+                  value:
+                    error: "Insight generation is already running"
+                    details:
+                      code: ACTIVE_RUN_CONFLICT
+                      activeRunId: INSR-MABCDEF-1234
+                      activeRunStatus: running
+                      trigger: manual
+        "500":
+          description: The run could not be executed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/runs:
+    get:
+      summary: List runs
+      operationId: listInsightRuns
+      description: >
+        Lists extraction runs for the scoped project, newest first.
+        A stale-run sweep runs before the list is served.
+      parameters:
+        - name: projectId
+          in: query
+          required: false
+          description: Project the request is scoped to.
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Restrict to one run status.
+          schema:
+            $ref: "#/components/schemas/InsightRunStatus"
+        - name: trigger
+          in: query
+          required: false
+          description: Restrict to one run trigger.
+          schema:
+            $ref: "#/components/schemas/InsightRunTrigger"
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of rows to return. Must be an integer of at least one.
+          schema:
+            type: integer
+            minimum: 1
+        - name: offset
+          in: query
+          required: false
+          description: Number of rows to skip. Must be an integer of at least zero.
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          description: Matching runs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightRunListResponse"
+        "400":
+          description: A filter or pagination value is not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/runs/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    get:
+      summary: Read one run
+      operationId: getInsightRun
+      description: >
+        Reads one extraction run.
+        A stale-run sweep runs before the run is read.
+      responses:
+        "200":
+          description: The run.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightRun"
+        "404":
+          description: No run holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/runs/{id}/events:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    get:
+      summary: List the events of one run
+      operationId: listInsightRunEvents
+      description: Lists the event trail of one run, ordered by sequence number.
+      responses:
+        "200":
+          description: The events of the run.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightRunEventListResponse"
+        "404":
+          description: No run holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/runs/{id}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    post:
+      summary: Cancel a run
+      operationId: cancelInsightRun
+      description: >
+        Cancels a pending or running run.
+        A pending run is cancelled at once.
+        A running run records the cancellation request and its execution is aborted.
+      responses:
+        "200":
+          description: The run after the cancellation was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightRun"
+        "404":
+          description: No run holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: The run already reached a terminal state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/runs/{id}/retry:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    post:
+      summary: Retry a failed run
+      operationId: retryInsightRun
+      description: >
+        Starts a new run from a failed run whose failure class is retryable transient.
+        The new run reuses the model selection, the reasoning effort, and the
+        input metadata of the original run.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RetryInsightRunRequest"
+      responses:
+        "201":
+          description: The new run.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightRun"
+        "404":
+          description: No run holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: The run is not failed, or its failure class is not retryable transient.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    get:
+      summary: Read one insight
+      operationId: getInsight
+      description: >
+        Reads one insight.
+        The literal run and runs paths are matched before this path,
+        so a request to those paths never resolves to an insight.
+      responses:
+        "200":
+          description: The insight.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Insight"
+        "404":
+          description: No insight holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      summary: Update one insight
+      operationId: updateInsight
+      description: Updates the title, the body, the category, or the status of one insight.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInsightRequest"
+      responses:
+        "200":
+          description: The insight after the update.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Insight"
+        "400":
+          description: The category or the status is not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No insight holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete one insight
+      operationId: deleteInsight
+      responses:
+        "204":
+          description: The insight was deleted.
+        "404":
+          description: No insight holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/{id}/dismiss:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    post:
+      summary: Dismiss one insight
+      operationId: dismissInsight
+      description: Moves the insight to the dismissed state.
+      responses:
+        "200":
+          description: The insight after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Insight"
+        "404":
+          description: No insight holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/{id}/archive:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    post:
+      summary: Archive one insight
+      operationId: archiveInsight
+      description: Moves the insight to the archived state.
+      responses:
+        "200":
+          description: The insight after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Insight"
+        "404":
+          description: No insight holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/{id}/unarchive:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    post:
+      summary: Unarchive one insight
+      operationId: unarchiveInsight
+      description: Moves an archived insight back to the confirmed state.
+      responses:
+        "200":
+          description: The insight after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Insight"
+        "404":
+          description: No insight holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /insights/{id}/create-task:
+    parameters:
+      - $ref: "#/components/parameters/InsightId"
+    post:
+      summary: Draft a board task from one insight
+      operationId: createInsightTaskDraft
+      description: >
+        Returns the insight plus a suggested task title and description.
+        The endpoint does not create the task.
+      responses:
+        "200":
+          description: The insight and the task payload draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTaskDraftResponse"
+        "404":
+          description: No insight holds that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  parameters:
+    InsightId:
+      name: id
+      in: path
+      required: true
+      description: Insight id for an insight path, run id for a run path.
+      schema:
+        type: string
+  schemas:
+    InsightCategory:
+      type: string
+      description: Insight category.
+      enum:
+        - quality
+        - performance
+        - architecture
+        - security
+        - reliability
+        - ux
+        - testability
+        - documentation
+        - dependency
+        - workflow
+        - other
+        - features
+        - competitive_analysis
+        - research
+        - trends
+    InsightStatus:
+      type: string
+      description: Lifecycle state of an insight.
+      enum:
+        - generated
+        - confirmed
+        - stale
+        - dismissed
+        - archived
+    InsightRunStatus:
+      type: string
+      description: Execution status of a run.
+      enum:
+        - pending
+        - running
+        - completed
+        - failed
+        - cancelled
+    InsightRunTrigger:
+      type: string
+      description: What started a run.
+      enum:
+        - schedule
+        - manual
+        - task_completion
+        - merge_event
+        - api
+    InsightRunFailureClass:
+      type: string
+      description: Classification of a run failure.
+      enum:
+        - cancelled
+        - timed_out
+        - retryable_transient
+        - non_retryable
+    InsightRunEventType:
+      type: string
+      description: Type of a run event.
+      enum:
+        - status_changed
+        - retry_scheduled
+        - cancel_requested
+        - timeout
+        - info
+        - warning
+        - error
+    InsightProvenance:
+      type: object
+      additionalProperties: true
+      required: [trigger]
+      properties:
+        trigger:
+          type: string
+          description: What triggered the generation of the insight.
+        description:
+          type: string
+          description: Human-readable description of the generation context.
+        relatedEntityIds:
+          type: array
+          items:
+            type: string
+          description: Identifiers of the entities that were in scope.
+        tokenEstimate:
+          type: object
+          additionalProperties: true
+          properties:
+            input:
+              type: integer
+            output:
+              type: integer
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Generation metadata such as the run id and the extraction timestamp.
+    Insight:
+      type: object
+      additionalProperties: true
+      required: [id, projectId, title, category, status, fingerprint, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          description: Store-assigned insight id.
+          example: INS-MABCDEF-1234
+        projectId:
+          type: string
+          description: Project the insight belongs to.
+        title:
+          type: string
+          description: Short summary of the insight.
+        content:
+          type: [string, "null"]
+          description: Body of the insight, nullable for a title-only insight.
+        category:
+          $ref: "#/components/schemas/InsightCategory"
+        status:
+          $ref: "#/components/schemas/InsightStatus"
+        fingerprint:
+          type: string
+          description: Deterministic dedupe key of the insight.
+        provenance:
+          $ref: "#/components/schemas/InsightProvenance"
+        lastRunId:
+          type: [string, "null"]
+          description: Most recent run that produced or updated the insight.
+        createdAt:
+          type: string
+          description: ISO-8601 creation timestamp.
+        updatedAt:
+          type: string
+          description: ISO-8601 timestamp of the last change.
+    InsightRunLifecycle:
+      type: object
+      additionalProperties: true
+      properties:
+        terminalReason:
+          type: string
+          enum: [completed, cancelled, failed, timed_out]
+        terminalCause:
+          type: string
+        failureClass:
+          $ref: "#/components/schemas/InsightRunFailureClass"
+        retryable:
+          type: boolean
+        cancellationRequestedAt:
+          type: string
+        timeoutAt:
+          type: string
+        retryOfRunId:
+          type: string
+        rootRunId:
+          type: string
+        attempt:
+          type: integer
+        maxAttempts:
+          type: integer
+    InsightRunInputMetadata:
+      type: object
+      additionalProperties: true
+      properties:
+        taskIds:
+          type: array
+          items:
+            type: string
+        branch:
+          type: string
+        commitSha:
+          type: string
+        context:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Run parameters, including the model provider, the model id, and the reasoning effort.
+          properties:
+            modelProvider:
+              type: string
+            modelId:
+              type: string
+            thinkingLevel:
+              type: string
+    InsightRunOutputMetadata:
+      type: object
+      additionalProperties: true
+      properties:
+        insightIds:
+          type: array
+          items:
+            type: string
+        updatedInsightIds:
+          type: array
+          items:
+            type: string
+        supersededInsightIds:
+          type: array
+          items:
+            type: string
+        promptTokens:
+          type: integer
+        completionTokens:
+          type: integer
+        metadata:
+          type: object
+          additionalProperties: true
+    InsightRun:
+      type: object
+      additionalProperties: true
+      required: [id, projectId, trigger, status, insightsCreated, insightsUpdated, createdAt, lifecycle]
+      properties:
+        id:
+          type: string
+          description: Store-assigned run id.
+          example: INSR-MABCDEF-1234
+        projectId:
+          type: string
+          description: Project the run belongs to.
+        trigger:
+          $ref: "#/components/schemas/InsightRunTrigger"
+        status:
+          $ref: "#/components/schemas/InsightRunStatus"
+        summary:
+          type: [string, "null"]
+          description: Human-readable outcome of the run.
+        error:
+          type: [string, "null"]
+          description: Error message of a failed or cancelled run.
+        insightsCreated:
+          type: integer
+          description: Insights inserted by the run.
+        insightsUpdated:
+          type: integer
+          description: Existing insights updated by the run.
+        inputMetadata:
+          $ref: "#/components/schemas/InsightRunInputMetadata"
+        outputMetadata:
+          $ref: "#/components/schemas/InsightRunOutputMetadata"
+        createdAt:
+          type: string
+          description: ISO-8601 timestamp of run creation.
+        startedAt:
+          type: [string, "null"]
+          description: ISO-8601 timestamp of the first attempt.
+        completedAt:
+          type: [string, "null"]
+          description: ISO-8601 timestamp of the terminal transition.
+        cancelledAt:
+          type: [string, "null"]
+          description: ISO-8601 timestamp of cancellation.
+        lifecycle:
+          $ref: "#/components/schemas/InsightRunLifecycle"
+    InsightRunEvent:
+      type: object
+      additionalProperties: true
+      required: [id, runId, seq, type, message, createdAt]
+      properties:
+        id:
+          type: string
+          description: Store-assigned event id.
+        runId:
+          type: string
+          description: Run the event belongs to.
+        seq:
+          type: integer
+          description: Per-run sequence number.
+        type:
+          $ref: "#/components/schemas/InsightRunEventType"
+        message:
+          type: string
+          description: Human-readable event text.
+        status:
+          $ref: "#/components/schemas/InsightRunStatus"
+        classification:
+          $ref: "#/components/schemas/InsightRunFailureClass"
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          description: ISO-8601 timestamp of the event.
+    InsightListResponse:
+      type: object
+      additionalProperties: true
+      required: [insights, count]
+      properties:
+        insights:
+          type: array
+          items:
+            $ref: "#/components/schemas/Insight"
+        count:
+          type: integer
+          description: Total number of insights matching the same filter.
+    InsightRunListResponse:
+      type: object
+      additionalProperties: true
+      required: [runs]
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightRun"
+    InsightRunEventListResponse:
+      type: object
+      additionalProperties: true
+      required: [events]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightRunEvent"
+    CreateInsightRunRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        projectId:
+          type: string
+          description: Project the run belongs to.
+        trigger:
+          $ref: "#/components/schemas/InsightRunTrigger"
+        inputMetadata:
+          $ref: "#/components/schemas/InsightRunInputMetadata"
+        modelProvider:
+          type: string
+          description: Model provider override. Only applied when a model id is also supplied.
+        modelId:
+          type: string
+          description: Model id override. Only applied when a model provider is also supplied.
+        thinkingLevel:
+          type: string
+          description: Reasoning effort for the extraction.
+        timeoutMs:
+          type: integer
+          description: Attempt timeout in milliseconds. Defaults to 120000.
+    RetryInsightRunRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        timeoutMs:
+          type: integer
+          description: Attempt timeout in milliseconds. Defaults to 120000.
+    UpdateInsightRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        title:
+          type: string
+        content:
+          type: [string, "null"]
+        category:
+          $ref: "#/components/schemas/InsightCategory"
+        status:
+          $ref: "#/components/schemas/InsightStatus"
+    CreateTaskDraftResponse:
+      type: object
+      additionalProperties: true
+      required: [success, insight, suggestedTitle, suggestedDescription]
+      properties:
+        success:
+          type: boolean
+        insight:
+          $ref: "#/components/schemas/Insight"
+        suggestedTitle:
+          type: string
+          description: Suggested board task title.
+        suggestedDescription:
+          type: string
+          description: Suggested board task description.
+    Error:
+      type: object
+      additionalProperties: true
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message.
+          example: "Invalid category: features"
+        details:
+          type: object
+          additionalProperties: true
+          description: Machine-readable error details, such as the active run id on a conflict.
+          properties:
+            code:
+              type: string
+              example: ACTIVE_RUN_CONFLICT
+            activeRunId:
+              type: string
+            activeRunStatus:
+              $ref: "#/components/schemas/InsightRunStatus"
+            trigger:
+              $ref: "#/components/schemas/InsightRunTrigger"

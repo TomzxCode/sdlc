@@ -1,0 +1,21 @@
+---
+artifact: tests
+verdict: changes-requested
+reviewed_at: 2026-10-19
+---
+
+## Sync drift: 2026-10-19
+
+- **The key test file `register-planning-subtask-routes.parent-close.test.ts` does not exist.** No file with that name is present anywhere in the repository. The planning route tests that do exist are `packages/dashboard/src/__tests__/planning-e2e-plan-creation.test.ts`, `packages/dashboard/src/__tests__/routes-planning-issue-images.test.ts` and `packages/dashboard/src/__tests__/routes-planning-tracking.test.ts`.
+
+- **TC-1 has no active test.** The described behavior is a confirmation request going from pending to resolved. The only suite that covers that lifecycle is `packages/engine/src/__tests__/planner-recovery-controller-confirmation.test.ts`, and it is entirely skipped: `describe.skip` at `:43`, with the comment at `:39-42` stating that the exercised path is intentionally unreachable after FN-7840. `packages/core/src/__tests__/planner-confirmation.test.ts` covers only the pure side-effect classifier and never creates or resolves a request.
+
+- **The coverage matrix omits FR-7, NFR-2 and NFR-3.** The matrix in `tests.md` has rows for FR-1 to FR-6 and NFR-1 only. FR-7 (recover planner handoffs and continuation across runs) is covered by `packages/engine/src/__tests__/planning-handoff-recovery.test.ts` and `packages/engine/src/__tests__/triage-reset-planning-fence.test.ts`, and NFR-2 (Plan Review state survives engine restart) is covered by `packages/engine/src/__tests__/planning-handoff-recovery.test.ts`.
+
+- **The key test files omit the dashboard component suites for this feature.** The Planning Mode modal has ten suites under `packages/dashboard/app/components/__tests__/` (`PlanningModeModal.autosize.test.tsx`, `PlanningModeModal.css.test.ts`, `PlanningModeModal.dedupeSessionsById.test.ts`, `PlanningModeModal.initial.test.tsx`, `PlanningModeModal.internal-transitions.test.tsx`, `PlanningModeModal.keep-alive.test.tsx`, `PlanningModeModal.planning-flow.test.tsx`, `PlanningModeModal.session-prompt.test.tsx`, `PlanningModeModal.ui-interactions.test.tsx`, `PlanningModeModal.workflow-routing.test.tsx`), and the feature also has `TaskPlannerChatTab.test.tsx`, `TaskPlannerChatTab.chat-focus-flag.test.tsx`, `SpecEditor.test.tsx`, `PlannerInterventionTimeline.test.tsx` and `plannerOverseerBadge.test.ts`. FR-1 and FR-5 are dashboard surfaces and the test plan names no dashboard component suite.
+
+- **The key test files omit the planner recovery controller and human-control policy suites.** `packages/engine/src/__tests__/planner-recovery-controller.test.ts`, `packages/engine/src/__tests__/planner-recovery-controller-human-control.test.ts`, `packages/engine/src/__tests__/planner-recovery-controller-manual-action.test.ts` and `packages/engine/src/__tests__/overseer-human-control-policy.test.ts` carry the bounded recovery dispatch, the withhold behaviour and the manual action recording. Only the skipped confirmation suite is adjacent to the listed files.
+
+- **A significant new test area has no coverage in the plan at all: the session advisor.** `packages/engine/src/__tests__/overseer-advise-tool.test.ts`, `packages/engine/src/__tests__/overseer-advisor-runtime.test.ts`, `packages/engine/src/__tests__/overseer-advisor-service.test.ts`, `packages/engine/src/__tests__/overseer-session-delta.test.ts` and `packages/engine/src/__tests__/overseer-watchdog.test.ts` test a shipped oversight tier that no test case and no coverage matrix row mentions.
+
+- **A second significant new test area has no coverage in the plan: the no-op finalize veto and the spec lock.** `packages/engine/src/__tests__/overseer-noop-finalize-veto.test.ts`, `packages/core/src/__tests__/planner/spec-lock.test.ts`, `packages/core/src/__tests__/plan-evidence-next-version.test.ts`, `packages/engine/src/__tests__/spec-staleness.test.ts` and `packages/engine/src/__tests__/spec-drift-reconciler.test.ts` cover behaviors that no test case describes. The plan approval surface is also untested in the plan, with `packages/core/src/__tests__/plan-approval.test.ts`, `packages/engine/src/__tests__/plan-approval-hold-invariant.test.ts` and `packages/engine/src/__tests__/triage-per-task-plan-approval.test.ts` outside the listed files.

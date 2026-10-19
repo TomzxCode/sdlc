@@ -1,0 +1,1021 @@
+# OpenAPI 3 contract for Scheduled Automations & Routines.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Scheduled Automations & Routines API"
+  version: 0.1.0
+  description: >
+    HTTP surface for the Fusion Automations feature. Automations are cron-driven
+    schedules that run a shell command or a list of steps. Routines are the
+    richer form, with a cron, webhook, API, or manual trigger plus catch-up and
+    execution policies. Every route accepts an optional scope query parameter or
+    body field. The value is global or project, and an unrecognised value is a
+    400. Within a major version the contract is additive only.
+servers:
+  - url: /api
+    description: Dashboard API mount point
+tags:
+  - name: automations
+    description: Cron-driven schedules
+  - name: routines
+    description: Recurring routines with a configurable trigger
+paths:
+  /automations:
+    get:
+      tags: [automations]
+      summary: List automations
+      operationId: listAutomations
+      parameters:
+        - $ref: "#/components/parameters/Scope"
+      responses:
+        "200":
+          description: The matching automations. An empty array is returned when no store is resolvable for an omitted or global scope.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Automation"
+        "400":
+          description: Invalid scope value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No automation store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      tags: [automations]
+      summary: Create an automation
+      operationId: createAutomation
+      parameters:
+        - $ref: "#/components/parameters/Scope"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAutomationRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+        "400":
+          description: Missing name, missing command, invalid schedule type, invalid cron expression, or an invalid step payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No automation store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /automations/{id}:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+    get:
+      tags: [automations]
+      summary: Read one automation
+      operationId: getAutomation
+      responses:
+        "200":
+          description: The automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+        "404":
+          description: The automation does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No automation store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      tags: [automations]
+      summary: Update an automation
+      operationId: updateAutomation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAutomationRequest"
+      responses:
+        "200":
+          description: The updated automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+        "400":
+          description: Empty name, empty command, invalid cron expression, or an invalid step payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The automation does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No automation store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: [automations]
+      summary: Delete an automation
+      operationId: deleteAutomation
+      responses:
+        "200":
+          description: The deleted automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+        "404":
+          description: The automation does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No automation store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /automations/{id}/run:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+    post:
+      tags: [automations]
+      summary: Run an automation now
+      operationId: runAutomation
+      responses:
+        "200":
+          description: The run result, the refreshed automation, and the live run id used by the stream route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationRunResponse"
+        "404":
+          description: The automation does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No automation store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /automations/{id}/run/stream:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+      - name: runId
+        in: query
+        required: false
+        description: The live run to attach to. When absent the stream waits for the next run of this automation.
+        schema:
+          type: string
+    get:
+      tags: [automations]
+      summary: Stream live run output for an automation
+      operationId: streamAutomationRun
+      responses:
+        "200":
+          description: A text/event-stream of run, step, output, tool, complete, and error events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "404":
+          description: The automation does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /automations/{id}/toggle:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+    post:
+      tags: [automations]
+      summary: Flip the enabled flag of an automation
+      operationId: toggleAutomation
+      responses:
+        "200":
+          description: The updated automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+        "404":
+          description: The automation does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No automation store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /automations/{id}/steps/reorder:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+    post:
+      tags: [automations]
+      summary: Reorder the steps of an automation
+      operationId: reorderAutomationSteps
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderStepsRequest"
+      responses:
+        "200":
+          description: The updated automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+        "400":
+          description: stepIds is not an array, the count does not match, or a step id is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The automation does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /routines:
+    get:
+      tags: [routines]
+      summary: List routines
+      operationId: listRoutines
+      parameters:
+        - $ref: "#/components/parameters/Scope"
+      responses:
+        "200":
+          description: The matching routines. An empty array is returned when no store is resolvable for an omitted or global scope.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Routine"
+        "400":
+          description: Invalid scope value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      tags: [routines]
+      summary: Create a routine
+      operationId: createRoutine
+      parameters:
+        - $ref: "#/components/parameters/Scope"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRoutineRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+        "400":
+          description: Missing name, missing trigger, invalid trigger type, invalid cron expression, a webhook secret shorter than 16 characters, an invalid policy, or an invalid step payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /routines/{id}:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+    get:
+      tags: [routines]
+      summary: Read one routine
+      operationId: getRoutine
+      responses:
+        "200":
+          description: The routine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+        "404":
+          description: The routine does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      tags: [routines]
+      summary: Update a routine
+      operationId: updateRoutine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRoutineRequest"
+      responses:
+        "200":
+          description: The updated routine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+        "400":
+          description: Empty name, invalid trigger type, invalid cron expression, a webhook secret shorter than 16 characters, or an invalid step payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The routine does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: [routines]
+      summary: Delete a routine
+      operationId: deleteRoutine
+      responses:
+        "200":
+          description: The deleted routine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+        "404":
+          description: The routine does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /routines/{id}/run:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+    post:
+      tags: [routines]
+      summary: Run a routine now
+      description: A backward-compatible alias of the trigger route with identical behaviour.
+      operationId: runRoutine
+      responses:
+        "200":
+          description: The run result, the refreshed routine, and the live run id used by the stream route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoutineRunResponse"
+        "400":
+          description: The routine is disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The routine does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store or routine runner is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /routines/{id}/trigger:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+    post:
+      tags: [routines]
+      summary: Run a routine now
+      description: The canonical manual trigger route.
+      operationId: triggerRoutine
+      responses:
+        "200":
+          description: The run result, the refreshed routine, and the live run id used by the stream route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoutineRunResponse"
+        "400":
+          description: The routine is disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The routine does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store or routine runner is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /routines/{id}/run/stream:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+      - name: runId
+        in: query
+        required: false
+        description: The live run to attach to. When absent the stream waits for the next run of this routine.
+        schema:
+          type: string
+    get:
+      tags: [routines]
+      summary: Stream live run output for a routine
+      operationId: streamRoutineRun
+      responses:
+        "200":
+          description: A text/event-stream of run, step, output, tool, complete, and error events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "404":
+          description: The routine does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /routines/{id}/runs:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+      - $ref: "#/components/parameters/Scope"
+    get:
+      tags: [routines]
+      summary: Read the run history of a routine
+      operationId: listRoutineRuns
+      responses:
+        "200":
+          description: The routine run history, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoutineExecutionResult"
+        "404":
+          description: The routine does not exist or belongs to another scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store is resolvable for the requested scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /routines/{id}/webhook:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+    post:
+      tags: [routines]
+      summary: Accept a signed webhook call for a webhook-triggered routine
+      description: >
+        The scope is not read from the request. The routine's own scope decides
+        which store serves the call. The raw request body is verified against the
+        x-hub-signature-256 header using the routine trigger secret.
+      operationId: triggerRoutineWebhook
+      parameters:
+        - name: x-hub-signature-256
+          in: header
+          required: true
+          description: The HMAC signature of the raw request body.
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: The run result and the refreshed routine
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoutineWebhookResponse"
+        "400":
+          description: The routine is not a webhook routine, the routine is disabled, or the raw body is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: The routine carries no secret, the signature header is missing, or the signature does not verify
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The routine does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: No routine store or routine runner is resolvable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  parameters:
+    EntityId:
+      name: id
+      in: path
+      required: true
+      description: The automation or routine identifier.
+      schema:
+        type: string
+    Scope:
+      name: scope
+      in: query
+      required: false
+      description: The lane to read or write. Omitted reads every lane, and an omitted write defaults to the project lane.
+      schema:
+        type: string
+        enum: [global, project]
+  schemas:
+    CreateAutomationRequest:
+      type: object
+      additionalProperties: true
+      required: [name, scheduleType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        scheduleType:
+          type: string
+          enum: [hourly, daily, weekly, monthly, custom, every15Minutes, every30Minutes, every2Hours, every6Hours, every12Hours, weekdays]
+        cronExpression:
+          type: string
+          description: Required when scheduleType is custom, and ignored for the presets.
+        command:
+          type: string
+          description: Required when no steps are supplied.
+        enabled:
+          type: boolean
+        timeoutMs:
+          type: integer
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationStep"
+        scope:
+          type: string
+          enum: [global, project]
+    UpdateAutomationRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        scheduleType:
+          type: string
+          enum: [hourly, daily, weekly, monthly, custom, every15Minutes, every30Minutes, every2Hours, every6Hours, every12Hours, weekdays]
+        cronExpression:
+          type: string
+        command:
+          type: string
+        enabled:
+          type: boolean
+        timeoutMs:
+          type: integer
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationStep"
+        scope:
+          type: string
+          enum: [global, project]
+    CreateRoutineRequest:
+      type: object
+      additionalProperties: true
+      required: [name, trigger]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        agentId:
+          type: string
+          description: The agent that runs the routine. Required when the routine has no command and no steps.
+        description:
+          type: string
+        trigger:
+          $ref: "#/components/schemas/RoutineTrigger"
+        command:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationStep"
+        timeoutMs:
+          type: integer
+        catchUpPolicy:
+          type: string
+          enum: [run, skip, run_one]
+          default: run_one
+        executionPolicy:
+          type: string
+          enum: [parallel, queue, reject]
+          default: queue
+        enabled:
+          type: boolean
+          default: true
+        scope:
+          type: string
+          enum: [global, project]
+    UpdateRoutineRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        trigger:
+          $ref: "#/components/schemas/RoutineTrigger"
+        command:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationStep"
+        timeoutMs:
+          type: integer
+        catchUpPolicy:
+          type: string
+          enum: [run, skip, run_one]
+        executionPolicy:
+          type: string
+          enum: [parallel, queue, reject]
+        enabled:
+          type: boolean
+        scope:
+          type: string
+          enum: [global, project]
+    ReorderStepsRequest:
+      type: object
+      additionalProperties: false
+      required: [stepIds]
+      properties:
+        stepIds:
+          type: array
+          description: The step identifiers in the desired order. The set must match the stored steps exactly.
+          items:
+            type: string
+    RoutineTrigger:
+      type: object
+      additionalProperties: true
+      required: [type]
+      description: The trigger configuration. The required fields depend on the type.
+      properties:
+        type:
+          type: string
+          enum: [cron, webhook, api, manual]
+        cronExpression:
+          type: string
+          description: Required when the type is cron.
+        timezone:
+          type: string
+          description: Optional IANA timezone. The persisted cron computation always uses UTC.
+        webhookPath:
+          type: string
+          description: The webhook path, required when the type is webhook.
+        secret:
+          type: string
+          minLength: 16
+          description: The HMAC secret, required when the type is webhook.
+        endpoint:
+          type: string
+          description: The API endpoint for an api trigger. The editor requires it, and the route stores it without checking.
+    AutomationStep:
+      type: object
+      additionalProperties: true
+      required: [id, type, name]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [command, ai-prompt, create-task]
+        name:
+          type: string
+        command:
+          type: string
+          description: Required for a command step.
+        prompt:
+          type: string
+          description: Required for an ai-prompt step.
+        modelProvider:
+          type: string
+        modelId:
+          type: string
+        thinkingLevel:
+          type: string
+          description: The reasoning effort override. Absent means the resolved default is inherited.
+        allowedTools:
+          type: array
+          description: The tool names the step may use. Absent means every selectable tool, an empty array means no tool.
+          items:
+            type: string
+            enum: [Read, Bash, Edit, Write, Grep, Find, Ls]
+        taskTitle:
+          type: string
+        taskDescription:
+          type: string
+          description: Required for a create-task step.
+        taskColumn:
+          type: string
+          description: The target column. Absent means the workflow intake column resolves it.
+        timeoutMs:
+          type: integer
+        continueOnFailure:
+          type: boolean
+          default: false
+    Automation:
+      type: object
+      additionalProperties: true
+      required: [id, name, scheduleType, cronExpression, command, enabled, runCount, runHistory, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        scheduleType:
+          type: string
+          enum: [hourly, daily, weekly, monthly, custom, every15Minutes, every30Minutes, every2Hours, every6Hours, every12Hours, weekdays]
+        cronExpression:
+          type: string
+        command:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationStep"
+        enabled:
+          type: boolean
+        timeoutMs:
+          type: integer
+        nextRunAt:
+          type: string
+        lastRunAt:
+          type: string
+        lastRunResult:
+          $ref: "#/components/schemas/AutomationRunResult"
+        runCount:
+          type: integer
+        runHistory:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/AutomationRunResult"
+        scope:
+          type: string
+          enum: [global, project]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    Routine:
+      type: object
+      additionalProperties: true
+      required: [id, agentId, name, trigger, catchUpPolicy, executionPolicy, enabled, runCount, runHistory, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        agentId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        trigger:
+          $ref: "#/components/schemas/RoutineTrigger"
+        command:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationStep"
+        timeoutMs:
+          type: integer
+        catchUpPolicy:
+          type: string
+          enum: [run, skip, run_one]
+        executionPolicy:
+          type: string
+          enum: [parallel, queue, reject]
+        enabled:
+          type: boolean
+        lastRunAt:
+          type: string
+        lastRunResult:
+          $ref: "#/components/schemas/RoutineExecutionResult"
+        nextRunAt:
+          type: string
+        runCount:
+          type: integer
+        runHistory:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/RoutineExecutionResult"
+        catchUpLimit:
+          type: integer
+        cronExpression:
+          type: string
+          description: The cron expression derived from a cron trigger, used by the due-routine query.
+        scope:
+          type: string
+          enum: [global, project]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    AutomationStepResult:
+      type: object
+      additionalProperties: true
+      required: [stepId, stepName, stepIndex, success, output, startedAt, completedAt]
+      properties:
+        stepId:
+          type: string
+        stepName:
+          type: string
+        stepIndex:
+          type: integer
+        success:
+          type: boolean
+        output:
+          type: string
+        error:
+          type: string
+        startedAt:
+          type: string
+        completedAt:
+          type: string
+    AutomationRunResult:
+      type: object
+      additionalProperties: true
+      required: [success, output, startedAt, completedAt]
+      properties:
+        success:
+          type: boolean
+        output:
+          type: string
+        error:
+          type: string
+        startedAt:
+          type: string
+        completedAt:
+          type: string
+        stepResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationStepResult"
+    RoutineExecutionResult:
+      allOf:
+        - $ref: "#/components/schemas/AutomationRunResult"
+        - type: object
+          additionalProperties: true
+          properties:
+            routineId:
+              type: string
+            isCatchUp:
+              type: boolean
+            triggerType:
+              type: string
+              enum: [cron, webhook, api, manual]
+    AutomationRunResponse:
+      type: object
+      additionalProperties: true
+      required: [schedule, result, liveRunId]
+      properties:
+        schedule:
+          $ref: "#/components/schemas/Automation"
+        result:
+          $ref: "#/components/schemas/AutomationRunResult"
+        liveRunId:
+          type: string
+          description: The identifier to pass as the runId query parameter of the stream route.
+    RoutineRunResponse:
+      type: object
+      additionalProperties: true
+      required: [routine, result, liveRunId]
+      properties:
+        routine:
+          $ref: "#/components/schemas/Routine"
+        result:
+          $ref: "#/components/schemas/RoutineExecutionResult"
+        liveRunId:
+          type: string
+    RoutineWebhookResponse:
+      type: object
+      additionalProperties: true
+      required: [routine, result]
+      properties:
+        routine:
+          $ref: "#/components/schemas/Routine"
+        result:
+          $ref: "#/components/schemas/RoutineExecutionResult"
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: Invalid scope value "team". Must be "global" or "project".
+        details:
+          type: object
+          additionalProperties: true
