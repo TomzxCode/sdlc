@@ -1,0 +1,48 @@
+---
+artifact: tests
+verdict: changes-requested
+reviewed_at: 2026-10-19
+session_link: http://localhost:10000/?session=ses_6b3f0a1c2d4e5f60718293a4b5c6d7e8
+---
+
+# Review: tests (sync drift 2026-10-19)
+
+The artifact drifted from the code during the `/sync-sdlc` full sync on 2026-10-19.
+
+## Sync drift: 2026-10-19
+
+### The test plan has no theme coverage, and eight theme test files exist in the repo
+- **Evidence:** The plan's Scope (`tests.md:10`) covers "extension loading, hook dispatch, skills, prompt templates, package manager, and the ExtensionAPI surface" and never mentions themes, although themes are a first-class resource (`packages/coding-agent/src/core/resource-loader.ts:157`, `packages/coding-agent/src/core/package-manager.ts:88-93`, `packages/coding-agent/src/modes/interactive/theme/theme.ts:789-809`). Unmentioned theme test files in `packages/coding-agent/test/`: `theme-controller.test.ts` (theme hot reload and terminal colour scheme), `theme-detection.test.ts` (`parseAutoThemeSetting`, `resolveThemeSetting`, `detectColorFgBgTheme`, `getThemeByName`), `theme-export.test.ts` (`getThemeExportColors`), `theme-picker.test.ts` (`getAvailableThemes`, `getAvailableThemesWithPaths`, `setRegisteredThemes`), `theme-style.test.ts` (`loadThemeFromPath`), `system-theme.test.ts` (`generateSystemThemeColors`, `wcagContrast`), `scrollbar-theme.test.ts` (`loadThemeFromPath` + `validateThemeJson`), `themed-text.test.ts` (`initTheme`).
+- **Artifact says:** Scope: "Covers extension loading, hook dispatch, skills, prompt templates, package manager, and the ExtensionAPI surface." The Coverage Matrix has no theme row.
+- **Required change:** Add themes to the Scope, list the eight theme test files, and add a matrix row for the theme requirement once the requirements artifact states one.
+
+### FR-01 is mapped to the wrong file, and the loader-cache coverage is not cited by path
+- **Evidence:** `packages/coding-agent/test/extensions-runner.test.ts` exercises the `ExtensionRunner` (project_trust handling, shortcut conflicts, tool/command/flag collection, renderers, boundary chaining, provider registration) and does not load extension modules. Module loading is covered by `packages/coding-agent/test/extensions-discovery.test.ts:43-556` (direct `.ts`/`.js` files, `index.ts`/`index.js` subdirectories, `package.json` `pi` manifest, error reporting, no default export), by `packages/coding-agent/test/suite/regressions/extension-factory-cache.test.ts` (factory cache), by `packages/coding-agent/test/suite/regressions/9540-extension-loader-lazy.test.ts` ("defers ordinary jiti and its virtual modules until importing an extension"), and by `packages/coding-agent/test/suite/regressions/8237-node-sea-extension-loading.test.ts` (the `jiti-static-loader.ts` path for Node SEA builds, `packages/coding-agent/src/core/extensions/loader.ts:41-54`).
+- **Artifact says:** Coverage Matrix: "| FR-01 (Extension loading) | extensions-runner.test.ts |" and "| NFR-02 (Cached module loading) | loader extensionCache (extension-factory-cache coverage) |".
+- **Required change:** Map FR-01 to `extensions-discovery.test.ts`, `extension-factory-cache.test.ts`, `9540-extension-loader-lazy.test.ts`, and `8237-node-sea-extension-loading.test.ts`; cite the NFR-02 row by file path.
+
+### Material extension regressions are not listed in the plan
+- **Evidence:** `packages/coding-agent/test/suite/regressions/` contains issue-numbered tests that cover this feature and are absent from `tests.md:25`: `2753-reload-stale-resource-settings.test.ts` (top-level prompt settings on reload), `2781-skill-collision-precedence.test.ts` (skill collision precedence and `ResourceCollision` diagnostics), `2860-replaced-session-context.test.ts` (`withSession` rebinding and stale `pi`/`ctx` invalidation), `3592-no-builtin-tools-keeps-extension-tools.test.ts`, `7193-event-bus-lifecycle.test.ts` (the shared `pi.events` bus on reload/dispose), `8423-extension-factory-failure.test.ts` (a failed factory discards runtime changes), `8964-extension-provider-streaming.test.ts` (`provider_stream_event`), `9789-context-handler-system-messages.test.ts` (`context`/`context_with_system`), `6363-agent-settled-event.test.ts` (`agent_settled`), `5998-blocked-tool-terminate.test.ts` (`tool_call` `block`/`terminate`), `8261-subagent-project-trust.test.ts` (project trust for an extension-provided agent), `10285-mcp-tool-renderers.test.ts` (`registerToolRenderer` for MCP tools), `7187-malformed-package-manifest.test.ts` (`pi` manifest field validation), `2023-queued-slash-command-followup.test.ts`, `3686-session-name-event.test.ts` (`pi.setSessionName` -> `session_info_changed`), `5996-session-name-newlines.test.ts`, `8724-in-memory-fork-active-tool.test.ts`, `5109-exclude-tools.test.ts`, `8337-utf8-bom-parsing.test.ts`.
+- **Artifact says:** "Suite regressions (test/suite/regressions/: 6162-extension-active-tools-next-turn, 6260-inline-extension-naming, 5433-extension-oauth-prompt-input, 2835-tools-allowlist-filters-extension-tools, 5080-signal-shutdown-extension-cleanup, plus extension-factory-cache coverage via loader cache tests)".
+- **Required change:** Extend the regression list with the files above.
+
+### Material top-level test files are not listed in the plan
+- **Evidence:** These files in `packages/coding-agent/test/` cover this feature and are absent from `tests.md:14-25`: `crash-log.test.ts` ("extension crash attribution", covering `findExtensionStackMatches` in `packages/coding-agent/src/core/crash-log.ts:71`), `agent-session-dynamic-provider.test.ts` ("AgentSession dynamic provider registration", i.e. `pi.registerProvider`), `agent-session-dynamic-tools.test.ts` ("AgentSession dynamic tool registration", i.e. `pi.registerTool` at runtime), `nested-tool-calls.test.ts` ("NestedToolCallRunner", i.e. `ExtensionToolContext.executeTool` and the `parentToolCallId` event contract), `custom-message.test.ts` (custom message rendering), `tool-renderer-examples.test.ts` (`registerToolRenderer`), `export-html-skill-block.test.ts` (the `<skill>` block in HTML export), `input-transform-streaming-example.test.ts` (the `input` event transform chain), `jev-router-example.test.ts` (the example extension), `default-tools-setting.test.ts` (`defaultTools` activation), `documentation.test.ts` (validates the `docs/` navigation that hosts `docs/extensions.md`, `docs/skills.md`, `docs/prompt-templates.md`, `docs/packages.md`, and `docs/themes.md`).
+- **Artifact says:** The Unit Tests list covers extension runner, discovery/resource loading, input events, skills, prompt templates, package manager, git integration, plan mode, trigger compact, and built-in extensions.
+- **Required change:** Add the files above to the Unit Tests list.
+
+### FR-12 is mapped to files that do not cover extension provider registration
+- **Evidence:** `packages/coding-agent/test/agent-session-dynamic-provider.test.ts` ("AgentSession dynamic provider registration") and the "provider registration" block of `packages/coding-agent/test/extensions-runner.test.ts:1153-1224` are the direct coverage of `pi.registerProvider` / `pi.unregisterProvider` (`packages/coding-agent/src/core/extensions/types.ts:1858-1874`). `mcp-extension.test.ts` and `llama-extension.test.ts` cover the built-in MCP and llama.cpp extensions, not the provider-registration API.
+- **Artifact says:** Coverage Matrix: "| FR-12 (Custom providers) | mcp-extension.test.ts, llama-extension.test.ts |".
+- **Severity:** advisory
+- **Required change:** Add `agent-session-dynamic-provider.test.ts` and `extensions-runner.test.ts` to the FR-12 row; keep the built-in extension files as separate rows if they are wanted.
+
+### The Coverage Matrix omits five requirements
+- **Evidence:** `tests.md:35-49` maps FR-01 to FR-05, FR-07 to FR-12, NFR-01, and NFR-02 only. FR-06 (shortcuts, flags, autocomplete providers, renderers), FR-13 (custom compaction and summarization), NFR-03 (the pi-ai `/compat` alias), NFR-04, and NFR-05 have no row, although the repo has coverage for several of them: `packages/coding-agent/test/extensions-runner.test.ts:169-375` (shortcut conflicts), `:708-757` (message, entry, and markdown renderers), `:758-848` (flags), `packages/coding-agent/test/extensions-discovery.test.ts:54-124` (the pi-ai compat entrypoint), `packages/coding-agent/test/compaction-extensions.test.ts` and `compaction-extensions-example.test.ts` (custom compaction), `packages/coding-agent/test/extensions-runner.test.ts:602-707` (handler error isolation).
+- **Artifact says:** The Coverage Matrix table as written.
+- **Severity:** advisory
+- **Required change:** Add rows for FR-06, FR-13, NFR-03, NFR-04, and NFR-05 with their covering files.
+
+## Open questions
+- `packages/coding-agent/test/references.test.ts` was checked and does not materially cover this feature: it asserts only that the generated `docs/models-configuration.md` page matches the committed file (`references.test.ts:9`). It was checked and left out of the drift list.
+- The plan lists "In-memory extension module loading with mock default exports" and "Test extension files in `examples/extensions/`" as test infrastructure. The repo's `examples/extensions/` holds 86 `.ts` files (70 at the top level, the rest inside 9 subdirectories) and `examples/sdk/` holds 14 numbered SDK examples, but only a handful of examples have dedicated tests (`compaction-extensions-example.test.ts`, `input-transform-streaming-example.test.ts`, `jev-router-example.test.ts`, `git-merge-and-resolve-extension.test.ts`, `plan-mode-extension.test.ts`, `trigger-compact-extension.test.ts`, `tool-renderer-examples.test.ts`). Whether the plan should state the intended example coverage level is unresolved.
