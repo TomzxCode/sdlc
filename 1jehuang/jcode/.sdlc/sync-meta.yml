@@ -1,10 +1,10 @@
 # SDLC Sync Metadata
 # Tracks which version of agents was used for the last sync.
 # Used by sync-sdlc to detect process/template changes and migrate existing files.
-agents_ref: f248f3390b3eb828f852ef42dbb4cad98ae5724e
+agents_ref: fdf8a2e80abd1cf213b575096ca452ae26fe9095
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-10-13
-code_ref: 0d240f1d4ade1c93dad1135fcb9d51decd25386b
+last_synced: 2026-10-19
+code_ref: 48aa83e919e235d6cca87b7ce42858a9bd8e1f26
 code_index:
   "p1-provider-auth":
     - crates/jcode-provider-core/
@@ -28,14 +28,30 @@ code_index:
     - crates/jcode-provider-doctor/
     - crates/jcode-azure-auth/
     - crates/jcode-auth-types/
-    - src/cli/auth_test.rs
+    - crates/jcode-schema-dialect/
+    - crates/jcode-base/src/auth/
+    - src/cli/login/
     - src/cli/auth_import.rs
+    - src/cli/auth_test/
+    - src/cli/commands/report_info.rs
   "p2-agent-memory":
     - crates/jcode-memory-types/
     - crates/jcode-embedding/
+    - crates/jcode-base/src/memory/
+    - crates/jcode-base/src/memory.rs
+    - crates/jcode-base/src/memory_jev.rs
+    - crates/jcode-base/src/memory_agent.rs
+    - crates/jcode-app-core/src/tool/memory.rs
   "p3-swarm-coordination":
     - crates/jcode-swarm-core/
     - crates/jcode-plan/
+    - crates/jcode-app-core/src/tool/communicate.rs
+    - crates/jcode-app-core/src/server/comm_plan.rs
+    - crates/jcode-app-core/src/server/comm_session.rs
+    - crates/jcode-app-core/src/server/comm_control.rs
+    - crates/jcode-app-core/src/server/comm_sync.rs
+    - crates/jcode-app-core/src/server/comm_await.rs
+    - crates/jcode-app-core/src/server/swarm_persistence.rs
   "p4-terminal-ui":
     - crates/jcode-tui/
     - crates/jcode-tui-core/
@@ -55,15 +71,26 @@ code_index:
     - crates/jcode-terminal-image/
     - crates/jcode-terminal-launch/
     - crates/jcode-terminal-prompt/
+    - crates/jcode-render-core/
+    - crates/jcode-fuzzy/
+    - crates/jcode-side-panel-types/
   "p5-session-resume-replay":
     - crates/jcode-session-types/
     - crates/jcode-message-types/
     - crates/jcode-storage/
     - crates/jcode-import-core/
+    - crates/jcode-base/src/session/
+    - crates/jcode-base/src/import.rs
+    - crates/jcode-app-core/src/replay.rs
+    - crates/jcode-app-core/src/restart_snapshot.rs
+    - crates/jcode-app-core/src/tool/session_search.rs
   "p6-ambient-mode":
     - crates/jcode-ambient-types/
     - crates/jcode-background-types/
     - crates/jcode-overnight-core/
+    - crates/jcode-app-core/src/ambient.rs
+    - crates/jcode-app-core/src/ambient/
+    - crates/jcode-notify-email/
   "p7-harness-api-sdk":
     - crates/jcode-harness-api/
     - crates/jcode-harness-api-server/
@@ -72,12 +99,84 @@ code_index:
     - ios/
   "p8-telemetry":
     - crates/jcode-telemetry-core/
+    - crates/jcode-usage-types/
     - telemetry-worker/
     - TELEMETRY.md
   "p9-install-and-update":
     - crates/jcode-update-core/
+    - crates/jcode-build-meta/
+    - crates/jcode-build-support/
     - scripts/install.sh
     - scripts/install_release.sh
     - scripts/install.ps1
+    - sdk/npm/
+    - packaging/
   "p10-context-compaction":
     - crates/jcode-compaction-core/
+    - crates/jcode-app-core/src/agent/compaction.rs
+    - crates/jcode-base/src/compaction.rs
+  "p11-agent-tools":
+    - crates/jcode-tool-core/
+    - crates/jcode-tool-types/
+    - crates/jcode-batch-types/
+    - crates/jcode-app-core/src/tool/
+    - crates/jcode-base/src/mcp/
+    - crates/jcode-base/src/browser.rs
+    - crates/jcode-base/src/browser_session.rs
+    - crates/jcode-base/src/skill.rs
+    - crates/jcode-app-core/src/tool/skill.rs
+    - crates/jcode-app-core/src/tool/selfdev/
+    - crates/jcode-app-core/src/ssh_remote.rs
+    - crates/jcode-app-core/src/tool/websearch.rs
+    - docs/custom-web-search.md
+  "p12-desktop-companion-and-voice":
+    - crates/jcode-companion/
+    - crates/jcode-desktop-open/
+    - crates/jcode-voice/
+    - crates/jcode-base/src/companion_client.rs
+  "p13-remote-client-gateway":
+    - crates/jcode-gateway-types/
+    - crates/jcode-base/src/gateway.rs
+    - crates/jcode-base/src/gateway/
+    - crates/jcode-base/src/gateway_tests.rs
+  "p14-command-safety-gate":
+    - crates/jcode-command-risk/
+    - crates/jcode-app-core/src/tool/bash_destructive_gate.rs
+    - crates/jcode-app-core/src/tool/apply_patch.rs
+  "p15-todo-and-goal-tracking":
+    - crates/jcode-task-types/
+    - crates/jcode-todo-policy/
+    - crates/jcode-base/src/todo.rs
+    - crates/jcode-base/src/goal.rs
+    - crates/jcode-app-core/src/tool/todo.rs
+    - crates/jcode-app-core/src/tool/goal.rs
+  "p16-productivity-reporting":
+    - crates/jcode-productivity-core/
+    - crates/jcode-tui/src/tui/app/productivity.rs
+  "p17-codemode":
+    - crates/jcode-codemode/
+    - crates/jcode-app-core/src/tool/codemode.rs
+  "p18-agent-applets":
+    - crates/jcode-applet-types/
+    - crates/jcode-base/src/applets.rs
+    - crates/jcode-app-core/src/tool/applet.rs
+  "p19-session-hibernation":
+    - crates/jcode-app-core/src/agent/idle_hibernation.rs
+    - crates/jcode-app-core/src/server/idle_hibernation.rs
+    - crates/jcode-tui/src/tui/app/idle_hibernation.rs
+    - crates/jcode-tui/src/tui/app/idle_heap_release.rs
+    - crates/jcode-config-types/src/session.rs
+    - src/cli/hibernate_wait.rs
+    - docs/SESSION_HIBERNATION.md
+  "p20-cloud-session-handoff":
+    - src/cli/cloud_move.rs
+    - src/cli/args/cloud_sessions.rs
+    - crates/jcode-storage/src/session_lease.rs
+  "p21-hosted-account-and-plans":
+    - crates/jcode-base/src/account_login.rs
+    - crates/jcode-base/src/account_login/
+    - crates/jcode-base/src/subscription_api.rs
+    - crates/jcode-base/src/subscription_catalog.rs
+    - crates/jcode-base/src/subscription_notice.rs
+    - src/cli/account.rs
+    - crates/jcode-tui/src/tui/app/auth_subscription_status.rs
