@@ -1,0 +1,849 @@
+# OpenAPI 3 contract for Memory and Recall.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+#
+# Transport note: OpenClaw's Gateway is not REST. Every path below is a Gateway
+# RPC method name, carried in a request frame
+#   { "type": "req", "id": "req-1", "method": "memory.search", "params": { "query": "meeting notes" } }
+# and answered with a response frame
+#   { "type": "res", "id": "req-1", "ok": true, "payload": { "results": [] } }.
+# A failed call answers with "ok": false and an "error" object of shape
+#   { "code": "INVALID_REQUEST", "message": "query must be a non-empty string" }.
+# The same frames travel over the Gateway WebSocket or the Gateway HTTP bridge.
+# Path segments are written with dots so the mapping back to `method` is literal.
+openapi: 3.1.0
+info:
+  title: "Memory and Recall API"
+  version: 0.1.0
+  description: >
+    Gateway RPC surface for OpenClaw memory: searching the active agent memory
+    index, reading a provider-scoped memory reference, reporting memory provider
+    health, distilling retained session history into staged memory candidates,
+    repairing dreaming artifacts, and importing memory from other providers.
+    Methods are additive-only within a major version: new optional request fields
+    and new methods may be added, but existing field meanings and method names
+    do not change.
+components:
+  parameters:
+    ExpectedOwnerId:
+      name: expectedOwnerId
+      in: query
+      required: true
+      description: Local state mutation owner that must still hold the lock when the call lands.
+      schema:
+        type: string
+        minLength: 1
+  schemas:
+    RequestFrame:
+      type: object
+      required: [type, id, method]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          const: req
+        id:
+          type: string
+          minLength: 1
+        method:
+          type: string
+          minLength: 1
+        params:
+          type: object
+          additionalProperties: true
+    ResponseFrame:
+      type: object
+      required: [type, id, ok]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          const: res
+        id:
+          type: string
+          minLength: 1
+        ok:
+          type: boolean
+        payload:
+          type: object
+          additionalProperties: true
+        error:
+          $ref: "#/components/schemas/Error"
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+    MemoryReference:
+      type: object
+      required: [providerId, id]
+      additionalProperties: false
+      properties:
+        providerId:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+        revision:
+          type: string
+        fragment:
+          type: string
+    MemorySearchHit:
+      type: object
+      additionalProperties: true
+      properties:
+        path:
+          type: string
+        startLine:
+          type: integer
+        endLine:
+          type: integer
+        score:
+          type: number
+        vectorScore:
+          type: number
+        textScore:
+          type: number
+        snippet:
+          type: string
+        source:
+          type: string
+          enum: [memory, sessions]
+        importance:
+          type: integer
+          minimum: 1
+          maximum: 10
+        triggers:
+          type: string
+        projectKey:
+          type: string
+        provenance:
+          type: object
+          additionalProperties: true
+          properties:
+            originClass:
+              type: string
+              enum: [owner, agent, untrusted, system]
+            sessionKind:
+              type: string
+              enum: [interactive, cron, heartbeat, subagent, unknown]
+            observedAt:
+              type: integer
+    MemorySearchRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        query:
+          type: string
+          minLength: 1
+        version:
+          type: integer
+          enum: [1, 2]
+          description: >
+            Version 1 returns built-in index results. Version 2 delegates to the
+            provider runtime and is rejected by built-in providers.
+        agentId:
+          type: string
+        maxResults:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+        minScore:
+          type: number
+        cursor:
+          type: string
+        sources:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [memory, sessions]
+    MemorySearchResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        agentId:
+          type: string
+        provider:
+          type: string
+        searchMode:
+          type: string
+          enum: [hybrid, fts-only]
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemorySearchHit"
+        stale:
+          type: boolean
+        warning:
+          type: string
+        action:
+          type: string
+    MemoryGetRequest:
+      type: object
+      additionalProperties: true
+      required: [reference]
+      properties:
+        reference:
+          $ref: "#/components/schemas/MemoryReference"
+        from:
+          type: integer
+          minimum: 1
+        lines:
+          type: integer
+          minimum: 1
+    MemoryGetResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [ok, not_found]
+        reference:
+          $ref: "#/components/schemas/MemoryReference"
+        text:
+          type: string
+    MemoryStatusResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        agentId:
+          type: string
+        provider:
+          type: string
+        searchMode:
+          type: string
+          enum: [hybrid, fts-only]
+        vector:
+          type: object
+          additionalProperties: true
+          properties:
+            enabled:
+              type: boolean
+        embedding:
+          type: object
+          additionalProperties: true
+          properties:
+            ok:
+              type: boolean
+            error:
+              type: string
+            checked:
+              type: boolean
+            checkedAtMs:
+              type: integer
+    SessionBackfillRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        agentId:
+          type: string
+        from:
+          type: string
+          description: Oldest transcript day to include, as YYYY-MM-DD.
+        to:
+          type: string
+          description: Newest transcript day to include, as YYYY-MM-DD.
+        limitDays:
+          type: integer
+          minimum: 1
+        expectedOwnerId:
+          type: string
+        operationOwnerId:
+          type: string
+        cliResult:
+          type: boolean
+    SessionBackfillResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        days:
+          type: integer
+        candidates:
+          type: integer
+        perDay:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            properties:
+              day:
+                type: string
+              candidateCount:
+                type: integer
+              sample:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+        staged:
+          type: integer
+        truncated:
+          type: boolean
+        cursor:
+          type: object
+          additionalProperties: true
+          properties:
+            advanced:
+              type: boolean
+            exhausted:
+              type: boolean
+            hasMore:
+              type: boolean
+        removedDiaryEntries:
+          type: integer
+        removedStagedEntries:
+          type: integer
+    DreamDiaryRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        agentId:
+          type: string
+    DreamDiaryResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        dreamsPath:
+          type: string
+        entries:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    DoctorMemoryActionResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        changed:
+          type: boolean
+        archivedPaths:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+    MigrationsMemoryPlanRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        agentId:
+          type: string
+        overwrite:
+          type: boolean
+    MigrationsMemoryPlanResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        agentId:
+          type: string
+        workspace:
+          type: string
+        providers:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    MigrationsMemoryApplyRequest:
+      type: object
+      additionalProperties: true
+      required: [idempotencyKey]
+      properties:
+        agentId:
+          type: string
+        providerId:
+          type: string
+        planFingerprint:
+          type: string
+        itemIds:
+          type: array
+          items:
+            type: string
+        overwrite:
+          type: boolean
+        idempotencyKey:
+          type: string
+          minLength: 1
+paths:
+  /memory.search:
+    post:
+      summary: Search the active agent memory index
+      operationId: memorySearch
+      description: >
+        Searches the memory index of the resolved agent. `version: 1` returns
+        built-in index results. `version: 2` delegates to the provider runtime
+        and is rejected when the selected provider uses the provider runtime.
+      tags: [memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.search.owner:
+    post:
+      summary: Owner-bound memory search
+      operationId: memorySearchOwner
+      description: >
+        Runs the search under a local state mutation owner and fails when the
+        owner changed while the search was in flight.
+      tags: [memory]
+      parameters:
+        - $ref: "#/components/parameters/ExpectedOwnerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.get:
+    post:
+      summary: Read a provider-scoped memory reference
+      operationId: memoryGet
+      tags: [memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Memory content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.status:
+    post:
+      summary: Report memory provider health and index state
+      operationId: memoryStatus
+      tags: [memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Provider status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.sessionBackfill.preview:
+    post:
+      summary: Preview session history candidates for memory backfill
+      operationId: memorySessionBackfillPreview
+      tags: [memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Preview result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.sessionBackfill.apply:
+    post:
+      summary: Stage session backfill candidates and write dream diary entries
+      operationId: memorySessionBackfillApply
+      tags: [memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Apply result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.sessionBackfill.rollback:
+    post:
+      summary: Remove staged backfill candidates and shared dream diary entries
+      operationId: memorySessionBackfillRollback
+      tags: [memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Rollback result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.sessionBackfill.preview.owner:
+    post:
+      summary: Owner-bound session backfill preview
+      operationId: memorySessionBackfillPreviewOwner
+      tags: [memory]
+      parameters:
+        - $ref: "#/components/parameters/ExpectedOwnerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Preview result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.sessionBackfill.apply.owner:
+    post:
+      summary: Owner-bound session backfill apply
+      operationId: memorySessionBackfillApplyOwner
+      tags: [memory]
+      parameters:
+        - $ref: "#/components/parameters/ExpectedOwnerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Apply result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /memory.sessionBackfill.rollback.owner:
+    post:
+      summary: Owner-bound session backfill rollback
+      operationId: memorySessionBackfillRollbackOwner
+      tags: [memory]
+      parameters:
+        - $ref: "#/components/parameters/ExpectedOwnerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Rollback result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /doctor.memory.status:
+    post:
+      summary: Report memory index status and embedding runtime state
+      operationId: doctorMemoryStatus
+      tags: [doctor, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Memory status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /doctor.memory.dreamDiary:
+    post:
+      summary: Read the dream diary for the resolved workspace
+      operationId: doctorMemoryDreamDiary
+      tags: [doctor, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Dream diary entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /doctor.memory.backfillDreamDiary:
+    post:
+      summary: Write grounded REM backfill entries into the dream diary
+      operationId: doctorMemoryBackfillDreamDiary
+      tags: [doctor, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Backfill result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /doctor.memory.resetDreamDiary:
+    post:
+      summary: Clear the dream diary for the resolved workspace
+      operationId: doctorMemoryResetDreamDiary
+      tags: [doctor, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Reset result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /doctor.memory.resetGroundedShortTerm:
+    post:
+      summary: Remove grounded short-term promotion candidates
+      operationId: doctorMemoryResetGroundedShortTerm
+      tags: [doctor, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Reset result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /doctor.memory.repairDreamingArtifacts:
+    post:
+      summary: Archive and repair contaminated dreaming artifacts
+      operationId: doctorMemoryRepairDreamingArtifacts
+      tags: [doctor, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Repair result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /doctor.memory.dedupeDreamDiary:
+    post:
+      summary: Remove duplicate dream diary entries
+      operationId: doctorMemoryDedupeDreamDiary
+      tags: [doctor, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Dedupe result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /migrations.memory.plan:
+    post:
+      summary: Plan a memory import from the configured providers
+      operationId: migrationsMemoryPlan
+      tags: [migrations, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Import plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /migrations.memory.apply:
+    post:
+      summary: Apply a planned memory import
+      operationId: migrationsMemoryApply
+      description: >
+        The idempotency key identifies the import. Reusing a key with a different
+        request fingerprint is rejected rather than applied twice.
+      tags: [migrations, memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or reused idempotency key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

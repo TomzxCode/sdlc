@@ -1,0 +1,315 @@
+# OpenAPI 3 contract for Internal Event Hooks.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Internal Event Hooks API"
+  version: 0.1.0
+  description: >
+    Gateway RPC operations that expose the internal event hook inventory.
+
+    The Gateway RPC channel is a JSON-RPC channel carried over the Gateway
+    WebSocket endpoint at /rpc. The single operation below describes one JSON-RPC
+    request frame; the `method` field selects the operation. The `x-rpc-method`
+    extension lists the method strings this contract covers, and the
+    `x-rpc-scope` extension names the operator scope the Gateway requires.
+
+    Hook enablement is not part of this surface. `openclaw hooks enable` and
+    `openclaw hooks disable` write the local config file on the host where the
+    CLI runs, so there is no enable or disable RPC method.
+
+    Compatibility policy: additive-only within a major version. New fields may be
+    added to a response object; existing fields are not removed or retyped.
+paths:
+  /rpc:
+    post:
+      summary: Gateway JSON-RPC frame for the hook-related methods
+      operationId: gatewayHookRpc
+      description: >
+        Send one JSON-RPC request frame on the Gateway RPC channel.
+
+        Supported methods:
+
+        - `hooks.status` (scope `operator.read`): returns the hook inventory
+          report for one agent workspace.
+        - `nativeHook.invoke` (scope `operator.admin`, unadvertised): relays a
+          native coding-harness event into a live native harness. It is not part
+          of the internal event hook registry.
+      x-rpc-method:
+        - hooks.status
+        - nativeHook.invoke
+      x-rpc-scope:
+        hooks.status: operator.read
+        nativeHook.invoke: operator.admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewayRequestFrame"
+      responses:
+        "200":
+          description: Response frame for the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GatewayResponseFrame"
+components:
+  schemas:
+    GatewayRequestFrame:
+      type: object
+      additionalProperties: false
+      required: [type, id, method]
+      properties:
+        type:
+          type: string
+          const: req
+        id:
+          type: string
+          minLength: 1
+        method:
+          type: string
+          enum:
+            - hooks.status
+            - nativeHook.invoke
+        params:
+          oneOf:
+            - $ref: "#/components/schemas/HooksStatusParams"
+            - $ref: "#/components/schemas/NativeHookInvokeParams"
+        traceparent:
+          type: string
+          maxLength: 128
+    GatewayResponseFrame:
+      type: object
+      additionalProperties: false
+      required: [type, id, ok]
+      properties:
+        type:
+          type: string
+          const: res
+        id:
+          type: string
+          minLength: 1
+        ok:
+          type: boolean
+        payload:
+          oneOf:
+            - $ref: "#/components/schemas/HooksStatusReport"
+            - $ref: "#/components/schemas/NativeHookRelayProcessResponse"
+        error:
+          $ref: "#/components/schemas/Error"
+    HooksStatusParams:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+          description: >
+            Agent whose workspace is inspected. When omitted, the Gateway uses
+            the legacy compatibility owner or the default agent, and fails with
+            INVALID_REQUEST when no owner can be resolved.
+    HooksStatusReport:
+      type: object
+      additionalProperties: true
+      required: [workspaceDir, managedHooksDir, hooks]
+      properties:
+        workspaceDir:
+          type: string
+        managedHooksDir:
+          type: string
+        hooks:
+          type: array
+          items:
+            $ref: "#/components/schemas/HookStatusEntry"
+    HookStatusEntry:
+      type: object
+      additionalProperties: true
+      required:
+        - name
+        - description
+        - source
+        - filePath
+        - baseDir
+        - handlerPath
+        - hookKey
+        - events
+        - unknownEvents
+        - always
+        - enabledByConfig
+        - requirementsSatisfied
+        - loadable
+        - managedByPlugin
+        - requirements
+        - missing
+        - configChecks
+        - install
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        source:
+          type: string
+          enum:
+            - openclaw-bundled
+            - openclaw-plugin
+            - openclaw-managed
+            - openclaw-workspace
+        pluginId:
+          type: string
+        filePath:
+          type: string
+          description: Path to the HOOK.md descriptor
+        baseDir:
+          type: string
+        handlerPath:
+          type: string
+        hookKey:
+          type: string
+          description: Config entry key under hooks.internal.entries
+        emoji:
+          type: string
+        homepage:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+        unknownEvents:
+          type: array
+          items:
+            type: string
+          description: Declared events that OpenClaw core does not emit
+        always:
+          type: boolean
+        enabledByConfig:
+          type: boolean
+        requirementsSatisfied:
+          type: boolean
+        loadable:
+          type: boolean
+        blockedReason:
+          type: string
+          enum:
+            - disabled in config
+            - workspace hook (disabled by default)
+            - missing requirements
+            - no events defined
+        managedByPlugin:
+          type: boolean
+        requirements:
+          $ref: "#/components/schemas/Requirements"
+        missing:
+          $ref: "#/components/schemas/Requirements"
+        configChecks:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [path, satisfied]
+            properties:
+              path:
+                type: string
+              satisfied:
+                type: boolean
+        install:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [id, kind, label, bins]
+            properties:
+              id:
+                type: string
+              kind:
+                type: string
+                enum:
+                  - bundled
+                  - npm
+                  - git
+              label:
+                type: string
+              bins:
+                type: array
+                items:
+                  type: string
+    Requirements:
+      type: object
+      additionalProperties: true
+      required: [bins, anyBins, env, config, os]
+      properties:
+        bins:
+          type: array
+          items:
+            type: string
+        anyBins:
+          type: array
+          items:
+            type: string
+        env:
+          type: array
+          items:
+            type: string
+        config:
+          type: array
+          items:
+            type: string
+        os:
+          type: array
+          items:
+            type: string
+    NativeHookInvokeParams:
+      type: object
+      additionalProperties: true
+      required: [provider, relayId, event, rawPayload]
+      properties:
+        provider:
+          type: string
+          enum:
+            - codex
+        relayId:
+          type: string
+        generation:
+          type: string
+          description: >
+            Registration generation. The Gateway requires the current generation
+            so a stale client cannot post into a newly registered relay with the
+            same id.
+        event:
+          type: string
+          enum:
+            - pre_tool_use
+            - post_tool_use
+            - permission_request
+            - before_agent_finalize
+        rawPayload: {}
+    NativeHookRelayProcessResponse:
+      type: object
+      additionalProperties: true
+      required: [stdout, stderr, exitCode]
+      properties:
+        stdout:
+          type: string
+        stderr:
+          type: string
+        exitCode:
+          type: integer
+        failureDisposition:
+          type: string
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+        details: {}
+        retryable:
+          type: boolean
+        retryAfterMs:
+          type: integer
+          minimum: 0

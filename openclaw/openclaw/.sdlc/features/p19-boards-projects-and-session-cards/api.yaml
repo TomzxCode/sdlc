@@ -1,0 +1,1422 @@
+# OpenAPI 3 contract for Boards, Projects, and Session Cards.
+# Normative API definition referenced by specification.md.
+#
+# Transport note: OpenClaw's Gateway is a WebSocket and HTTP JSON-RPC surface,
+# not REST. A client sends a request frame `{ type: "req", id, method, params }`
+# over the Gateway socket and receives `{ type: "res", id, ok, payload, error }`.
+# Each Gateway RPC method is therefore modelled here as a path under a synthetic
+# `/rpc` root, where the last path segment is the literal RPC method name and
+# the request body is the method's `params` object. The one genuinely
+# HTTP-shaped surface is the board widget document route, which is modelled
+# with a real path and a `?bt=` query parameter.
+#
+# Method names, parameter names, and scopes are taken from
+# `src/gateway/methods/core-descriptors.ts` and the handler files under
+# `src/gateway/server-methods/`. The `workboard.*` methods are registered by the
+# bundled Workboard plugin in `extensions/workboard/src/gateway.ts`.
+#
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Boards, Projects, and Session Cards API"
+  version: 0.1.0
+  description: >
+    Session dashboards, the project registry, session progress cards, and the
+    bundled Workboard plugin. The Gateway surface is JSON-RPC over a WebSocket
+    (and over HTTP for the board widget document route), modelled here as
+    OpenAPI paths for tooling. Compatibility policy: methods are additive-only
+    within a major version; a new optional request field is a minor change, and
+    removing a field or changing its meaning requires a new major version.
+    Every method carries an operator scope, taken from the Gateway core
+    descriptors, and the scope decides whether the call is admitted.
+servers:
+  - url: "/rpc"
+    description: >
+      Synthetic root for Gateway RPC methods. The real endpoint is the Gateway
+      socket described in `docs/gateway/protocol/`.
+paths:
+  /board.get:
+    post:
+      summary: Read the board snapshot of a session
+      operationId: boardGet
+      description: >
+        Returns the tabs and widgets of the session board together with the
+        snapshot revision. Reads run inside the authoritative read turn and
+        release the database before the result is awaited.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardSessionTarget"
+      responses:
+        "200":
+          description: Board snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardSnapshot"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /board.update:
+    post:
+      summary: Apply a batch of board operations
+      operationId: boardUpdate
+      description: >
+        Applies tab and widget operations atomically. A rejected operation
+        leaves the stored layout unchanged. Requires the `operator.write` scope.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardUpdateParams"
+      responses:
+        "200":
+          description: Updated board snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardSnapshot"
+        "400":
+          description: Invalid operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /board.widget.put:
+    post:
+      summary: Create or update one board widget
+      operationId: boardWidgetPut
+      description: >
+        Materializes a widget on a board. The content kind must match the kind
+        already stored under the same name. A widget that declares network
+        origins or tools is stored with grant state `pending`.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardWidgetPutParams"
+      responses:
+        "200":
+          description: Board snapshot with the resolved widget name
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardWidgetPutResult"
+        "400":
+          description: Invalid operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /board.widget.grant:
+    post:
+      summary: Record an operator grant decision for a widget
+      operationId: boardWidgetGrant
+      description: >
+        Grants or rejects the capabilities a widget declared. The widget revision
+        and instance identifier must still match, and the widget must be in the
+        `pending` grant state. Requires the `operator.approvals` scope.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardWidgetGrantParams"
+      responses:
+        "200":
+          description: Board snapshot with the new grant state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardSnapshot"
+        "409":
+          description: The widget revision or instance changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /board.widget.appView:
+    post:
+      summary: Mint a view for a pinned MCP App widget
+      operationId: boardWidgetAppView
+      description: >
+        Returns a short-lived view identifier for an interactive MCP App widget
+        that is already granted.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardSessionTarget"
+      responses:
+        "200":
+          description: Minted view
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [viewId, expiresAtMs]
+                properties:
+                  viewId:
+                    type: string
+                  expiresAtMs:
+                    type: integer
+        "400":
+          description: The widget is not a granted MCP App widget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /board.event:
+    post:
+      summary: Publish a widget event back to the session
+      operationId: boardEvent
+      description: >
+        Queues a `[dashboard]` system event for the session. A payload larger
+        than 8 KiB is refused, and an identical payload repeated within 5
+        seconds is dropped.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardEventParams"
+      responses:
+        "200":
+          description: Event accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, appended]
+                properties:
+                  ok:
+                    type: boolean
+                  appended:
+                    type: boolean
+                    description: False when the notice was dropped as a duplicate
+  /board.prompt.authorize:
+    post:
+      summary: Check whether a widget prompt needs a confirmation
+      operationId: boardPromptAuthorize
+      description: >
+        Returns `confirmationRequired` for a widget view ticket, based on
+        whether the widget holds a granted `prompt` tool capability.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardTicketParams"
+      responses:
+        "200":
+          description: Authorization answer
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [confirmationRequired]
+                properties:
+                  confirmationRequired:
+                    type: boolean
+  /board.data.read:
+    post:
+      summary: Read a declared dashboard data binding
+      operationId: boardDataRead
+      description: >
+        Runs a dashboard data binding on behalf of a widget. The binding must be
+        declared and granted for that widget.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardTicketParams"
+      responses:
+        "200":
+          description: Binding result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /board.action:
+    post:
+      summary: Run a declared dashboard action verb
+      operationId: boardAction
+      description: >
+        Runs a dashboard action verb, or triggers a cron job for the widget
+        that requested it. The action must be declared and granted.
+      tags: [board]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BoardTicketParams"
+      responses:
+        "200":
+          description: Action result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /progressCard.get:
+    post:
+      summary: Read the progress card of a session
+      operationId: progressCardGet
+      description: Returns the markdown and steps of one session progress card.
+      tags: [progress-card]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionTarget"
+      responses:
+        "200":
+          description: Progress card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressCard"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /progressCard.put:
+    post:
+      summary: Write the progress card of a session
+      operationId: progressCardPut
+      description: >
+        Writes markdown and steps for one session. An `expectedRevision` guard
+        rejects a write against a newer card. Writing neither markdown nor
+        steps clears the card.
+      tags: [progress-card]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgressCardPutParams"
+      responses:
+        "200":
+          description: Stored progress card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressCard"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /progressCard.refresh:
+    post:
+      summary: Recompute the progress card from session state
+      operationId: progressCardRefresh
+      description: >
+        Rebuilds the progress card from the current session transcript and
+        channel summary.
+      tags: [progress-card]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionTarget"
+      responses:
+        "200":
+          description: Refreshed progress card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressCard"
+  /projects.list:
+    post:
+      summary: List the workspace and registered projects
+      operationId: projectsList
+      description: >
+        Returns the agent workspace projects and the stored registry projects,
+        sorted by display name.
+      tags: [projects]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Project list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [projects]
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Project"
+  /projects.add:
+    post:
+      summary: Add a project to the registry
+      operationId: projectsAdd
+      description: >
+        Adds a project, resolving the path to a git checkout root under the
+        checkout lease. Requires the `operator.write` scope and the
+        control-plane write flag.
+      tags: [projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectAddParams"
+      responses:
+        "200":
+          description: Registered project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          description: The path is not a usable git checkout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /projects.register:
+    post:
+      summary: Register an existing local checkout as a project
+      operationId: projectsRegister
+      description: >
+        Registers a local git checkout with source `registered`. Requires the
+        `operator.admin` scope.
+      tags: [projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectAddParams"
+      responses:
+        "200":
+          description: Registered project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          description: The path is not a usable git checkout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /projects.remove:
+    post:
+      summary: Remove a project from the registry
+      operationId: projectsRemove
+      description: >
+        Removes the registry row and, for a cloned project, the managed
+        checkout. Requires the `operator.admin` scope.
+      tags: [projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                id:
+                  type: string
+      responses:
+        "200":
+          description: Removal result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                properties:
+                  removed:
+                    type: boolean
+  /projects.searchRemote:
+    post:
+      summary: Search remote repositories that can be cloned as projects
+      operationId: projectsSearchRemote
+      description: >
+        Searches GitHub repositories that can be cloned into managed projects.
+      tags: [projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                query:
+                  type: string
+      responses:
+        "200":
+          description: Search result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /projects.checkoutOptions:
+    post:
+      summary: List the checkout options for a project
+      operationId: projectsCheckoutOptions
+      description: >
+        Returns the checkout, branch, and refresh options available for one
+        project.
+      tags: [projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                id:
+                  type: string
+      responses:
+        "200":
+          description: Checkout options
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /__openclaw__/board/{sessionKey}/{widget}/index.html:
+    get:
+      summary: Serve a board widget document
+      operationId: boardWidgetDocument
+      description: >
+        The one genuinely HTTP-shaped surface of this feature. The Gateway
+        serves the widget document from a sandboxed origin. Authorization comes
+        from the `bt` view ticket query parameter, not from session
+        credentials in the URL, and the response carries a content security
+        policy for the widget sandbox. Only `GET` and `HEAD` are accepted.
+      servers:
+        - url: "/"
+          description: Gateway HTTP origin
+      tags: [board]
+      parameters:
+        - name: sessionKey
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Session that owns the widget
+        - name: widget
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z0-9][a-z0-9._-]{0,63}$"
+          description: Widget name
+        - name: bt
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Signed view ticket for this widget view
+      responses:
+        "200":
+          description: Widget document
+          content:
+            text/html:
+              schema:
+                type: string
+        "403":
+          description: The view ticket is missing, expired, or does not match the widget
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: The widget does not exist
+          content:
+            text/plain:
+              schema:
+                type: string
+  /workboard.boards.list:
+    post:
+      summary: List Workboard boards
+      operationId: workboardBoardsList
+      description: >
+        Registered by the bundled Workboard plugin, which ships disabled by
+        default.
+      tags: [workboard]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Board list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkboardBoard"
+  /workboard.boards.upsert:
+    post:
+      summary: Create or update a Workboard board
+      operationId: workboardBoardsUpsert
+      description: Creates or updates a board, including a sessions board spec.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkboardBoardInput"
+      responses:
+        "200":
+          description: Stored board
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkboardBoard"
+  /workboard.cards.list:
+    post:
+      summary: List Workboard cards
+      operationId: workboardCardsList
+      description: >
+        Returns the cards of one board, with the available statuses and a
+        cursor for the next page.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                boardId:
+                  type: string
+                after:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Card list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkboardListResult"
+  /workboard.cards.update:
+    post:
+      summary: Update a Workboard card
+      operationId: workboardCardsUpdate
+      description: Updates the title, notes, status, priority, labels, or metadata of a card.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                id:
+                  type: string
+                boardId:
+                  type: string
+      responses:
+        "200":
+          description: Stored card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkboardCard"
+  /workboard.cards.move:
+    post:
+      summary: Move a Workboard card to another status
+      operationId: workboardCardsMove
+      description: >
+        Moves a card to one of the Workboard statuses and records a `moved`
+        event.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                id:
+                  type: string
+                status:
+                  $ref: "#/components/schemas/WorkboardStatus"
+      responses:
+        "200":
+          description: Moved card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkboardCard"
+  /workboard.cards.archive:
+    post:
+      summary: Archive a Workboard card
+      operationId: workboardCardsArchive
+      description: Archives a card and records an `archived` event.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                id:
+                  type: string
+      responses:
+        "200":
+          description: Archived card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkboardCard"
+  /workboard.cards.delete:
+    post:
+      summary: Delete a Workboard card
+      operationId: workboardCardsDelete
+      description: >
+        Deletes a card and reports the reference updates it caused.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                id:
+                  type: string
+      responses:
+        "200":
+          description: Delete result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkboardDeleteResult"
+  /workboard.cards.stats:
+    post:
+      summary: Read Workboard card statistics
+      operationId: workboardCardsStats
+      description: Returns the card counts per status for one board.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                boardId:
+                  type: string
+      responses:
+        "200":
+          description: Statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /workboard.cards.dispatch:
+    post:
+      summary: Promote ready cards and start worker runs
+      operationId: workboardCardsDispatch
+      description: >
+        Promotes ready cards on one board and starts the worker runs for them.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                boardId:
+                  type: string
+                maxStarts:
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          description: Dispatch result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /workboard.sessionsBoard.read:
+    post:
+      summary: Read the sessions board and its placements
+      operationId: workboardSessionsBoardRead
+      description: >
+        Returns the sessions board specification, the session facts, and the
+        column each session is placed in.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                boardId:
+                  type: string
+      responses:
+        "200":
+          description: Sessions board view
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkboardSessionsBoardRead"
+  /workboard.sessionsBoard.update:
+    post:
+      summary: Update the sessions board specification
+      operationId: workboardSessionsBoardUpdate
+      description: >
+        Replaces the columns and the scope of a sessions board. The columns are
+        validated by the shared contract, which requires 2 to 12 columns and
+        exactly one fallback column.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                boardId:
+                  type: string
+                sessions:
+                  $ref: "#/components/schemas/WorkboardSessionsBoardSpec"
+      responses:
+        "200":
+          description: Stored sessions board
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkboardBoard"
+  /workboard.sessionsBoard.move:
+    post:
+      summary: Place a session in a sessions board column
+      operationId: workboardSessionsBoardMove
+      description: >
+        Records an operator placement of one session into one column.
+      tags: [workboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                boardId:
+                  type: string
+                sessionKey:
+                  type: string
+                columnId:
+                  type: string
+      responses:
+        "200":
+          description: Stored placement
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+components:
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: invalid_operation
+        message:
+          type: string
+    SessionTarget:
+      type: object
+      additionalProperties: true
+      required: [sessionKey]
+      properties:
+        sessionKey:
+          type: string
+          description: Session key that owns the record
+        agentId:
+          type: string
+          description: Owning agent, when the caller acts for one agent
+    BoardSessionTarget:
+      allOf:
+        - $ref: "#/components/schemas/SessionTarget"
+    BoardTab:
+      type: object
+      additionalProperties: true
+      required: [tabId, title, position, chatDock]
+      properties:
+        tabId:
+          type: string
+          pattern: "^[a-z0-9-]{1,40}$"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 80
+        position:
+          type: integer
+          minimum: 0
+        chatDock:
+          type: string
+          enum: [left, right, bottom, hidden]
+    BoardWidgetDeclared:
+      type: object
+      additionalProperties: true
+      properties:
+        netOrigins:
+          type: array
+          maxItems: 32
+          items:
+            type: string
+            maxLength: 2048
+            description: Exact HTTPS origin, no path, query, fragment, or credentials
+        tools:
+          type: array
+          maxItems: 64
+          items:
+            type: string
+            maxLength: 300
+    BoardWidget:
+      type: object
+      additionalProperties: true
+      required: [name, tabId, contentKind, sizeW, sizeH, position, grantState, revision]
+      properties:
+        name:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9._-]{0,63}$"
+        tabId:
+          type: string
+        title:
+          type: string
+        contentKind:
+          type: string
+          enum: [html, mcp-app, plugin]
+        contentOwner:
+          type: string
+          enum: [html, mcp-app, plugin, registered]
+        pluginKind:
+          type: string
+          description: Registered widget kind, for example session:report
+        props:
+          type: object
+          additionalProperties: true
+        presentation:
+          type: string
+          enum: [card, full-bleed, frameless]
+        heightMode:
+          type: string
+          enum: [auto, fixed]
+        sizeW:
+          type: integer
+          minimum: 1
+          maximum: 12
+        sizeH:
+          type: integer
+          minimum: 1
+          maximum: 20
+        position:
+          type: integer
+          minimum: 0
+        grantState:
+          type: string
+          enum: [none, pending, granted, rejected]
+        revision:
+          type: integer
+          minimum: 1
+        instanceId:
+          type: string
+        declared:
+          $ref: "#/components/schemas/BoardWidgetDeclared"
+    BoardSnapshot:
+      type: object
+      additionalProperties: true
+      required: [sessionKey, revision, tabs, widgets]
+      properties:
+        sessionKey:
+          type: string
+        revision:
+          type: integer
+          minimum: 0
+        tabs:
+          type: array
+          items:
+            $ref: "#/components/schemas/BoardTab"
+        widgets:
+          type: array
+          items:
+            $ref: "#/components/schemas/BoardWidget"
+    BoardOp:
+      type: object
+      additionalProperties: true
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum:
+            [
+              tab_create,
+              tab_update,
+              tab_delete,
+              tabs_reorder,
+              widget_move,
+              widget_resize,
+              widget_remove,
+            ]
+    BoardUpdateParams:
+      type: object
+      additionalProperties: true
+      required: [sessionKey, ops]
+      properties:
+        sessionKey:
+          type: string
+        agentId:
+          type: string
+        ops:
+          type: array
+          items:
+            $ref: "#/components/schemas/BoardOp"
+    BoardWidgetPutParams:
+      type: object
+      additionalProperties: true
+      required: [sessionKey, name, content]
+      properties:
+        sessionKey:
+          type: string
+        agentId:
+          type: string
+        name:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9._-]{0,63}$"
+        title:
+          type: string
+        content:
+          type: object
+          additionalProperties: true
+          description: >
+            One of `html` (an HTML document), `mcp-app` (an MCP App descriptor),
+            `plugin` (a registered widget kind plus props), or `registered`
+            (registered content source).
+          properties:
+            kind:
+              type: string
+              enum: [html, mcp-app, plugin, registered]
+        placement:
+          type: object
+          additionalProperties: true
+          properties:
+            tabId:
+              type: string
+            after:
+              type: string
+              description: Place after this widget name
+            size:
+              type: string
+              enum: [sm, md, lg, xl, full]
+        declared:
+          $ref: "#/components/schemas/BoardWidgetDeclared"
+    BoardWidgetPutResult:
+      allOf:
+        - $ref: "#/components/schemas/BoardSnapshot"
+        - type: object
+          required: [resolvedWidgetName]
+          properties:
+            resolvedWidgetName:
+              type: string
+              description: The name the widget was stored under
+    BoardWidgetGrantParams:
+      type: object
+      additionalProperties: true
+      required: [sessionKey, name, decision, revision]
+      properties:
+        sessionKey:
+          type: string
+        agentId:
+          type: string
+        name:
+          type: string
+        decision:
+          type: string
+          enum: [granted, rejected]
+        revision:
+          type: integer
+          description: The widget revision the operator reviewed
+        instanceId:
+          type: string
+    BoardTicketParams:
+      type: object
+      additionalProperties: true
+      required: [ticket]
+      properties:
+        ticket:
+          type: string
+          description: Signed view ticket for one widget view
+        bindingId:
+          type: string
+        action:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+    BoardEventParams:
+      type: object
+      additionalProperties: true
+      properties:
+        ticket:
+          type: string
+          description: Signed view ticket, when the event comes from a widget frame
+        sessionKey:
+          type: string
+        agentId:
+          type: string
+        widget:
+          type: string
+        payload:
+          description: JSON serializable event payload, at most 8 KiB
+    ProgressCardStep:
+      type: object
+      additionalProperties: true
+      required: [step, status]
+      properties:
+        step:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+    ProgressCard:
+      type: object
+      additionalProperties: true
+      required: [sessionKey, revision, updatedAt]
+      properties:
+        sessionKey:
+          type: string
+        revision:
+          type: integer
+        updatedAt:
+          type: integer
+        markdown:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgressCardStep"
+    ProgressCardPutParams:
+      type: object
+      additionalProperties: true
+      required: [sessionKey]
+      properties:
+        sessionKey:
+          type: string
+        agentId:
+          type: string
+        markdown:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgressCardStep"
+        expectedRevision:
+          type: integer
+          description: Reject the write when the stored card is at another revision
+    Project:
+      type: object
+      additionalProperties: true
+      required: [id, displayName, repoRoot, source]
+      properties:
+        id:
+          type: string
+          description: Project identifier, for example workspace:main
+        displayName:
+          type: string
+        repoRoot:
+          type: string
+        originUrl:
+          type: string
+        source:
+          type: string
+          enum: [workspace, registered, cloned]
+        agentId:
+          type: string
+    ProjectAddParams:
+      type: object
+      additionalProperties: true
+      required: [path]
+      properties:
+        path:
+          type: string
+          description: Local path or remote URL to register
+        name:
+          type: string
+          description: Display name, defaults to the checkout directory name
+    WorkboardStatus:
+      type: string
+      enum:
+        [
+          triage,
+          backlog,
+          todo,
+          scheduled,
+          ready,
+          running,
+          review,
+          blocked,
+          done,
+        ]
+    WorkboardPriority:
+      type: string
+      enum: [low, normal, high, urgent]
+    WorkboardBoard:
+      type: object
+      additionalProperties: true
+      required: [id, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9._-]{0,79}$"
+        kind:
+          type: string
+          enum: [cards, sessions]
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        sessions:
+          $ref: "#/components/schemas/WorkboardSessionsBoardSpec"
+        automationJobId:
+          type: string
+        createdAt:
+          type: integer
+        updatedAt:
+          type: integer
+        archivedAt:
+          type: integer
+    WorkboardBoardInput:
+      type: object
+      additionalProperties: true
+      required: [id]
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9._-]{0,79}$"
+        kind:
+          type: string
+          enum: [cards, sessions]
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        sessions:
+          $ref: "#/components/schemas/WorkboardSessionsBoardSpec"
+    WorkboardSessionsBoardSpec:
+      type: object
+      additionalProperties: true
+      required: [columns]
+      properties:
+        columns:
+          type: array
+          minItems: 2
+          maxItems: 12
+          items:
+            type: object
+            additionalProperties: true
+            required: [id, label, description]
+            properties:
+              id:
+                type: string
+                pattern: "^[a-z0-9][a-z0-9-]{0,47}$"
+              label:
+                type: string
+              color:
+                type: string
+                enum: [red, blue, green, yellow, purple, orange, pink, cyan]
+              description:
+                type: string
+              match:
+                description: Observer health, run state, pull request state, or archived flag
+              fallback:
+                type: boolean
+                description: Exactly one column per board carries the fallback flag
+        scope:
+          type: object
+          additionalProperties: true
+          properties:
+            agentIds:
+              type: array
+              items:
+                type: string
+            includeArchived:
+              type: boolean
+            includeAutomation:
+              type: boolean
+            includeHome:
+              type: boolean
+            maxAgeHours:
+              type: number
+              exclusiveMinimum: 0
+        agentSessionKey:
+          type: string
+    WorkboardCard:
+      type: object
+      additionalProperties: true
+      required: [id, title, status, priority, labels, position, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        notes:
+          type: string
+        status:
+          $ref: "#/components/schemas/WorkboardStatus"
+        priority:
+          $ref: "#/components/schemas/WorkboardPriority"
+        labels:
+          type: array
+          items:
+            type: string
+        agentId:
+          type: string
+        sessionKey:
+          type: string
+        runId:
+          type: string
+        sourceUrl:
+          type: string
+        position:
+          type: number
+        createdAt:
+          type: integer
+        updatedAt:
+          type: integer
+        startedAt:
+          type: integer
+        completedAt:
+          type: integer
+    WorkboardListResult:
+      type: object
+      additionalProperties: true
+      required: [cards, statuses]
+      properties:
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkboardCard"
+        statuses:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkboardStatus"
+        nextCursor:
+          type: object
+          additionalProperties: true
+    WorkboardDeleteResult:
+      type: object
+      additionalProperties: true
+      required: [deleted]
+      properties:
+        deleted:
+          type: boolean
+        referenceUpdates:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    WorkboardSessionsBoardRead:
+      type: object
+      additionalProperties: true
+      required: [board, columns, sessions]
+      properties:
+        revision:
+          type: object
+          additionalProperties: true
+        board:
+          $ref: "#/components/schemas/WorkboardBoard"
+        columns:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        sessions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        nextCursor:
+          type: string
+        total:
+          type: integer
+        warning:
+          type: string
