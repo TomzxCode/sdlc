@@ -1,0 +1,1023 @@
+# OpenAPI 3 contract for Security, Audit, and Secrets.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+#
+# Transport note: OpenClaw's Gateway is not REST. Every path below is a Gateway
+# RPC method name, carried in a request frame
+#   { "type": "req", "id": "<string>", "method": "<name>", "params": { ... } }
+# and answered with a response frame
+#   { "type": "res", "id": "<string>", "ok": <boolean>, "payload": { ... }, "error": { ... } }.
+# The same frames travel over the Gateway WebSocket or the Gateway HTTP bridge.
+# Path segments are written with dots so the mapping back to `method` is literal.
+#
+# Scope note: the local static security audit in src/security/ is not part of this
+# API. It runs entirely on the operator's machine through the
+# "openclaw security audit" command and never calls a Gateway method.
+#
+# Compatibility policy: methods are additive-only within a major version. New
+# optional request fields and new methods may be added. Existing field meanings
+# and method names do not change.
+openapi: 3.1.0
+info:
+  title: "Security, Audit, and Secrets API"
+  version: 0.1.0
+  description: >
+    Gateway RPC surface for the durable content-free activity ledger, the shared
+    secret store and its resolution surface, and channel DM pairing. Method
+    authority is enforced by the Gateway descriptor catalog: audit reads require
+    operator.read, secret store mutations require operator.admin, and pairing
+    mutations require operator.pairing or a dynamic owner check.
+components:
+  parameters:
+    ExpectedOwnerId:
+      name: expectedOwnerId
+      in: query
+      required: true
+      description: Local state mutation owner that must still hold the lock when the call lands.
+      schema:
+        type: string
+        minLength: 1
+  schemas:
+    RequestFrame:
+      type: object
+      required: [type, id, method]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          const: req
+        id:
+          type: string
+          minLength: 1
+        method:
+          type: string
+          minLength: 1
+          examples: [audit.activity.list]
+        params:
+          type: object
+          additionalProperties: true
+    ResponseFrame:
+      type: object
+      required: [type, id, ok]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          const: res
+        id:
+          type: string
+          minLength: 1
+        ok:
+          type: boolean
+        payload:
+          type: object
+          additionalProperties: true
+        error:
+          $ref: "#/components/schemas/Error"
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+    AuditListRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        sessionKey:
+          type: string
+          minLength: 1
+        runId:
+          type: string
+          minLength: 1
+        kind:
+          type: string
+          enum: [agent_run, tool_action]
+        status:
+          type: string
+          enum:
+            - started
+            - succeeded
+            - failed
+            - cancelled
+            - timed_out
+            - blocked
+            - unknown
+        after:
+          type: integer
+          minimum: 0
+          description: Inclusive lower bound in Unix milliseconds.
+        before:
+          type: integer
+          minimum: 0
+          description: Inclusive upper bound in Unix milliseconds.
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+        cursor:
+          type: string
+          minLength: 1
+          description: Continuation cursor returned by a previous page.
+    AuditListResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEvent"
+        nextCursor:
+          type: string
+    AuditActivityListRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        sessionKey:
+          type: string
+          minLength: 1
+        runId:
+          type: string
+          minLength: 1
+        kind:
+          type: string
+          enum: [agent_run, tool_action, message]
+        status:
+          type: string
+          enum:
+            - started
+            - succeeded
+            - failed
+            - cancelled
+            - timed_out
+            - blocked
+            - unknown
+        direction:
+          type: string
+          enum: [inbound, outbound]
+          description: Only valid together with kind "message".
+        channel:
+          type: string
+          minLength: 1
+          description: Only valid together with kind "message".
+        after:
+          type: integer
+          minimum: 0
+        before:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+        cursor:
+          type: string
+          minLength: 1
+    AuditActivityListResponse:
+      type: object
+      additionalProperties: false
+      required: [events]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEvent"
+        nextCursor:
+          type: string
+    AuditEvent:
+      type: object
+      description: >
+        A metadata-only ledger record. The schema is closed: a field that is not
+        listed does not exist in the ledger, so no content-bearing field can be
+        added without a schema version change.
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - eventId
+        - sequence
+        - sourceSequence
+        - occurredAt
+        - redaction
+        - kind
+        - action
+        - status
+        - actor
+      properties:
+        schemaVersion:
+          type: integer
+          const: 1
+        eventId:
+          type: string
+          minLength: 1
+        sequence:
+          type: integer
+          minimum: 1
+        sourceSequence:
+          type: integer
+          minimum: 1
+        occurredAt:
+          type: integer
+          minimum: 0
+        redaction:
+          type: string
+          const: metadata_only
+        kind:
+          type: string
+          enum: [agent_run, tool_action, message]
+        eventType:
+          type: string
+          enum: [agent_run, tool_action, inbound_message, outbound_message]
+        action:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          minLength: 1
+        errorCode:
+          type: string
+        reasonCode:
+          type: string
+        failureStage:
+          type: string
+          enum: [platform_send, queue, unknown]
+        deliveryKind:
+          type: string
+          enum: [text, media, other]
+        outcome:
+          type: string
+          enum: [completed, skipped, failed, sent, suppressed, unknown]
+        durationMs:
+          type: integer
+          minimum: 0
+        resultCount:
+          type: integer
+          minimum: 0
+        actor:
+          type: object
+          additionalProperties: false
+          required: [type, id]
+          properties:
+            type:
+              type: string
+              enum: [agent, system, channel_sender]
+            id:
+              type: string
+              minLength: 1
+        agentId:
+          type: string
+          minLength: 1
+        sessionKey:
+          type: string
+          minLength: 1
+        sessionId:
+          type: string
+          minLength: 1
+        runId:
+          type: string
+          minLength: 1
+        toolCallId:
+          type: string
+          minLength: 1
+        toolName:
+          type: string
+          minLength: 1
+        direction:
+          type: string
+          enum: [inbound, outbound]
+        channel:
+          type: string
+          minLength: 1
+        conversationKind:
+          type: string
+          enum: [direct, group, channel, unknown]
+        accountRef:
+          $ref: "#/components/schemas/AuditHmacRef"
+        conversationRef:
+          $ref: "#/components/schemas/AuditHmacRef"
+        messageRef:
+          $ref: "#/components/schemas/AuditHmacRef"
+        targetRef:
+          $ref: "#/components/schemas/AuditHmacRef"
+    AuditHmacRef:
+      type: string
+      pattern: "^hmac-sha256:v1:[a-f0-9]{32}:[a-f0-9]{64}$"
+      description: A keyed pseudonym of a sensitive identifier.
+    AuditRunInspectRequest:
+      type: object
+      additionalProperties: false
+      required: [runId]
+      properties:
+        runId:
+          type: string
+          minLength: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+        decisionCursor:
+          type: string
+          minLength: 1
+        executionCursor:
+          type: string
+          minLength: 1
+    AuditRunInspectResponse:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, run, identity, decisionDisplays, coverage]
+      properties:
+        schemaVersion:
+          type: integer
+          const: 1
+        run:
+          type: object
+          additionalProperties: true
+        identity:
+          type: object
+          additionalProperties: true
+        decisionDisplays:
+          type: array
+          items:
+            $ref: "#/components/schemas/DecisionReceipt"
+        coverage:
+          type: object
+          additionalProperties: true
+        nextDecisionCursor:
+          type: string
+        nextExecutionCursor:
+          type: string
+    DecisionReceipt:
+      type: object
+      additionalProperties: true
+      required: [owner, reasonCode]
+      properties:
+        owner:
+          type: string
+          minLength: 1
+        actionFamily:
+          type: string
+        decisionOutcome:
+          type: string
+          enum: [allowed, denied, not-applicable, unknown]
+        reasonCode:
+          type: string
+          minLength: 1
+        coverageState:
+          type: string
+          enum: [enforced, attribution-only, unattributed, unknown, unsupported]
+        sourceRef:
+          type: string
+        occurredAt:
+          type: integer
+          minimum: 0
+        provenance:
+          type: string
+    SecretRef:
+      type: object
+      description: The shared secret reference grammar.
+      additionalProperties: false
+      required: [source, provider, id]
+      properties:
+        source:
+          type: string
+          enum: [env, file, exec, store]
+        provider:
+          type: string
+          pattern: "^[a-z][a-z0-9_-]{0,63}$"
+          description: The provider alias, "default" when the operator did not set one.
+        id:
+          type: string
+          minLength: 1
+          description: The identifier inside the provider.
+    SecretsResolveRequest:
+      type: object
+      additionalProperties: false
+      required: [ref]
+      properties:
+        ref:
+          $ref: "#/components/schemas/SecretRef"
+    SecretsResolveResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        value:
+          type: string
+    SecretStoreScope:
+      type: object
+      additionalProperties: false
+      required: [scopeKind]
+      properties:
+        scopeKind:
+          type: string
+          enum: [team, identity]
+        scopeId:
+          type: string
+          description: Empty for team scope, non-empty for identity scope.
+    SecretStoreEntry:
+      type: object
+      additionalProperties: true
+      required: [name, kind]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        kind:
+          type: string
+          enum: [secret, env]
+        value:
+          type: string
+          description: Present only for entries whose kind is "env".
+        scopeKind:
+          type: string
+          enum: [team, identity]
+        scopeId:
+          type: string
+        allowedHosts:
+          type: array
+          items:
+            type: string
+        updatedAtMs:
+          type: integer
+          minimum: 0
+    SecretStoreListResponse:
+      type: object
+      additionalProperties: true
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/SecretStoreEntry"
+    SecretStoreSetRequest:
+      type: object
+      additionalProperties: false
+      required: [name, value, kind]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        value:
+          type: string
+        kind:
+          type: string
+          enum: [secret, env]
+        scope:
+          $ref: "#/components/schemas/SecretStoreScope"
+        allowedHosts:
+          type: array
+          items:
+            type: string
+    SecretStoreDeleteRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        scope:
+          $ref: "#/components/schemas/SecretStoreScope"
+    SecretStoreImportRequest:
+      type: object
+      additionalProperties: false
+      required: [content]
+      properties:
+        content:
+          type: string
+          description: Dotenv-formatted entries.
+        scope:
+          $ref: "#/components/schemas/SecretStoreScope"
+    SecretStoreAllowedHostsRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        scope:
+          $ref: "#/components/schemas/SecretStoreScope"
+    SecretStoreAllowedHostsResponse:
+      type: object
+      additionalProperties: false
+      required: [allowedHosts]
+      properties:
+        allowedHosts:
+          type: array
+          items:
+            type: string
+    ChannelsPairingListRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        channel:
+          type: string
+          minLength: 1
+        accountId:
+          type: string
+          minLength: 1
+        format:
+          type: string
+          enum: [cli]
+        expectedOwnerId:
+          type: string
+          minLength: 1
+          description: Required for the CLI-shaped request form.
+    ChannelsPairingListResponse:
+      type: object
+      additionalProperties: false
+      required: [accounts, requests, commandOwnerConfigured, limits]
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        requests:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChannelsPairingRequest"
+        commandOwnerConfigured:
+          type: boolean
+        limits:
+          type: object
+          additionalProperties: false
+          required: [pendingPerAccount, ttlMs]
+          properties:
+            pendingPerAccount:
+              type: integer
+              minimum: 0
+              examples: [3]
+            ttlMs:
+              type: integer
+              minimum: 0
+              examples: [3600000]
+    ChannelsPairingRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - requestId
+        - channel
+        - channelLabel
+        - accountId
+        - senderId
+        - senderLabel
+        - createdAt
+        - lastSeenAt
+        - expiresAt
+        - notifySupported
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          description: The opaque request id, not the human pairing code.
+        channel:
+          type: string
+          minLength: 1
+        channelLabel:
+          type: string
+          minLength: 1
+        accountId:
+          type: string
+          minLength: 1
+        accountLabel:
+          type: string
+        senderId:
+          type: string
+          minLength: 1
+        senderLabel:
+          type: string
+          minLength: 1
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        createdAt:
+          type: string
+          minLength: 1
+        lastSeenAt:
+          type: string
+          minLength: 1
+        expiresAt:
+          type: string
+          minLength: 1
+        notifySupported:
+          type: boolean
+    ChannelsPairingApproveRequest:
+      type: object
+      additionalProperties: false
+      required: [channel]
+      properties:
+        channel:
+          type: string
+          minLength: 1
+        accountId:
+          type: string
+          minLength: 1
+        requestId:
+          type: string
+          minLength: 1
+          description: Approve by opaque request id.
+        code:
+          type: string
+          minLength: 1
+          description: Approve by human pairing code, together with expectedOwnerId.
+        expectedOwnerId:
+          type: string
+          minLength: 1
+        notify:
+          type: boolean
+        bootstrapCommandOwner:
+          type: boolean
+    ChannelsPairingApproveResponse:
+      type: object
+      additionalProperties: false
+      required: [requestId, senderId, notification, commandOwnerBootstrap]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+        senderId:
+          type: string
+          minLength: 1
+        notification:
+          type: string
+          enum: [not-requested, sent, unsupported, failed]
+        commandOwnerBootstrap:
+          type: string
+          enum: [not-requested, configured, already-configured, unavailable]
+    ChannelsPairingDismissRequest:
+      type: object
+      additionalProperties: false
+      required: [channel, requestId]
+      properties:
+        channel:
+          type: string
+          minLength: 1
+        accountId:
+          type: string
+          minLength: 1
+        requestId:
+          type: string
+          minLength: 1
+    ChannelsPairingDismissResponse:
+      type: object
+      additionalProperties: false
+      required: [requestId, senderId]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+        senderId:
+          type: string
+          minLength: 1
+paths:
+  /audit.list:
+    post:
+      summary: Query run and tool activity records from the durable ledger
+      description: >
+        Bounded, newest-first query over agent_run and tool_action records.
+        Message records are not projected by this method and cause an error
+        rather than being silently dropped. Use audit.activity.list for the
+        full V1 activity union.
+      operationId: auditList
+      tags: [audit]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: A bounded page of activity records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid range or cursor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /audit.activity.list:
+    post:
+      summary: Query the V1 activity union, including message records
+      description: >
+        Bounded, newest-first query over agent_run, tool_action, inbound_message,
+        and outbound_message records. Every returned record is tagged with
+        redaction "metadata_only" and carries no prompt, message body, tool
+        argument, tool result, attachment, file name, URL, command output, or
+        raw error text.
+      operationId: auditActivityList
+      tags: [audit]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: A bounded page of activity records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid filters, range, or cursor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /audit.run.inspect:
+    post:
+      summary: Inspect one run's execution identity and decision receipts
+      description: >
+        Returns the execution identity context, coverage state, and the bounded
+        decision receipts for one run, merged across operator approval, message
+        delivery, generic decision fact, and owner lifecycle sources. Receipts
+        are read from their owner-native tables and are never copied into the
+        generic decision fact table.
+      operationId: auditRunInspect
+      tags: [audit]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Run identity, coverage, and decision receipts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid cursor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /secrets.reload:
+    post:
+      summary: Re-resolve secret references and swap the runtime snapshot
+      operationId: secretsReload
+      tags: [secrets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The refreshed runtime snapshot was installed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /secrets.resolve:
+    post:
+      summary: Resolve one secret reference
+      operationId: secretsResolve
+      tags: [secrets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The resolved secret
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /secrets.store.list:
+    post:
+      summary: List stored secret names and non-secret metadata
+      description: >
+        Values of entries whose kind is "secret" are never returned. Only
+        entries whose kind is "env" expose their value.
+      operationId: secretsStoreList
+      tags: [secrets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Store metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /secrets.store.set:
+    post:
+      summary: Create or update one shared secret store entry
+      operationId: secretsStoreSet
+      tags: [secrets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The entry was written
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /secrets.store.delete:
+    post:
+      summary: Soft delete one shared secret store entry
+      operationId: secretsStoreDelete
+      tags: [secrets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The entry was soft deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /secrets.store.import:
+    post:
+      summary: Import dotenv-formatted entries into the shared secret store
+      operationId: secretsStoreImport
+      tags: [secrets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /secrets.store.allowedHosts:
+    post:
+      summary: Read the host allowlist bound to one secret store entry
+      operationId: secretsStoreAllowedHosts
+      tags: [secrets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The bound host allowlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /channels.pairing.list:
+    post:
+      summary: List pending DM pairing requests for a channel
+      operationId: channelsPairingList
+      tags: [pairing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Pending pairing requests and the per-account limits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /channels.pairing.approve:
+    post:
+      summary: Approve a pairing code and allow that sender
+      description: >
+        Either approve by opaque request id, or approve by human pairing code
+        with an expected owner id. Approval adds the sender to the persistent
+        per-channel and per-account allow list.
+      operationId: channelsPairingApprove
+      tags: [pairing]
+      parameters:
+        - $ref: "#/components/parameters/ExpectedOwnerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The approved request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or a request that no longer exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /channels.pairing.dismiss:
+    post:
+      summary: Dismiss a pending pairing request
+      operationId: channelsPairingDismiss
+      tags: [pairing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The dismissed request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or a request that no longer exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

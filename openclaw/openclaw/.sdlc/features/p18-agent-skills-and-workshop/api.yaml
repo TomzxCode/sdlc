@@ -1,0 +1,1477 @@
+# OpenAPI 3 contract for Agent Skills and Workshop.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+#
+# Transport note: OpenClaw's Gateway is not REST. Every path below is a Gateway
+# RPC method name, carried in a request frame
+#   { "type": "req", "id": "<string>", "method": "<name>", "params": { ... } }
+# and answered with a response frame
+#   { "type": "res", "id": "<string>", "ok": <boolean>, "payload": { ... }, "error": { ... } }.
+# The same frames travel over the Gateway WebSocket or the Gateway HTTP bridge.
+# Path segments are written with dots so the mapping back to `method` is literal.
+#
+# Compatibility policy: methods are additive-only within a major version. New
+# optional request fields and new methods may be added. Existing field meanings
+# and method names do not change. The retired skills.proposals.* and
+# skills.curator.* methods stay registered and always answer INVALID_REQUEST so
+# that an old client is redirected rather than disconnected.
+openapi: 3.1.0
+info:
+  title: "Agent Skills and Workshop API"
+  version: 0.1.0
+  description: >
+    Gateway RPC surface for the skill pipeline: discovery and status for an
+    agent workspace, registry search and detail, Skill Card and binary
+    reporting, skill file reads, install, update, and chunked upload, the
+    profile-owned personal and team skill library, and the Workshop surface for
+    learned skills, the change feed, archive, restore, and undo.
+components:
+  parameters:
+    ExpectedOwnerId:
+      name: expectedOwnerId
+      in: query
+      required: true
+      description: Local state mutation owner that must still hold the lock when the call lands.
+      schema:
+        type: string
+        minLength: 1
+  schemas:
+    RequestFrame:
+      type: object
+      required: [type, id, method]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          const: req
+        id:
+          type: string
+          minLength: 1
+        method:
+          type: string
+          minLength: 1
+          examples: [skills.status]
+        params:
+          type: object
+          additionalProperties: true
+    ResponseFrame:
+      type: object
+      required: [type, id, ok]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          const: res
+        id:
+          type: string
+          minLength: 1
+        ok:
+          type: boolean
+        payload:
+          type: object
+          additionalProperties: true
+        error:
+          $ref: "#/components/schemas/Error"
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+    SkillsStatusRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        sessionKey:
+          type: string
+          minLength: 1
+        refresh:
+          type: boolean
+          description: Refresh file-backed discovery before reporting status.
+    SkillsStatusResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        agentId:
+          type: string
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillStatusEntry"
+    SkillStatusEntry:
+      type: object
+      additionalProperties: true
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        source:
+          type: string
+        ready:
+          type: boolean
+        missingRequirements:
+          type: array
+          items:
+            type: string
+        modelVisible:
+          type: boolean
+        userInvocable:
+          type: boolean
+        useCount:
+          type: integer
+          minimum: 0
+        lastUsedAtMs:
+          type: integer
+          minimum: 0
+    SkillsSearchRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        query:
+          type: string
+          minLength: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+    SkillsSearchResponse:
+      type: object
+      additionalProperties: false
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [score, slug, registry, installRef, displayName]
+            properties:
+              score:
+                type: number
+              slug:
+                type: string
+                minLength: 1
+              registry:
+                type: string
+                minLength: 1
+              installRef:
+                type: string
+                minLength: 1
+                description: Source-qualified reference to pass to skills.install.
+              displayName:
+                type: string
+                minLength: 1
+              official:
+                type: boolean
+              ownerHandle:
+                type: string
+              summary:
+                type: string
+              version:
+                type: string
+              updatedAt:
+                type: integer
+    SkillsDetailRequest:
+      type: object
+      additionalProperties: false
+      required: [slug]
+      properties:
+        slug:
+          type: string
+          minLength: 1
+        version:
+          type: string
+    SkillsDetailResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        registry:
+          type: string
+        source:
+          type: string
+          enum: [clawhub]
+        installRef:
+          type: string
+        card:
+          type: object
+          additionalProperties: true
+        requirements:
+          type: object
+          additionalProperties: true
+        downloadability:
+          type: object
+          additionalProperties: true
+    SkillsSkillCardRequest:
+      type: object
+      additionalProperties: false
+      required: [skillKey]
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        skillKey:
+          type: string
+          minLength: 1
+    SkillsSkillCardResponse:
+      type: object
+      additionalProperties: false
+      required: [schema, skillKey, path, sizeBytes, content]
+      properties:
+        schema:
+          type: string
+          const: openclaw.skills.skill-card.v1
+        skillKey:
+          type: string
+          minLength: 1
+        path:
+          type: string
+          minLength: 1
+        sizeBytes:
+          type: integer
+          minimum: 0
+        content:
+          type: string
+    SkillsBinsRequest:
+      type: object
+      additionalProperties: false
+      properties: {}
+    SkillsBinsResponse:
+      type: object
+      additionalProperties: false
+      required: [bins]
+      properties:
+        bins:
+          type: array
+          items:
+            type: string
+    SkillsSecurityVerdictsRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+    SkillsSecurityVerdictsResponse:
+      type: object
+      additionalProperties: false
+      required: [schema, items]
+      properties:
+        schema:
+          type: string
+          const: openclaw.skills.security-verdicts.v1
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [registry, ok, decision, reasons, requestedSlug, requestedVersion]
+            properties:
+              registry:
+                type: string
+                minLength: 1
+              ok:
+                type: boolean
+              decision:
+                type: string
+                minLength: 1
+              reasons:
+                type: array
+                items:
+                  type: string
+              requestedSlug:
+                type: string
+                minLength: 1
+              requestedVersion:
+                type: string
+                minLength: 1
+    SkillsFilesGetRequest:
+      type: object
+      additionalProperties: false
+      required: [path]
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        path:
+          type: string
+          minLength: 1
+    SkillsFilesGetResponse:
+      type: object
+      additionalProperties: false
+      required: [path, name, content]
+      properties:
+        path:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        content:
+          type: string
+    SkillsInstallRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        installId:
+          type: string
+          minLength: 1
+        source:
+          type: string
+          enum: [clawhub, upload]
+        slug:
+          type: string
+          minLength: 1
+        version:
+          type: string
+        uploadId:
+          type: string
+          minLength: 1
+        sha256:
+          type: string
+        force:
+          type: boolean
+        timeoutMs:
+          type: integer
+          minimum: 1000
+    SkillsUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        source:
+          type: string
+          enum: [clawhub]
+        slug:
+          type: string
+        skillKey:
+          type: string
+          minLength: 1
+        all:
+          type: boolean
+        force:
+          type: boolean
+        enabled:
+          type: boolean
+    SkillsUploadRequest:
+      type: object
+      description: >
+        The three upload phases share one method family. skills.upload.begin
+        opens an upload, skills.upload.chunk appends one chunk, and
+        skills.upload.commit closes it. The action field selects the phase.
+      additionalProperties: false
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [begin, chunk, commit]
+        kind:
+          type: string
+          enum: [skill-archive]
+        slug:
+          type: string
+          minLength: 1
+        sizeBytes:
+          type: integer
+          minimum: 1
+        sha256:
+          type: string
+        force:
+          type: boolean
+        idempotencyKey:
+          type: string
+          minLength: 1
+          maxLength: 2048
+        uploadId:
+          type: string
+          minLength: 1
+        offset:
+          type: integer
+          minimum: 0
+        data:
+          type: string
+          maxLength: 5592408
+    SkillsLibraryListRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        sessionKey:
+          type: string
+          minLength: 1
+          maxLength: 512
+        scope:
+          type: string
+          enum: [mine, team, all]
+    SkillsLibraryListResponse:
+      type: object
+      additionalProperties: true
+      required: [defaultTarget]
+      properties:
+        defaultTarget:
+          type: string
+        defaultSelectionLimit:
+          type: integer
+          minimum: 0
+        defaultSelectionNotice:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillLibraryEntry"
+        session:
+          type: object
+          additionalProperties: true
+    SkillLibraryEntry:
+      type: object
+      additionalProperties: true
+      required: [skillId, slug, revision]
+      properties:
+        skillId:
+          type: string
+          pattern: "^[a-f0-9-]{36}$"
+        slug:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
+        revision:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        name:
+          type: string
+        description:
+          type: string
+        ownerLabel:
+          type: string
+        shared:
+          type: boolean
+        enabled:
+          type: boolean
+    SkillsLibraryReadRequest:
+      type: object
+      additionalProperties: false
+      required: [skillId]
+      properties:
+        skillId:
+          type: string
+          pattern: "^[a-f0-9-]{36}$"
+        revision:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        sessionKey:
+          type: string
+          minLength: 1
+          maxLength: 512
+    SkillsLibraryReadResponse:
+      type: object
+      additionalProperties: true
+      required: [entry]
+      properties:
+        entry:
+          $ref: "#/components/schemas/SkillLibraryEntry"
+        files:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [path, content]
+            properties:
+              path:
+                type: string
+                minLength: 1
+                maxLength: 512
+              content:
+                type: string
+              encoding:
+                type: string
+                enum: [utf8, base64]
+              executable:
+                type: boolean
+        revisions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    SkillsLibrarySaveRequest:
+      type: object
+      additionalProperties: false
+      required: [slug, content, expectedRevision]
+      properties:
+        skillId:
+          type: string
+          pattern: "^[a-f0-9-]{36}$"
+        expectedRevision:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          nullable: true
+        slug:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
+        content:
+          type: string
+          minLength: 1
+          maxLength: 1048576
+        files:
+          type: array
+          maxItems: 255
+          items:
+            type: object
+            additionalProperties: false
+            required: [path, content]
+            properties:
+              path:
+                type: string
+                minLength: 1
+                maxLength: 512
+              content:
+                type: string
+              encoding:
+                type: string
+                enum: [utf8, base64]
+              executable:
+                type: boolean
+        retainFiles:
+          type: array
+          maxItems: 255
+          items:
+            type: string
+            minLength: 1
+            maxLength: 512
+    SkillsLibraryMutateRequest:
+      type: object
+      additionalProperties: false
+      required: [skillId, expectedRevision, action]
+      properties:
+        skillId:
+          type: string
+          pattern: "^[a-f0-9-]{36}$"
+        expectedRevision:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        action:
+          type: string
+          enum: [share, unshare, transfer, remove, enable, disable, rollback]
+        revision:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+    SkillsLibraryActivateRequest:
+      type: object
+      additionalProperties: false
+      required: [sessionKey, action]
+      properties:
+        sessionKey:
+          type: string
+          minLength: 1
+          maxLength: 512
+        action:
+          type: string
+          enum: [attach, detach, refresh]
+        skillId:
+          type: string
+          pattern: "^[a-f0-9-]{36}$"
+        revision:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+    SkillsLibraryImportRequest:
+      type: object
+      additionalProperties: false
+      required: [slug, source]
+      properties:
+        slug:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
+        source:
+          type: object
+          additionalProperties: false
+          required: [kind, slug]
+          properties:
+            kind:
+              type: string
+              const: clawhub
+            slug:
+              type: string
+              minLength: 1
+              maxLength: 256
+            version:
+              type: string
+              minLength: 1
+              maxLength: 128
+    SkillsLibraryUploadRequest:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [begin, chunk, commit]
+        slug:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
+        sizeBytes:
+          type: integer
+          minimum: 1
+          maximum: 8388608
+        sha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        uploadId:
+          type: string
+          pattern: "^[a-f0-9-]{36}$"
+        offset:
+          type: integer
+          minimum: 0
+        data:
+          type: string
+          maxLength: 350000
+    SkillsLibraryReceipt:
+      type: object
+      additionalProperties: true
+      properties:
+        skillId:
+          type: string
+        revision:
+          type: string
+        committed:
+          type: boolean
+    SkillWorkshopChange:
+      type: object
+      additionalProperties: false
+      required: [id, agentId, skillName, action, actor, summary, createdAtMs]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        agentId:
+          type: string
+          minLength: 1
+        skillName:
+          type: string
+          minLength: 1
+        action:
+          type: string
+          enum: [create, patch, write_file, remove_file, archive, restore]
+        actor:
+          type: string
+          enum: [agent, review, curator, user]
+        summary:
+          type: string
+        versionId:
+          type: string
+        sessionKey:
+          type: string
+        runId:
+          type: string
+        createdAtMs:
+          type: number
+          minimum: 0
+    SkillsWorkshopListRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+    SkillsWorkshopListResponse:
+      type: object
+      additionalProperties: false
+      required: [agentId, mode, root, skills, archived]
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        mode:
+          type: string
+          enum: [off, auto]
+        root:
+          type: string
+          minLength: 1
+        skills:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [name, description, updatedAtMs, sizeBytes, files]
+            properties:
+              name:
+                type: string
+                minLength: 1
+              description:
+                type: string
+              updatedAtMs:
+                type: number
+                minimum: 0
+              sizeBytes:
+                type: integer
+                minimum: 0
+              files:
+                type: array
+                items:
+                  type: string
+              useCount:
+                type: integer
+                minimum: 0
+              lastUsedAtMs:
+                type: number
+                minimum: 0
+        archived:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [name, live, versions]
+            properties:
+              name:
+                type: string
+                minLength: 1
+              live:
+                type: boolean
+              versions:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+    SkillsWorkshopChangesRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 500
+        beforeMs:
+          type: number
+          minimum: 0
+    SkillsWorkshopChangesResponse:
+      type: object
+      additionalProperties: false
+      required: [changes]
+      properties:
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillWorkshopChange"
+    SkillsWorkshopReadRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        filePath:
+          type: string
+        versionId:
+          type: string
+    SkillsWorkshopReadResponse:
+      type: object
+      additionalProperties: false
+      required: [name, filePath, content, files]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        filePath:
+          type: string
+          minLength: 1
+        content:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+    SkillsWorkshopArchiveRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+    SkillsWorkshopRestoreRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        versionId:
+          type: string
+    SkillsWorkshopUndoRequest:
+      type: object
+      additionalProperties: false
+      required: [runId]
+      properties:
+        agentId:
+          type: string
+          minLength: 1
+        runId:
+          type: string
+          minLength: 1
+    SkillsWorkshopUndoResponse:
+      type: object
+      additionalProperties: false
+      required: [status, changes]
+      properties:
+        status:
+          type: string
+          enum: [undone, already-undone]
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillWorkshopChange"
+paths:
+  /skills.status:
+    post:
+      summary: Report the discovered skills for an agent workspace
+      operationId: skillsStatus
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The skill status report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or an unknown agent id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.detail:
+    post:
+      summary: Read the registry detail for one skill
+      operationId: skillsDetail
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The registry detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.search:
+    post:
+      summary: Search the skill registry
+      operationId: skillsSearch
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: Ranked registry results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.skillCard:
+    post:
+      summary: Read the rendered Skill Card for one installed skill
+      operationId: skillsSkillCard
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The Skill Card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.bins:
+    post:
+      summary: List the binaries available to the Gateway for skill use
+      operationId: skillsBins
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The available binary names
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.securityVerdicts:
+    post:
+      summary: Read the registry security verdicts for installed skills
+      operationId: skillsSecurityVerdicts
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The verdict report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.files.get:
+    post:
+      summary: Read one skill file from its owning host
+      operationId: skillsFilesGet
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The skill file content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.install:
+    post:
+      summary: Install a skill
+      operationId: skillsInstall
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The install result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The install policy refused the bundle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.update:
+    post:
+      summary: Update installed skill settings or refresh ClawHub-installed skills
+      operationId: skillsUpdate
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.upload.begin:
+    post:
+      summary: Open a chunked skill archive upload
+      operationId: skillsUploadBegin
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The upload was opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.upload.chunk:
+    post:
+      summary: Append one chunk to an open skill upload
+      operationId: skillsUploadChunk
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The chunk was accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.upload.commit:
+    post:
+      summary: Commit an open skill upload
+      operationId: skillsUploadCommit
+      tags: [skills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The upload was committed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.library.list:
+    post:
+      summary: List the caller's own and visible shared library skills
+      operationId: skillsLibraryList
+      tags: [skills-library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The library listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.library.read:
+    post:
+      summary: Read one library skill with its supporting files and revision history
+      operationId: skillsLibraryRead
+      tags: [skills-library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The library skill
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The caller lost read authority for the skill
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.library.save:
+    post:
+      summary: Save a library skill, creating a new revision
+      operationId: skillsLibrarySave
+      tags: [skills-library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The save receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The bundle carries a critical secret finding, or the caller lost write authority
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.library.mutate:
+    post:
+      summary: Apply a library mutation against an expected revision
+      operationId: skillsLibraryMutate
+      tags: [skills-library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The mutation receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The caller lost authority for the skill
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.library.activate:
+    post:
+      summary: Attach, detach, or refresh a library skill in a session
+      operationId: skillsLibraryActivate
+      tags: [skills-library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The activation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.library.import:
+    post:
+      summary: Import a registry skill into the caller's private library
+      operationId: skillsLibraryImport
+      tags: [skills-library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.library.upload:
+    post:
+      summary: Upload a private library bundle in chunks
+      operationId: skillsLibraryUpload
+      tags: [skills-library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The upload result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.workshop.list:
+    post:
+      summary: List the learned skills, the archived skills, and their usage
+      operationId: skillsWorkshopList
+      tags: [skills-workshop]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The Workshop listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or an unknown agent id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.workshop.changes:
+    post:
+      summary: List the recent Workshop changes for an agent
+      operationId: skillsWorkshopChanges
+      tags: [skills-workshop]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The change page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or an unknown agent id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.workshop.read:
+    post:
+      summary: Read one file of a learned skill or of a saved version
+      operationId: skillsWorkshopRead
+      tags: [skills-workshop]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The skill file content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or an unknown agent id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.workshop.archive:
+    post:
+      summary: Archive a learned skill so the agent no longer sees it
+      operationId: skillsWorkshopArchive
+      tags: [skills-workshop]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The recorded change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or an unknown agent id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.workshop.restore:
+    post:
+      summary: Restore an archived skill or a saved version
+      operationId: skillsWorkshopRestore
+      tags: [skills-workshop]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The recorded change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request or an unknown agent id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills.workshop.undo:
+    post:
+      summary: Undo a whole background review run
+      operationId: skillsWorkshopUndo
+      tags: [skills-workshop]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFrame"
+      responses:
+        "200":
+          description: The revert result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFrame"
+        "400":
+          description: Invalid request, an unknown agent id, or a review with no recorded changes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

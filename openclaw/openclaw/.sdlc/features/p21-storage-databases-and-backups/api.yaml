@@ -1,0 +1,459 @@
+# OpenAPI 3 contract for Storage, Databases, and Backups.
+# Normative API definition referenced by specification.md.
+#
+# Transport note: OpenClaw's Gateway is a WebSocket and HTTP JSON-RPC surface,
+# not REST. A client sends a request frame `{ type: "req", id, method, params }`
+# over the Gateway socket and receives `{ type: "res", id, ok, payload, error }`.
+# Each Gateway RPC method is therefore modelled here as a path under a synthetic
+# `/rpc` root, where the last path segment is the literal RPC method name and
+# the request body is the method's `params` object.
+#
+# The database itself has no dedicated Gateway method. The Gateway process owns
+# every OpenClaw database and its state process-side, and the operator reaches
+# that ownership through the `openclaw database`, `openclaw backup`, and
+# `openclaw storage` commands, through the `backup.*` and `storage.locations.*`
+# methods below, and through the `doctor`, `health`, and `system` method
+# families that report on the runtime that owns the databases. The CLI surface
+# is listed in the API Contracts table of specification.md and is not modelled
+# as a path here, because it is not an HTTP surface.
+#
+# Method names, parameter names, and scopes are taken from
+# `src/gateway/methods/core-descriptors.ts` and the handler files under
+# `src/gateway/server-methods/`. The request and result schemas are taken from
+# `packages/gateway-protocol/src/schema/backup.ts` and
+# `packages/gateway-protocol/src/schema/storage.ts`.
+#
+# Compatibility policy: methods are additive-only within a major version; a new
+# optional request field is a minor change, and removing a field or changing
+# its meaning requires a new major version.
+#
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Storage, Databases, and Backups API"
+  version: 0.1.0
+  description: >
+    The Gateway surface for backup outcomes, backup status, and named storage
+    locations. The databases themselves are owned process-side by the Gateway
+    and are reached through the `openclaw database`, `openclaw backup`, and
+    `openclaw storage` commands rather than through a dedicated RPC method.
+    Compatibility policy: methods are additive-only within a major version; a
+    new optional request field is a minor change, and removing a field or
+    changing its meaning requires a new major version. Every method carries an
+    operator scope, taken from the Gateway core descriptors, and the scope
+    decides whether the call is admitted.
+servers:
+  - url: "/rpc"
+    description: >
+      Synthetic root for Gateway RPC methods. The real endpoint is the Gateway
+      socket described in `docs/gateway/protocol/`.
+paths:
+  /backup.status:
+    post:
+      summary: Read the recorded backup runs, schedules, and storage locations
+      operationId: backupStatus
+      description: >
+        Returns the recorded backup runs grouped by target, the scheduled
+        backup jobs, and the configured storage locations. Reads run through
+        the shared read worker and do not create a missing state database.
+        Requires the `operator.read` scope.
+      tags: [backup]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackupStatusParams"
+      responses:
+        "200":
+          description: Backup status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackupStatusResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /backup.recordOutcome:
+    post:
+      summary: Record one external backup run outcome
+      operationId: backupRecordOutcome
+      description: >
+        Records one backup run outcome in the shared `backup_runs` table. The
+        call is fenced by the local state owner: the owner must still hold the
+        lock when the write lands. A missing shared state database is not
+        created to hold the record. Requires the `operator.admin` scope and
+        the control-plane write flag.
+      tags: [backup]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackupRecordOutcomeParams"
+      responses:
+        "200":
+          description: The outcome was recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [recorded]
+                properties:
+                  recorded:
+                    type: boolean
+                    const: true
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: The local state owner changed while the write was in flight
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      details:
+                        type: object
+                        properties:
+                          reason:
+                            type: string
+                            const: STATE_OWNER_CHANGED
+                          mutationAccepted:
+                            type: boolean
+                            const: false
+  /storage.locations.list:
+    post:
+      summary: List the configured storage locations
+      operationId: storageLocationsList
+      description: >
+        Returns a configuration projection of the named storage destinations.
+        The call does not open a provider backend, does not resolve a
+        passphrase, and does not write to a destination. Requires the
+        `operator.read` scope.
+      tags: [storage]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageLocationsListParams"
+      responses:
+        "200":
+          description: Storage locations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageLocationsListResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /storage.locations.probe:
+    post:
+      summary: Check one storage location for its marker, key, and capacity
+      operationId: storageLocationsProbe
+      description: >
+        Opens one configured location, reads its initialization marker, and
+        reports the location state. A location without a marker reports
+        `unavailable`, a location whose passphrase does not match the marker
+        reports `wrong-key`, and a location that cannot be reached reports
+        `error`. The call does not initialize the location and does not write
+        a test object. Requires the `operator.read` scope.
+      tags: [storage]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorageLocationsProbeParams"
+      responses:
+        "200":
+          description: Probe result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorageLocationsProbeResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+    BackupKind:
+      type: string
+      enum: [archive, sqlite-snapshot, git, external]
+    BackupStatusParams:
+      type: object
+      additionalProperties: false
+      description: The method takes no parameters.
+    BackupRunLocation:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          name,
+          provider,
+          locationId,
+          key,
+          namespace,
+          plaintextBytes,
+          storedBytes,
+        ]
+      properties:
+        name:
+          type: string
+          description: Configured storage location name
+        provider:
+          type: string
+          description: Storage provider id that holds the object
+        locationId:
+          type: string
+          description: Identity of the location from its initialization marker
+        key:
+          type: string
+          description: Object key inside the location
+        namespace:
+          type: string
+          description: Backup namespace used for the key
+        plaintextBytes:
+          type: integer
+          minimum: 0
+          description: Size of the archive before encryption
+        storedBytes:
+          type: integer
+          minimum: 0
+          description: Size of the object as stored
+    BackupRunRetention:
+      type: object
+      additionalProperties: false
+      required: [kept, deleted]
+      properties:
+        kept:
+          type: integer
+          minimum: 0
+          description: Number of retained archives
+        deleted:
+          type: integer
+          minimum: 0
+          description: Number of deleted archives
+    BackupRunRecord:
+      type: object
+      additionalProperties: false
+      required: [id, createdAt, archivePath, status, kind]
+      properties:
+        id:
+          type: string
+          description: Run identifier
+        createdAt:
+          type: number
+          description: Run timestamp in epoch milliseconds
+        archivePath:
+          type: string
+          description: Archive, snapshot, or commit path
+        status:
+          type: string
+          enum: [ok, failed]
+        kind:
+          $ref: "#/components/schemas/BackupKind"
+        target:
+          type: string
+          description: Target label for the run
+        namespace:
+          type: string
+          description: Backup namespace for the run
+        error:
+          type: string
+          description: Failure detail, truncated on write
+        pushFailed:
+          type: boolean
+          const: true
+          description: Present when the run failed to push its archive
+        bytes:
+          type: integer
+          minimum: 0
+          description: Archive size in bytes
+        location:
+          $ref: "#/components/schemas/BackupRunLocation"
+        retention:
+          $ref: "#/components/schemas/BackupRunRetention"
+    BackupStatusResult:
+      type: object
+      additionalProperties: false
+      required: [targets, schedules, locations]
+      properties:
+        targets:
+          type: array
+          description: Recorded backup runs grouped by kind, target, and namespace
+          items:
+            type: object
+            additionalProperties: false
+            required: [kind, target, latest]
+            properties:
+              kind:
+                $ref: "#/components/schemas/BackupKind"
+              target:
+                type: string
+              namespace:
+                type: string
+              latest:
+                $ref: "#/components/schemas/BackupRunRecord"
+              latestOk:
+                $ref: "#/components/schemas/BackupRunRecord"
+        schedules:
+          type: array
+          description: Scheduled backup jobs
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, mode, target, enabled, everyMs]
+            properties:
+              id:
+                type: string
+                description: Cron job identifier
+              mode:
+                type: string
+                enum: [git, offsite]
+              target:
+                type: string
+                description: Git repository path or storage location name
+              namespace:
+                type: string
+              enabled:
+                type: boolean
+              everyMs:
+                type: number
+                description: Backup interval in milliseconds
+              nextRunAtMs:
+                type: number
+                description: Next scheduled run in epoch milliseconds
+        locations:
+          type: array
+          description: Configured storage locations
+          items:
+            $ref: "#/components/schemas/StorageLocationSummary"
+    BackupRecordOutcomeParams:
+      type: object
+      additionalProperties: false
+      required: [expectedOwnerId, outcome]
+      properties:
+        expectedOwnerId:
+          type: string
+          minLength: 1
+          description: Local state owner that must still hold the lock when the write lands
+        outcome:
+          type: object
+          additionalProperties: false
+          required: [createdAt, archivePath, status, kind]
+          description: The run to record. The `id` field is assigned by the store.
+          properties:
+            createdAt:
+              type: number
+              description: Run timestamp in epoch milliseconds
+            archivePath:
+              type: string
+              description: Archive, snapshot, or commit path
+            status:
+              type: string
+              enum: [ok, failed]
+            kind:
+              $ref: "#/components/schemas/BackupKind"
+            target:
+              type: string
+            namespace:
+              type: string
+            error:
+              type: string
+            pushFailed:
+              type: boolean
+              const: true
+            bytes:
+              type: integer
+              minimum: 0
+            location:
+              $ref: "#/components/schemas/BackupRunLocation"
+            retention:
+              $ref: "#/components/schemas/BackupRunRetention"
+    StorageLocationSummary:
+      type: object
+      additionalProperties: false
+      required: [name, provider, encrypted]
+      properties:
+        name:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
+          description: Storage location name
+        provider:
+          type: string
+          minLength: 1
+          description: Storage provider id
+        displayTarget:
+          type: string
+          minLength: 1
+          description: Non-secret human-readable target for the location
+        encrypted:
+          type: boolean
+          description: Whether the location encrypts objects before upload
+    StorageLocationsListParams:
+      type: object
+      additionalProperties: false
+      description: The method takes no parameters.
+    StorageLocationsListResult:
+      type: object
+      additionalProperties: false
+      required: [locations]
+      properties:
+        locations:
+          type: array
+          items:
+            $ref: "#/components/schemas/StorageLocationSummary"
+    StorageLocationsProbeParams:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
+          description: Storage location name
+    StorageLocationsProbeResult:
+      type: object
+      additionalProperties: false
+      required: [state]
+      properties:
+        state:
+          type: string
+          enum: [ok, unavailable, uninitialized, wrong-key, error]
+          description: Result of the marker, key, and reachability checks
+        freeBytes:
+          type: number
+          minimum: 0
+          description: Free capacity reported by the provider
+        totalBytes:
+          type: number
+          minimum: 0
+          description: Total capacity reported by the provider
+        message:
+          type: string
+          description: Actionable detail for a state other than `ok`

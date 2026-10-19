@@ -1,0 +1,832 @@
+# OpenAPI 3 contract for Node Host and Device Execution.
+# Normative API definition referenced by specification.md.
+#
+# Transport note: the OpenClaw Gateway protocol is NOT REST. It is a WebSocket and
+# HTTP JSON-RPC surface. A request is a `req` frame {type, id, method, params}, a
+# response is a `res` frame {type, id, ok, payload, error}, and an event is an
+# `event` frame {type, event, payload}. The paths below are the RPC method
+# identifiers, not URL routes. The payload schemas are the OpenClaw protocol
+# schemas in `packages/gateway-protocol/src/schema/nodes.ts`, and the scope policy
+# for each method is the canonical table in `src/gateway/methods/core-descriptors.ts`.
+#
+# Methods scoped `node` are called by the node itself over its own connection.
+# Methods scoped `operator.*` are called by an operator client.
+#
+# Compatibility policy: additive-only within a major version. New optional request
+# fields and new response fields may be added; existing fields are not removed or
+# retyped. A method's required scope never relaxes.
+#
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Node Host and Device Execution API"
+  version: 0.1.0
+  description: >
+    The Gateway-side surface a node host depends on: pairing a node and its declared
+    command surface, listing and describing paired nodes, invoking one command on a
+    node, exchanging the invocation progress and result stream, accepting
+    node-originated events, and delivering queued node work. The node host itself
+    lives in `src/node-host/` and is described in the specification. The Rust node
+    host is a separate implementation and is out of scope here.
+paths:
+  /rpc/node.pair.list:
+    post:
+      summary: List pending node pairing requests
+      operationId: nodePairList
+      tags: [pairing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyParams"
+      responses:
+        "200":
+          description: Pending node requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NodePairRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.pair.approve:
+    post:
+      summary: Approve a pending node request and its declared command surface
+      operationId: nodePairApprove
+      description: >
+        Approving a node request approves the command surface it declared at that
+        time. A later expansion of the surface creates a new request that must be
+        approved separately, while commands that were already approved and remain
+        declared stay usable.
+      tags: [pairing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodePairApproveParams"
+      responses:
+        "200":
+          description: Approval result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodePairResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.pair.reject:
+    post:
+      summary: Reject a pending node request
+      operationId: nodePairReject
+      tags: [pairing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodePairRejectParams"
+      responses:
+        "200":
+          description: Rejection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodePairResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.pair.remove:
+    post:
+      summary: Remove an already paired node from the trust set
+      operationId: nodePairRemove
+      tags: [pairing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodePairRemoveParams"
+      responses:
+        "200":
+          description: Removal result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodePairResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.rename:
+    post:
+      summary: Rename a paired node while preserving its stable id
+      operationId: nodeRename
+      tags: [pairing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeRenameParams"
+      responses:
+        "200":
+          description: Rename result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodePairResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.list:
+    post:
+      summary: List the paired nodes
+      operationId: nodeList
+      tags: [nodes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyParams"
+      responses:
+        "200":
+          description: Paired nodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NodeSummary"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.describe:
+    post:
+      summary: Describe one node, its capabilities, and its command surface
+      operationId: nodeDescribe
+      tags: [nodes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeDescribeParams"
+      responses:
+        "200":
+          description: Node description
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeSummary"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.pluginSurface.refresh:
+    post:
+      summary: Refresh the agent-visible plugin surface of a connected node
+      operationId: nodePluginSurfaceRefresh
+      tags: [nodes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyParams"
+      responses:
+        "200":
+          description: Refresh result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeEventResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.pluginTools.update:
+    post:
+      summary: Replace the connected node's dynamic plugin and MCP tool catalog
+      operationId: nodePluginToolsUpdate
+      tags: [nodes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodePluginToolsUpdateParams"
+      responses:
+        "200":
+          description: Update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeEventResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.skills.update:
+    post:
+      summary: Replace the connected node's agent-visible skill catalog
+      operationId: nodeSkillsUpdate
+      tags: [nodes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeSkillsUpdateParams"
+      responses:
+        "200":
+          description: Update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeEventResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.invoke:
+    post:
+      summary: Invoke one command on a paired node
+      operationId: nodeInvoke
+      description: >
+        The Gateway forwards the command and its parameters to the node, along with
+        a timeout and an idempotency key. The node answers on the
+        `node.invoke.progress` and `node.invoke.result` methods. Gateway-only
+        approval routing metadata travels beside `params` and is stripped by the
+        node before forwarding. Private node controls and `system.execApprovals.*`
+        are refused on this surface.
+      tags: [invoke]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeInvokeParams"
+      responses:
+        "200":
+          description: Invocation accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                properties:
+                  id: { type: string }
+                  nodeId: { type: string }
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/node.invoke.progress:
+    post:
+      summary: Ordered output produced while a node command runs
+      operationId: nodeInvokeProgress
+      description: >
+        Called by the node. An empty chunk is a liveness heartbeat for captured
+        stderr or a capped stdout.
+      tags: [invoke]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeInvokeProgressParams"
+      responses:
+        "200":
+          description: Progress accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeEventResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+  /rpc/node.invoke.result:
+    post:
+      summary: Final result or failure of a node command
+      operationId: nodeInvokeResult
+      description: >
+        Called by the node. A permission failure carries the node's own capability
+        vocabulary in `error.details.capabilities`.
+      tags: [invoke]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeInvokeResultParams"
+      responses:
+        "200":
+          description: Result accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeEventResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+  /rpc/node.event:
+    post:
+      summary: A node-originated event
+      operationId: nodeEvent
+      description: >
+        Called by the node. The event name selects the payload schema. The Gateway
+        accepts `node.presence.alive`, `node.presence.activity`, and
+        `node.host.stats`, and broadcasts `node.hostStats`, `node.presence`, and
+        `node.desktop.availability` to the clients that subscribe to them.
+      tags: [events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeEventParams"
+      responses:
+        "200":
+          description: Event accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeEventResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+  /rpc/node.pending.drain:
+    post:
+      summary: Fetch a bounded batch of queued node work
+      operationId: nodePendingDrain
+      tags: [pending-work]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodePendingDrainParams"
+      responses:
+        "200":
+          description: Queued work batch
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodePendingDrainResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+  /rpc/node.pending.enqueue:
+    post:
+      summary: Queue work for a node
+      operationId: nodePendingEnqueue
+      tags: [pending-work]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodePendingEnqueueParams"
+      responses:
+        "200":
+          description: Enqueue result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodePendingEnqueueResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/node.pending.pull:
+    post:
+      summary: Pull queued work items
+      operationId: nodePendingPull
+      tags: [pending-work]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyParams"
+      responses:
+        "200":
+          description: Pulled work items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NodePendingWorkItem"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+  /rpc/node.pending.ack:
+    post:
+      summary: Acknowledge the queued work items that were consumed
+      operationId: nodePendingAck
+      tags: [pending-work]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodePendingAckParams"
+      responses:
+        "200":
+          description: Acknowledgement result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeEventResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+components:
+  responses:
+    InvalidRequest:
+      description: The request failed validation or a method precondition
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: The caller lacks the required operator scope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unavailable:
+      description: The node is not connected or the service is not ready
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    EmptyParams:
+      type: object
+      additionalProperties: false
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_REQUEST
+            - FORBIDDEN
+            - UNAVAILABLE
+            - NOT_PAIRED
+            - APPROVAL_NOT_FOUND
+          example: INVALID_REQUEST
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        retryable:
+          type: boolean
+        retryAfterMs:
+          type: integer
+          minimum: 0
+    NodePairRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        requestId: { type: string, minLength: 1 }
+        nodeId: { type: string }
+        displayName: { type: string }
+        platform: { type: string }
+        deviceFamily: { type: string }
+        clientId: { type: string }
+        clientMode: { type: string }
+        commands:
+          type: array
+          items: { type: string }
+        caps:
+          type: array
+          items: { type: string }
+        ts: { type: integer, minimum: 0 }
+    NodePairResult:
+      type: object
+      additionalProperties: true
+      properties:
+        ok: { type: boolean }
+        nodeId: { type: string }
+        requestId: { type: string }
+        reason: { type: string }
+    NodeSummary:
+      type: object
+      additionalProperties: true
+      properties:
+        nodeId: { type: string }
+        displayName: { type: string }
+        platform: { type: string }
+        deviceFamily: { type: string }
+        connected: { type: boolean }
+        lastSeenAtMs: { type: integer, minimum: 0 }
+        commands:
+          type: array
+          items: { type: string }
+        caps:
+          type: array
+          items: { type: string }
+        invocableCommands:
+          type: array
+          items: { type: string }
+        requiredNodeCommand:
+          type: object
+          additionalProperties: true
+          properties:
+            command: { type: string }
+            state:
+              type: string
+              enum: [invocable, pending-approval, undeclared, unauthorized]
+            message: { type: string }
+        workerSlots:
+          type: object
+          additionalProperties: false
+          required: [total, available]
+          properties:
+            total: { type: integer, minimum: 1 }
+            available: { type: integer, minimum: 0 }
+            reclaimableIdle: { type: integer, minimum: 0, maximum: 2 }
+        hostStats:
+          $ref: "#/components/schemas/NodeHostStatsPayload"
+        presence:
+          type: object
+          additionalProperties: true
+    NodeHostStatsPayload:
+      type: object
+      additionalProperties: false
+      required: [cpuCount, memoryTotalBytes, memoryFreeBytes]
+      properties:
+        cpuCount: { type: integer, minimum: 1, maximum: 4096 }
+        loadAverage:
+          type: array
+          maxItems: 3
+          items: { type: number, minimum: 0, maximum: 100000 }
+        memoryTotalBytes: { type: integer, minimum: 0 }
+        memoryFreeBytes: { type: integer, minimum: 0 }
+        diskTotalBytes: { type: integer, minimum: 0 }
+        diskAvailableBytes: { type: integer, minimum: 0 }
+    NodePresenceAlivePayload:
+      type: object
+      additionalProperties: false
+      required: [trigger]
+      properties:
+        trigger:
+          type: string
+          minLength: 1
+        sentAtMs: { type: integer, minimum: 0 }
+        displayName: { type: string }
+        version: { type: string }
+        platform: { type: string }
+        deviceFamily: { type: string }
+        modelIdentifier: { type: string }
+        pushTransport: { type: string }
+    NodePresenceActivityPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        idleSeconds: { type: integer, minimum: 0, maximum: 2592000 }
+        source:
+          type: string
+          enum: [app, system]
+        saturated: { type: boolean }
+        action:
+          type: string
+          enum: [clear]
+    NodePluginToolDescriptor:
+      type: object
+      additionalProperties: false
+      required: [pluginId, name, description]
+      properties:
+        pluginId: { type: string, minLength: 1 }
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        description: { type: string, minLength: 1 }
+        parameters:
+          type: object
+          additionalProperties: true
+        command: { type: string }
+        mcp:
+          type: object
+          additionalProperties: false
+          required: [server, tool]
+          properties:
+            server: { type: string, minLength: 1 }
+            tool: { type: string, minLength: 1 }
+    NodeSkillDescriptor:
+      type: object
+      additionalProperties: false
+      required: [name, description, content]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: "^(?!.*--)[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+        description: { type: string, minLength: 1, maxLength: 1024 }
+        content: { type: string, minLength: 1, maxLength: 65536 }
+    NodePairApproveParams:
+      type: object
+      additionalProperties: false
+      required: [requestId]
+      properties:
+        requestId: { type: string, minLength: 1 }
+    NodePairRejectParams:
+      type: object
+      additionalProperties: false
+      required: [requestId]
+      properties:
+        requestId: { type: string, minLength: 1 }
+    NodePairRemoveParams:
+      type: object
+      additionalProperties: false
+      required: [nodeId]
+      properties:
+        nodeId: { type: string, minLength: 1 }
+    NodeRenameParams:
+      type: object
+      additionalProperties: false
+      required: [nodeId, displayName]
+      properties:
+        nodeId: { type: string, minLength: 1 }
+        displayName: { type: string, minLength: 1 }
+    NodeDescribeParams:
+      type: object
+      additionalProperties: false
+      required: [nodeId]
+      properties:
+        nodeId: { type: string, minLength: 1 }
+    NodePluginToolsUpdateParams:
+      type: object
+      additionalProperties: false
+      required: [tools]
+      properties:
+        tools:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodePluginToolDescriptor"
+    NodeSkillsUpdateParams:
+      type: object
+      additionalProperties: false
+      required: [skills]
+      properties:
+        skills:
+          type: array
+          maxItems: 64
+          items:
+            $ref: "#/components/schemas/NodeSkillDescriptor"
+    NodeInvokeParams:
+      type: object
+      additionalProperties: false
+      required: [nodeId, command, idempotencyKey]
+      properties:
+        nodeId: { type: string, minLength: 1 }
+        command: { type: string, minLength: 1 }
+        params: {}
+        timeoutMs: { type: integer, minimum: 0 }
+        idempotencyKey: { type: string, minLength: 1 }
+        sessionKey: { type: string, minLength: 1 }
+        turnSourceChannel: { type: string }
+        turnSourceTo: { type: string }
+        turnSourceAccountId: { type: string }
+        turnSourceThreadId:
+          oneOf:
+            - type: string
+            - type: number
+    NodeInvokeProgressParams:
+      type: object
+      additionalProperties: false
+      required: [invokeId, nodeId, seq, chunk]
+      properties:
+        invokeId: { type: string, minLength: 1 }
+        nodeId: { type: string, minLength: 1 }
+        seq: { type: integer, minimum: 0 }
+        chunk: { type: string, maxLength: 16384 }
+    NodePermissionDetails:
+      type: object
+      additionalProperties: false
+      required: [capabilities, state]
+      properties:
+        capabilities:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, minLength: 1 }
+        state:
+          type: string
+          minLength: 1
+    NodeInvokeResultParams:
+      type: object
+      additionalProperties: false
+      required: [id, nodeId, ok]
+      properties:
+        id: { type: string, minLength: 1 }
+        nodeId: { type: string, minLength: 1 }
+        ok: { type: boolean }
+        payload: {}
+        payloadJSON: { type: string }
+        error:
+          type: object
+          additionalProperties: false
+          properties:
+            code: { type: string, minLength: 1 }
+            message: { type: string, minLength: 1 }
+            details:
+              $ref: "#/components/schemas/NodePermissionDetails"
+    NodeEventParams:
+      type: object
+      additionalProperties: false
+      required: [event]
+      properties:
+        event: { type: string, minLength: 1 }
+        payload: {}
+        payloadJSON: { type: string }
+    NodeEventResult:
+      type: object
+      additionalProperties: false
+      required: [ok, event, handled]
+      properties:
+        ok: { type: boolean }
+        event: { type: string, minLength: 1 }
+        handled: { type: boolean }
+        reason: { type: string, minLength: 1 }
+    NodePendingWorkType:
+      type: string
+      enum: [status.request, location.request]
+    NodePendingWorkItem:
+      type: object
+      additionalProperties: true
+      required: [id, type, priority, createdAtMs]
+      properties:
+        id: { type: string, minLength: 1 }
+        type:
+          $ref: "#/components/schemas/NodePendingWorkType"
+        priority:
+          type: string
+          enum: [default, normal, high]
+        createdAtMs: { type: integer, minimum: 0 }
+        expiresAtMs:
+          oneOf:
+            - type: integer
+              minimum: 0
+            - type: "null"
+        payload:
+          type: object
+          additionalProperties: true
+    NodePendingDrainParams:
+      type: object
+      additionalProperties: false
+      properties:
+        maxItems: { type: integer, minimum: 1, maximum: 10 }
+    NodePendingDrainResult:
+      type: object
+      additionalProperties: false
+      required: [nodeId, revision, items, hasMore]
+      properties:
+        nodeId: { type: string, minLength: 1 }
+        revision: { type: integer, minimum: 0 }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodePendingWorkItem"
+        hasMore: { type: boolean }
+    NodePendingEnqueueParams:
+      type: object
+      additionalProperties: false
+      required: [nodeId, type]
+      properties:
+        nodeId: { type: string, minLength: 1 }
+        type:
+          $ref: "#/components/schemas/NodePendingWorkType"
+        priority:
+          type: string
+          enum: [default, normal, high]
+        expiresInMs: { type: integer, minimum: 1000, maximum: 86400000 }
+        wake: { type: boolean }
+    NodePendingEnqueueResult:
+      type: object
+      additionalProperties: false
+      required: [nodeId, revision, queued, wakeTriggered]
+      properties:
+        nodeId: { type: string, minLength: 1 }
+        revision: { type: integer, minimum: 0 }
+        queued:
+          $ref: "#/components/schemas/NodePendingWorkItem"
+        wakeTriggered: { type: boolean }
+    NodePendingAckParams:
+      type: object
+      additionalProperties: false
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          items: { type: string, minLength: 1 }

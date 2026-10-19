@@ -1,0 +1,502 @@
+# OpenAPI 3 contract for ACP and Agent Bindings.
+# Normative API definition referenced by specification.md.
+#
+# Transport note: OpenClaw's Gateway is a WebSocket and HTTP JSON-RPC surface,
+# not REST. A client sends a request frame `{ type: "req", id, method, params }`
+# over the Gateway socket and receives `{ type: "res", id, ok, payload, error }`.
+# Each Gateway RPC method is therefore modelled here as a path under a synthetic
+# `/rpc` root, where the last path segment is the literal RPC method name and
+# the request body is the method's `params` object.
+#
+# The ACP bridge is not an HTTP surface. `openclaw acp` speaks the Agent
+# Client Protocol over NDJSON on stdio, so it is described in the description
+# below and in the specification rather than modelled as a path.
+#
+# Method names, parameter names, and scopes are taken from
+# `src/gateway/methods/core-descriptors.ts` and the handler files under
+# `src/gateway/server-methods/`.
+#
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "ACP and Agent Bindings API"
+  version: 0.1.0
+  description: >
+    The Gateway surface for the agent roster and the operator-facing binding
+    commands, plus a description of the Agent Client Protocol bridge that is
+    not part of this HTTP-shaped contract. The Gateway surface is JSON-RPC over
+    a WebSocket, modelled here as OpenAPI paths for tooling. Compatibility
+    policy: methods are additive-only within a major version; a new optional
+    request field is a minor change, and removing a field or changing its
+    meaning requires a new major version. The ACP bridge itself follows the
+    upstream Agent Client Protocol, pinned to `@agentclientprotocol/sdk` 1.8.0,
+    and its wire format is owned upstream rather than by OpenClaw.
+servers:
+  - url: "/rpc"
+    description: >
+      Synthetic root for Gateway RPC methods. The real endpoint is the Gateway
+      socket described in `docs/gateway/protocol/`.
+paths:
+  /agents.list:
+    post:
+      summary: List the configured agents
+      operationId: agentsList
+      description: >
+        Returns the agent roster. Clients opt into the session placement policy
+        projection with `includeSessionPlacement`. Requires the
+        `operator.read` scope.
+      tags: [agents]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentsListParams"
+      responses:
+        "200":
+          description: Agent roster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentsListResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /agents.create:
+    post:
+      summary: Create a new agent
+      operationId: agentsCreate
+      description: >
+        Creates an isolated agent with its own workspace, auth, and routing.
+        Requires the `operator.admin` scope.
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentWriteParams"
+      responses:
+        "200":
+          description: Created agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /agents.update:
+    post:
+      summary: Update an existing agent
+      operationId: agentsUpdate
+      description: >
+        Updates the configuration of one agent, including its identity and its
+        route bindings. Requires the `operator.admin` scope.
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentWriteParams"
+      responses:
+        "200":
+          description: Updated agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /agents.delete:
+    post:
+      summary: Delete an agent and prune its workspace and state
+      operationId: agentsDelete
+      description: >
+        Deletes an agent and prunes its workspace, sessions, and state. Requires
+        the `operator.admin` scope.
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                id:
+                  type: string
+                force:
+                  type: boolean
+      responses:
+        "200":
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /agents.workspace.list:
+    post:
+      summary: List the entries of an agent workspace
+      operationId: agentsWorkspaceList
+      description: >
+        Returns a paginated directory listing rooted at the agent workspace.
+        This namespace is read-only. Requires the `operator.read` scope.
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentsWorkspaceListParams"
+      responses:
+        "200":
+          description: Directory listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentsWorkspaceListResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /agents.workspace.get:
+    post:
+      summary: Read one file from an agent workspace
+      operationId: agentsWorkspaceGet
+      description: >
+        Returns one workspace file by workspace-relative path, with its MIME
+        type and encoding. This namespace is read-only. Requires the
+        `operator.read` scope.
+      tags: [agents]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentsWorkspaceGetParams"
+      responses:
+        "200":
+          description: Workspace file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentsWorkspaceGetResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: AGENT_SELECTION_REQUIRED
+        message:
+          type: string
+    AgentsListParams:
+      type: object
+      additionalProperties: true
+      properties:
+        includeSessionPlacement:
+          type: boolean
+          description: Opt into the session placement policy projection
+    AgentsListResult:
+      type: object
+      additionalProperties: true
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Agent"
+        defaultAgentId:
+          type: string
+    Agent:
+      type: object
+      additionalProperties: true
+      required: [id]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        workspace:
+          type: string
+        isDefault:
+          type: boolean
+        bindings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteBinding"
+        sessionPlacement:
+          type: object
+          additionalProperties: true
+    AgentWriteParams:
+      type: object
+      additionalProperties: true
+      required: [id]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        workspace:
+          type: string
+        model:
+          type: string
+        bindings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouteBinding"
+    RouteBinding:
+      type: object
+      additionalProperties: true
+      required: [agentId, match]
+      properties:
+        agentId:
+          type: string
+          description: Agent that owns the matched conversations
+        type:
+          type: string
+          enum: [route, acp]
+          description: A missing type means a route binding
+        comment:
+          type: string
+        match:
+          type: object
+          additionalProperties: true
+          required: [channel]
+          properties:
+            channel:
+              type: string
+              description: Channel id the binding applies to
+            accountId:
+              type: string
+              description: Account id, or * for every account
+            peer:
+              type: object
+              additionalProperties: true
+              properties:
+                kind:
+                  type: string
+                id:
+                  type: string
+            guildId:
+              type: string
+            teamId:
+              type: string
+            roles:
+              type: array
+              items:
+                type: string
+        session:
+          type: object
+          additionalProperties: true
+          description: Per-binding direct-message and group scope override
+    AcpBinding:
+      type: object
+      additionalProperties: true
+      required: [channel, accountId, conversationId, agentId]
+      properties:
+        type:
+          type: string
+          enum: [acp]
+        channel:
+          type: string
+        accountId:
+          type: string
+        conversationId:
+          type: string
+        parentConversationId:
+          type: string
+        agentId:
+          type: string
+          description: Owning OpenClaw agent id
+        acpAgentId:
+          type: string
+          description: ACP harness agent id, defaults to agentId
+        mode:
+          type: string
+          enum: [persistent, oneshot]
+        model:
+          type: string
+        thinking:
+          type: string
+        cwd:
+          type: string
+        backend:
+          type: string
+        label:
+          type: string
+    AcpSessionStatus:
+      type: object
+      additionalProperties: true
+      required: [sessionKey, backend, agent, mode, lastActivityAt]
+      properties:
+        sessionKey:
+          type: string
+        agentId:
+          type: string
+        backend:
+          type: string
+        agent:
+          type: string
+        identity:
+          type: object
+          additionalProperties: true
+        state:
+          type: string
+        mode:
+          type: string
+          enum: [persistent, oneshot]
+        runtimeOptions:
+          type: object
+          additionalProperties: true
+        capabilities:
+          type: object
+          additionalProperties: true
+        runtimeStatus:
+          type: object
+          additionalProperties: true
+        lastActivityAt:
+          type: integer
+        lastError:
+          type: string
+    AcpRuntimeOptions:
+      type: object
+      additionalProperties: true
+      properties:
+        runtimeMode:
+          type: string
+        model:
+          type: string
+        thinking:
+          type: string
+        cwd:
+          type: string
+        permissionProfile:
+          type: string
+        timeoutSeconds:
+          type: integer
+        backendExtras:
+          type: object
+          additionalProperties:
+            type: string
+    AgentsWorkspaceListParams:
+      type: object
+      additionalProperties: true
+      required: [agentId]
+      properties:
+        agentId:
+          type: string
+        path:
+          type: string
+        offset:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+    AgentsWorkspaceListResult:
+      type: object
+      additionalProperties: true
+      required: [agentId, path, entries, totalEntries, offset]
+      properties:
+        agentId:
+          type: string
+        path:
+          type: string
+        parentPath:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentsWorkspaceEntry"
+        totalEntries:
+          type: integer
+          minimum: 0
+        offset:
+          type: integer
+          minimum: 0
+    AgentsWorkspaceEntry:
+      type: object
+      additionalProperties: true
+      required: [path, name, kind]
+      properties:
+        path:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [file, directory]
+        size:
+          type: integer
+          minimum: 0
+        updatedAtMs:
+          type: integer
+          minimum: 0
+    AgentsWorkspaceGetParams:
+      type: object
+      additionalProperties: true
+      required: [agentId, path]
+      properties:
+        agentId:
+          type: string
+        path:
+          type: string
+          description: Workspace-relative path
+    AgentsWorkspaceGetResult:
+      type: object
+      additionalProperties: true
+      required: [agentId, file]
+      properties:
+        agentId:
+          type: string
+        file:
+          type: object
+          additionalProperties: true
+          required: [path, name, size, mimeType, encoding, content]
+          properties:
+            path:
+              type: string
+            name:
+              type: string
+            size:
+              type: integer
+              minimum: 0
+            updatedAtMs:
+              type: integer
+              minimum: 0
+            mimeType:
+              type: string
+            encoding:
+              type: string
+              enum: [utf8, base64]
+            content:
+              type: string

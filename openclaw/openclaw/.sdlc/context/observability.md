@@ -20,11 +20,11 @@ Update this file when the monitoring stack changes.
 
 | Library | Pillar | Configuration |
 |---|---|---|
-| tslog (via src/logging/logger.ts) | Logging | Console plus JSONL file transport, level from logging.level with OPENCLAW log-level env override, secret redaction on every record |
+| tslog 5.2.0 (via src/logging/logger.ts) | Logging | Console plus JSONL file transport, level from logging.level with the OPENCLAW_LOG_LEVEL env override, secret redaction on console and diagnostic-export records |
 | In-process diagnostic event bus (src/infra/diagnostic-events.ts, openclaw/plugin-sdk/diagnostic-runtime) | Metrics, traces, logs | Gateway and bundled plugins emit structured diagnostic events, exporters subscribe only when diagnostics and the plugin are enabled |
-| @opentelemetry SDK 2.11.0 plus OTLP proto exporters (@openclaw/diagnostics-otel) | Tracing, metrics, logs | OTLP/HTTP protobuf push to diagnostics.otel.endpoint (example http://otel-collector:4318), per-signal endpoint overrides, protocol http/protobuf only, traces default on with metrics and opt-in logs |
+| OpenTelemetry SDK (@opentelemetry/sdk-node 0.223.0, @opentelemetry/api 1.9.1, @opentelemetry/api-logs 0.223.0, SDK packages 0.223.0, core, resources, and propagators 2.12.0, @opentelemetry/semantic-conventions 1.43.0) plus OTLP proto exporters (@openclaw/diagnostics-otel) | Tracing, metrics, logs | OTLP/HTTP protobuf push to diagnostics.otel.endpoint (example http://otel-collector:4318), per-signal endpoint overrides, protocol http/protobuf only, traces default on with metrics and opt-in logs |
 | diagnostics-prometheus in-process store (@openclaw/diagnostics-prometheus) | Metrics | Prometheus text exposition at GET /api/diagnostics/prometheus on the Gateway HTTP port, gateway auth with operator.read scope, 2048 series cap with openclaw_prometheus_series_dropped_total overflow counter |
-| sentry-sdk or equivalent error tracker | Errors | Not configured (no sentry, datadog, or similar references in package.json or src) |
+| sentry-sdk or equivalent error tracker | Errors | Not configured (no error-tracking dependency in package.json and no tracker integration in src) |
 
 ## Log Aggregation
 
@@ -34,7 +34,7 @@ Update this file when the monitoring stack changes.
 | File location | /tmp/openclaw/openclaw-YYYY-MM-DD.log by default, profile variants use openclaw-profile-YYYY-MM-DD.log, with OS-tmpdir fallback when the directory is unsafe |
 | Retention and rotation | Active file rotates at logging.maxFileBytes (default 100 MB), up to five numbered archives are kept |
 | Structured format | One JSON object per line, subsystem file logs omit call-site metadata below error level unless diagnostics are enabled with a consumer subscribed |
-| Sampling and filtering | No sampling, secret redaction applies to messages, fields, and error stacks, verbose-only details require logging.level debug or trace |
+| Sampling and filtering | No sampling; the level from logging.level or the OPENCLAW_LOG_LEVEL override filters records, secret redaction covers messages and structured fields, and the logs.tail read path masks stored records again |
 | Tailing surfaces | Gateway logs.tail API, openclaw logs --follow CLI, and the Control UI Logs tab all tail the same file |
 | Container pipeline option | diagnostics-otel logsExporter stdout or both mirrors log records as stdout JSONL for platform log shippers |
 | Operator bundles | docs/gateway/diagnostics.md describes the separate operator support-bundle export (diagnostic-support-bundle.ts, diagnostic-stability-bundle.ts) for redacted troubleshooting archives |
@@ -49,10 +49,10 @@ Update this file when the monitoring stack changes.
 | Propagation | W3C tracecontext plus baggage by default, OTEL_PROPAGATORS can select b3, b3multi, or jaeger (deprecated), or none to disable |
 | Provider header | Provider calls receive a W3C traceparent header from the live model-call span when the transport accepts custom headers |
 | Emitting services | Gateway processes export at startup when configured, one-shot openclaw agent runs export via src/plugins/one-shot-diagnostics.ts (OTel only, Prometheus stays gateway-only) |
-| Span coverage | Model calls, Gateway RPC, message flow, sessions, queues, exec, harness lifecycle, tool execution, event-loop windows, and exporter health, with exact names in docs/gateway/opentelemetry |
+| Span coverage | Model calls and usage, Gateway RPC, message flow and delivery, sessions, context assembly, exec, harness lifecycle, tool execution and loops, memory pressure, and webhook handling, with exact names in docs/gateway/opentelemetry/spans-and-events.md |
 | Privacy | Session, chat, message, run, call, tool-call, and trace IDs are dropped from OTLP attributes, log bodies and GenAI content export only when diagnostics.otel.captureContent is true |
 | Flush behavior | Metrics use a periodic exporting reader (diagnostics.otel.flushIntervalMs or OTEL_METRIC_EXPORT_INTERVAL), one-shot CLI runs drain 5 seconds and force-flush 10 seconds before exit |
-| Verification | pnpm qa:otel:smoke runs the in-process OTLP receiver smoke (test/e2e/qa-lab/runtime/qa-otel-smoke-runtime.ts), pnpm qa:otel:smoke repeats against a real otel/opentelemetry-collector:0.159.0 Docker container |
+| Verification | pnpm qa:otel:smoke runs the in-process OTLP receiver smoke (test/e2e/qa-lab/runtime/qa-otel-smoke-runtime.ts), pnpm qa:otel:collector-smoke repeats it against a real otel/opentelemetry-collector:0.159.0 Docker container |
 
 ## Alerting
 
@@ -72,10 +72,11 @@ Update this file when the monitoring stack changes.
 | None shipped | Not configured, build from docs/gateway/opentelemetry/model-calls-and-metrics.md and docs/gateway/prometheus.md | Latency, error rate, throughput, model usage, queue and session health |
 
 - No Grafana JSON or hosted dashboard URLs exist in the repository.
-- Histogram bucket layouts are frozen for dashboard stability (agent durations through one hour, context tokens through two million, Prometheus duration, token, byte, and ratio buckets in extensions/diagnostics-prometheus/src/service.ts).
+- Histogram bucket layouts are frozen for dashboard stability: agent durations through one hour and context tokens through two million in extensions/diagnostics-otel/src/service-constants.ts, and Prometheus duration, token, byte, and ratio buckets in extensions/diagnostics-prometheus/src/prometheus-metric-store.ts, extensions/diagnostics-prometheus/src/service-model-usage.ts, extensions/diagnostics-prometheus/src/service-operation-timing.ts, and extensions/diagnostics-prometheus/src/service.ts.
 
 ## SLO Reference
 
 - Service-level objectives, indicators, and error budgets are not defined in this repository.
 - .sdlc/context/service-levels.md does not exist, so there is nothing to reference yet.
+- The maturity scorecard covers the observability domain instead: qa/maturity-scores.yaml rates it beta (M3) across Health and Repair, Logging, Diagnostic Collection, Telemetry Export, and Session Diagnostics, and taxonomy.yaml defines its evidence profile and categories. It scores feature completeness, not service-level objectives.
 - Feature-level observability plans should reuse the existing metric, span, and log catalog above and record any new SLO proposal alongside the feature.

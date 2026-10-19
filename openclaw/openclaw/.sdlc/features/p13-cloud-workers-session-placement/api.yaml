@@ -1,0 +1,917 @@
+# OpenAPI 3 contract for Cloud Workers and Session Placement.
+# Normative API definition referenced by specification.md.
+#
+# Transport note: the OpenClaw Gateway protocol is NOT REST. It is a WebSocket and
+# HTTP JSON-RPC surface. A request is a `req` frame {type, id, method, params}, a
+# response is a `res` frame {type, id, ok, payload, error}, and an event is an
+# `event` frame {type, event, payload}. The paths below are the RPC method
+# identifiers, not URL routes. The payload schemas are the OpenClaw protocol
+# schemas in `packages/gateway-protocol/src/schema/`, and the scope policy for each
+# method is the canonical table in `src/gateway/methods/core-descriptors.ts`.
+#
+# Compatibility policy: additive-only within a major version. New optional request
+# fields and new response fields may be added; existing fields are not removed or
+# retyped. A method's required scope never relaxes.
+#
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Cloud Workers and Session Placement API"
+  version: 0.1.0
+  description: >
+    The Gateway-side control plane for dispatching a session's work to a remote or
+    throwaway machine while the Gateway keeps the transcript, the workspace, the
+    credentials, and the placement records. This file models the Gateway RPC
+    surface that the Control UI, the CLI, and the agent tools use to create,
+    inspect, prepare, and destroy worker environments, to attach sessions to them,
+    and to dispatch, move, and reclaim session placements. The worker-facing
+    protocol is a separate closed surface and is not described here.
+paths:
+  /rpc/environments.list:
+    post:
+      summary: List environment summaries, configured profiles, and the prepared pool
+      operationId: environmentsList
+      description: >
+        Returns the environment summaries the Gateway knows about, the configured
+        worker profiles with their machine and operating-system choices, the
+        provider-suggested profile when one exists, and the prepared-pool summary.
+        A `projection` of `profiles` returns the profile list without reading the
+        environment inventory. Requesting prepared details requires the admin scope.
+      tags: [environments]
+      parameters:
+        - name: runtimeId
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 128 }
+        - name: projection
+          in: query
+          required: false
+          schema: { type: string, enum: [profiles] }
+        - name: includeDesktopSetup
+          in: query
+          required: false
+          schema: { type: boolean }
+        - name: includePreparedDetails
+          in: query
+          required: false
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Environment inventory
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsListResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/environments.status:
+    post:
+      summary: Read one environment summary
+      operationId: environmentsStatus
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentsStatusParams"
+      responses:
+        "200":
+          description: Environment summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsStatusResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/environments.create:
+    post:
+      summary: Create a worker environment from a configured provider profile
+      operationId: environmentsCreate
+      description: >
+        Allocates a machine through the provider that owns the profile and returns
+        the environment summary. The idempotency key deterministically derives the
+        environment id and the provision operation id, so a replayed request
+        resolves to the same environment instead of allocating a second machine.
+        This is a control-plane write.
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentsCreateParams"
+      responses:
+        "200":
+          description: Created environment summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsCreateResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/environments.destroy:
+    post:
+      summary: Destroy one durable worker environment
+      operationId: environmentsDestroy
+      description: >
+        Tears the environment down through the provider and drives it to a terminal
+        state. This is a control-plane write.
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentsDestroyParams"
+      responses:
+        "200":
+          description: Terminal environment summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsDestroyResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/environments.prepare:
+    post:
+      summary: Prepare a configured profile's local Git project without dispatching
+      operationId: environmentsPrepare
+      description: >
+        Prepares the project and reserves capacity so a later dispatch can reuse the
+        preparation. This is a control-plane write.
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentsPrepareParams"
+      responses:
+        "200":
+          description: Preparation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsPrepareResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/environments.adoptSuggestedProfile:
+    post:
+      summary: Save the provider-suggested profile as a configured profile
+      operationId: environmentsAdoptSuggestedProfile
+      description: >
+        Adopts the profile the provider suggests. Viewing the suggestion does not
+        install a CLI, save configuration, or allocate a machine; saving requires
+        the admin scope. This is a control-plane write.
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyParams"
+      responses:
+        "200":
+          description: Adopted profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsAdoptSuggestedProfileResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/environments.session.create:
+    post:
+      summary: Attach a session to a worker environment
+      operationId: environmentsSessionCreate
+      description: >
+        Creates or reuses the attachment between a session and an environment. The
+        returned `reused` flag reports whether an existing attachment was returned.
+        This is a control-plane write.
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentsSessionCreateParams"
+      responses:
+        "200":
+          description: Session attachment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsSessionAttachment"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/environments.session.destroy:
+    post:
+      summary: Detach a session from its worker environment
+      operationId: environmentsSessionDestroy
+      description: >
+        Releases the attachment and starts teardown. This is a control-plane write.
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentsSessionDestroyParams"
+      responses:
+        "200":
+          description: Terminal environment summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsStatusResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/environments.session.status:
+    post:
+      summary: Read the attachment and environment for a session
+      operationId: environmentsSessionStatus
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentsSessionStatusParams"
+      responses:
+        "200":
+          description: Session attachment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentsSessionAttachment"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /rpc/environments.session.exec:
+    post:
+      summary: Run or control a process inside the attached environment
+      operationId: environmentsSessionExec
+      description: >
+        Commands always run in the environment attached to the authenticated
+        conversation. The `run` and `start` actions require `argv`; the `start`,
+        `status`, and `stop` actions require `processId`.
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentsSessionExecParams"
+      responses:
+        "200":
+          description: Process result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NodeWorkerWorkspaceExecResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/worker.desktop.launch:
+    post:
+      summary: Launch a desktop application on a cloud worker
+      operationId: workerDesktopLaunch
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkerDesktopLaunchParams"
+      responses:
+        "200":
+          description: Launch result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerDesktopLaunchResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/worker.desktop.observe:
+    post:
+      summary: Open an RFB observation session for a cloud worker desktop
+      operationId: workerDesktopObserve
+      description: >
+        The Gateway reaches the desktop over the existing authenticated node or
+        worker channel, so no inbound port is opened on the remote machine. The
+        `rfb` transport is an open enum so a future transport may be added
+        additively.
+      tags: [environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkerDesktopObserveParams"
+      responses:
+        "200":
+          description: Observation session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkerDesktopObserveResult"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/sessions.dispatch:
+    post:
+      summary: Dispatch a session to a worker placement
+      operationId: sessionsDispatch
+      description: >
+        Creates the durable placement record and drives the environment through
+        provisioning, syncing, and starting until the placement is active. This is
+        a control-plane write.
+      tags: [placement]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlacementRequest"
+      responses:
+        "200":
+          description: Active placement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlacementRecord"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/sessions.move:
+    post:
+      summary: Move a session between placements
+      operationId: sessionsMove
+      description: >
+        Records a durable move with the source generation and source owner epoch.
+        The opaque operation id fences a stale asynchronous completion so a
+        superseded source placement is not retired. This is a control-plane write.
+      tags: [placement]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlacementMoveRequest"
+      responses:
+        "200":
+          description: Placement after the move
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlacementRecord"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /rpc/sessions.reclaim:
+    post:
+      summary: Reclaim a session back to the Gateway
+      operationId: sessionsReclaim
+      description: >
+        Drains the remote placement, reconciles the accepted workspace result, and
+        returns the session to the local placement. This is a control-plane write.
+      tags: [placement]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlacementReclaimRequest"
+      responses:
+        "200":
+          description: Placement after the reclaim
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlacementRecord"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+components:
+  responses:
+    InvalidRequest:
+      description: The request failed validation or a method precondition
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: The caller lacks the required operator scope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unavailable:
+      description: The provider, sidecar, or environment is not ready
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    EmptyParams:
+      type: object
+      additionalProperties: false
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_REQUEST
+            - FORBIDDEN
+            - UNAVAILABLE
+            - APPROVAL_NOT_FOUND
+          example: INVALID_REQUEST
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        retryable:
+          type: boolean
+        retryAfterMs:
+          type: integer
+          minimum: 0
+    WorkerEnvironmentState:
+      type: string
+      enum:
+        - requested
+        - provisioning
+        - bootstrapping
+        - ready
+        - attached
+        - idle
+        - draining
+        - destroying
+        - destroyed
+        - failed
+        - orphaned
+    WorkerExecutionMode:
+      type: string
+      enum: [worker-turn, remote-exec]
+    EnvironmentStatus:
+      type: string
+      enum: [available, unavailable, starting, stopping, error]
+    EnvironmentSummary:
+      type: object
+      additionalProperties: true
+      required: [id, type, status]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          minLength: 1
+        label:
+          type: string
+        status:
+          $ref: "#/components/schemas/EnvironmentStatus"
+        platform:
+          type: string
+        sessionHost:
+          type: boolean
+        workerSlots:
+          type: object
+          additionalProperties: false
+          required: [total, available]
+          properties:
+            total: { type: integer, minimum: 1 }
+            available: { type: integer, minimum: 0 }
+            reclaimableIdle: { type: integer, minimum: 0, maximum: 2 }
+        workerBundle:
+          type: object
+          additionalProperties: true
+          properties:
+            status:
+              type: string
+              enum: [installed, missing]
+            version:
+              type: string
+        lastConnectedAtMs: { type: integer, minimum: 0 }
+        lastDisconnectedAtMs: { type: integer, minimum: 0 }
+        lastSeenAtMs: { type: integer, minimum: 0 }
+        lastSeenReason: { type: string }
+        trust:
+          type: string
+          enum: [persistent, disposable]
+        capabilities:
+          type: array
+          items: { type: string }
+        invocableCommands:
+          type: array
+          maxItems: 128
+          items: { type: string, minLength: 1, maxLength: 128 }
+        desktop: { type: boolean }
+        desktopAvailability:
+          type: object
+          additionalProperties: false
+          required: [state]
+          properties:
+            state:
+              type: string
+              enum: [locked, unlocked, unknown]
+        issues:
+          type: array
+          maxItems: 8
+          items:
+            type: object
+            additionalProperties: true
+            properties:
+              code:
+                type: string
+              action: { type: string }
+        worker:
+          type: object
+          additionalProperties: true
+          required: [providerId, state]
+          properties:
+            profileId: { type: string }
+            providerId: { type: string }
+            leaseId: { type: string }
+            state:
+              $ref: "#/components/schemas/WorkerEnvironmentState"
+            ageMs: { type: integer, minimum: 0 }
+            idleMs: { type: integer, minimum: 0 }
+            destroyRequestedAtMs: { type: integer, minimum: 0 }
+            attachedSessionIds:
+              type: array
+              items: { type: string }
+            tunnelStatus:
+              type: string
+              enum: [stopped, connecting, connected, reconnecting]
+            error: { type: string }
+            desktop: { type: boolean }
+            desktopApps:
+              type: array
+              items:
+                type: string
+                enum: [browser, terminal]
+    WorkerEnvironmentProfileSummary:
+      type: object
+      additionalProperties: true
+      required: [id, providerId]
+      properties:
+        id: { type: string, minLength: 1 }
+        providerId: { type: string, minLength: 1 }
+        inference:
+          type: string
+          enum: [worker]
+        readyWorkers: { type: integer, minimum: 0 }
+        providerDisplayId: { type: string }
+        trust:
+          type: string
+          enum: [persistent, disposable]
+        executionMode:
+          $ref: "#/components/schemas/WorkerExecutionMode"
+        executionModes:
+          type: array
+          minItems: 1
+          maxItems: 2
+          items:
+            $ref: "#/components/schemas/WorkerExecutionMode"
+        machines:
+          type: array
+          maxItems: 64
+          items:
+            type: object
+            additionalProperties: true
+            required: [id, label]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              cpu: { type: integer, minimum: 1 }
+              memoryGb: { type: integer, minimum: 1 }
+              default: { type: boolean }
+              os: { type: string }
+        operatingSystems:
+          type: array
+          maxItems: 8
+          items:
+            type: object
+            additionalProperties: true
+            required: [id, label]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              default: { type: boolean }
+              disabledReason: { type: string }
+    SuggestedWorkerProfileSummary:
+      type: object
+      additionalProperties: true
+      required: [id, providerId]
+      properties:
+        id: { type: string, minLength: 1 }
+        providerId: { type: string, minLength: 1 }
+        providerDisplayId: { type: string }
+    EnvironmentsListResult:
+      type: object
+      additionalProperties: true
+      required: [environments]
+      properties:
+        requiredProfile: { type: string }
+        environments:
+          type: array
+          items:
+            $ref: "#/components/schemas/EnvironmentSummary"
+        profiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkerEnvironmentProfileSummary"
+        suggestedProfile:
+          $ref: "#/components/schemas/SuggestedWorkerProfileSummary"
+        preparedPool:
+          type: object
+          additionalProperties: false
+          required: [maxTotal, reservedEnvironmentIds]
+          properties:
+            maxTotal: { type: integer, minimum: 0 }
+            reservedEnvironmentIds:
+              type: array
+              uniqueItems: true
+              items: { type: string }
+    EnvironmentsStatusParams:
+      type: object
+      additionalProperties: false
+      required: [environmentId]
+      properties:
+        environmentId: { type: string, minLength: 1 }
+        includePreparedDetails: { type: boolean }
+    EnvironmentsStatusResult:
+      $ref: "#/components/schemas/EnvironmentSummary"
+    EnvironmentsCreateParams:
+      type: object
+      additionalProperties: false
+      required: [profileId, idempotencyKey]
+      properties:
+        profileId: { type: string, minLength: 1 }
+        idempotencyKey: { type: string, minLength: 1 }
+    EnvironmentsCreateResult:
+      $ref: "#/components/schemas/EnvironmentSummary"
+    EnvironmentsDestroyParams:
+      type: object
+      additionalProperties: false
+      required: [environmentId]
+      properties:
+        environmentId: { type: string, minLength: 1 }
+        force: { type: boolean }
+    EnvironmentsDestroyResult:
+      $ref: "#/components/schemas/EnvironmentSummary"
+    EnvironmentsPrepareParams:
+      type: object
+      additionalProperties: false
+      required: [profileId, projectPath]
+      properties:
+        profileId: { type: string, minLength: 1 }
+        projectPath: { type: string, minLength: 1 }
+    EnvironmentsPrepareResult:
+      type: object
+      additionalProperties: false
+      required: [environmentId, preparationKey, reused]
+      properties:
+        environmentId: { type: string, minLength: 1 }
+        preparationKey: { type: string, minLength: 1 }
+        reused: { type: boolean }
+    EnvironmentsAdoptSuggestedProfileResult:
+      type: object
+      additionalProperties: false
+      required: [profile]
+      properties:
+        profile:
+          $ref: "#/components/schemas/WorkerEnvironmentProfileSummary"
+    SessionTarget:
+      type: object
+      additionalProperties: false
+      properties:
+        sessionKey: { type: string, minLength: 1 }
+        agentId: { type: string, minLength: 1 }
+    EnvironmentsSessionCreateParams:
+      allOf:
+        - $ref: "#/components/schemas/SessionTarget"
+        - type: object
+          additionalProperties: false
+          required: [profileId, idempotencyKey]
+          properties:
+            profileId: { type: string, minLength: 1 }
+            idempotencyKey: { type: string, minLength: 1, maxLength: 256 }
+            machineClass: { type: string, minLength: 1, maxLength: 128 }
+            os: { type: string, minLength: 1, maxLength: 128 }
+            presentation:
+              type: string
+              enum: [desktop, portal]
+    EnvironmentsSessionStatusParams:
+      allOf:
+        - $ref: "#/components/schemas/SessionTarget"
+        - type: object
+          additionalProperties: false
+          properties:
+            environmentId: { type: string, minLength: 1 }
+    EnvironmentsSessionDestroyParams:
+      allOf:
+        - $ref: "#/components/schemas/SessionTarget"
+        - type: object
+          additionalProperties: false
+          properties:
+            environmentId: { type: string, minLength: 1 }
+    EnvironmentsSessionAttachment:
+      type: object
+      additionalProperties: true
+      properties:
+        sessionId: { type: string }
+        environmentId: { type: string }
+        ownerEpoch: { type: integer, minimum: 1 }
+        reused: { type: boolean }
+        environment:
+          $ref: "#/components/schemas/EnvironmentSummary"
+    EnvironmentsSessionExecParams:
+      type: object
+      additionalProperties: false
+      properties:
+        sessionKey: { type: string, minLength: 1, maxLength: 1024 }
+        agentId: { type: string, minLength: 1, maxLength: 256 }
+        environmentId: { type: string, minLength: 1, maxLength: 256 }
+        action:
+          type: string
+          enum: [run, start, status, stop]
+        processId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        argv:
+          type: array
+          minItems: 1
+          maxItems: 128
+          items: { type: string, minLength: 1, maxLength: 131072 }
+        input: { type: string, maxLength: 131072 }
+        timeoutMs: { type: integer, minimum: 1, maximum: 600000 }
+    NodeWorkerWorkspaceExecResult:
+      type: object
+      additionalProperties: true
+      properties:
+        exitCode: { type: integer }
+        stdout: { type: string }
+        stderr: { type: string }
+        truncated: { type: boolean }
+    WorkerDesktopLaunchParams:
+      type: object
+      additionalProperties: false
+      required: [environmentId, app]
+      properties:
+        environmentId: { type: string, minLength: 1 }
+        app:
+          type: string
+          enum: [browser, terminal]
+    WorkerDesktopLaunchResult:
+      type: object
+      additionalProperties: false
+      required: [app, status]
+      properties:
+        app:
+          type: string
+          enum: [browser, terminal]
+        status:
+          type: string
+          enum: [ready]
+    WorkerDesktopObserveParams:
+      type: object
+      additionalProperties: false
+      required: [environmentId]
+      properties:
+        environmentId: { type: string, minLength: 1 }
+        control: { type: boolean }
+    WorkerDesktopObserveResult:
+      type: object
+      additionalProperties: false
+      required: [transport, wsPath, expiresAtMs, control]
+      properties:
+        transport:
+          type: string
+          enum: [rfb]
+        wsPath: { type: string, minLength: 1 }
+        expiresAtMs: { type: integer, minimum: 0 }
+        control: { type: boolean }
+        canResize: { type: boolean }
+        vncPassword: { type: string }
+    PlacementRequest:
+      type: object
+      additionalProperties: true
+      required: [sessionKey]
+      properties:
+        sessionKey: { type: string, minLength: 1 }
+        agentId: { type: string, minLength: 1 }
+        profileId: { type: string, minLength: 1 }
+        executionMode:
+          $ref: "#/components/schemas/WorkerExecutionMode"
+        machineClass: { type: string }
+        os: { type: string }
+        idempotencyKey: { type: string }
+    PlacementMoveRequest:
+      type: object
+      additionalProperties: true
+      required: [sessionKey, target]
+      properties:
+        sessionKey: { type: string, minLength: 1 }
+        agentId: { type: string, minLength: 1 }
+        abandonSource: { type: boolean }
+        target:
+          type: object
+          additionalProperties: true
+          properties:
+            kind:
+              type: string
+              enum: [gateway, profile, device]
+            id: { type: string }
+            machineClass: { type: string }
+            os: { type: string }
+    PlacementReclaimRequest:
+      type: object
+      additionalProperties: true
+      required: [sessionKey]
+      properties:
+        sessionKey: { type: string, minLength: 1 }
+        agentId: { type: string, minLength: 1 }
+        recoverToGateway: { type: boolean }
+    PlacementRecord:
+      type: object
+      additionalProperties: true
+      required: [sessionId, state]
+      properties:
+        sessionId: { type: string }
+        agentId: { type: string }
+        sessionKey: { type: string }
+        state:
+          type: string
+          enum:
+            - local
+            - requested
+            - provisioning
+            - syncing
+            - starting
+            - active
+            - draining
+            - reconciling
+            - reclaimed
+            - failed
+        executionMode:
+          $ref: "#/components/schemas/WorkerExecutionMode"
+        environmentId: { type: string }
+        transitionGeneration: { type: integer, minimum: 0 }
+        activeOwnerEpoch: { type: integer, minimum: 1 }
+        workspaceBaseManifestRef: { type: string }
+        remoteWorkspaceDir: { type: string }
+        workerBundleHash: { type: string }
+        recoveryError: { type: string }
+        terminalReason: { type: string }
+        terminalAtMs: { type: integer }

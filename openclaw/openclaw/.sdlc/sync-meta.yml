@@ -1,43 +1,82 @@
 # SDLC Sync Metadata
 # Tracks which version of agents was used for the last sync.
 # Used by sync-sdlc to detect process/template changes and migrate existing files.
-agents_ref: 993718a297d6b3a4eff7755ef3c8ff5584129202
+agents_ref: fdf8a2e80abd1cf213b575096ca452ae26fe9095
 agents_remote: https://github.com/tomzx/agents
-last_synced: "2026-10-13"
-code_ref: c6546e217ed5aff7fe3b8e553075b84e4111878b
+last_synced: "2026-10-19"
+code_ref: 8b78b230a1c109fe6456964e59cb0eeefe63b7e5
 code_index:
   "p1-gateway-server":
     - src/gateway/
+    - src/infra/
     - test/gateway.multi.e2e.test.ts
   "p2-agent-runtime":
     - src/agents/
+    - src/llm/
+    - src/provider-runtime/
+    - src/model-catalog/
+    - src/model-picker/
+    - src/trajectory/
+    - packages/agent-core/
+    - packages/ai/
+    - packages/llm-core/
+    - packages/model-catalog-core/
   "p3-channel-integration":
     - src/channels/
+    - src/auto-reply/
+    - src/infra/outbound/
+    - src/polls.ts
+    - extensions/a2a/
     - extensions/discord/
-    - extensions/telegram/
-    - extensions/slack/
+    - extensions/feishu/
+    - extensions/googlechat/
+    - extensions/imessage/
+    - extensions/irc/
+    - extensions/line/
+    - extensions/matrix/
     - extensions/mattermost/
     - extensions/msteams/
+    - extensions/nextcloud-talk/
+    - extensions/nostr/
+    - extensions/reef/
+    - extensions/signal/
+    - extensions/slack/
+    - extensions/sms/
+    - extensions/synology-chat/
     - extensions/teams-meetings/
-    - extensions/a2a/
+    - extensions/telegram/
+    - extensions/tlon/
+    - extensions/twitch/
+    - extensions/whatsapp/
+    - extensions/x/
+    - extensions/zalo/
+    - extensions/zalouser/
   "p4-plugin-sdk":
     - src/plugin-sdk/
     - src/plugins/
+    - src/plugin-state/
+    - src/mcp/
     - packages/plugin-sdk/
+    - packages/plugin-package-contract/
   "p5-cli":
     - openclaw.mjs
     - src/cli/
     - src/commands/
+    - src/tui/
+    - src/wizard/
+    - src/system-agent/
   "p6-configuration-system":
     - src/config/
     - src/flows/doctor-lint-flow.ts
     - src/flows/bundled-health-checks.ts
   "p7-companion-applications":
     - apps/macos/
+    - apps/macos-mlx-tts/
     - apps/ios/
     - apps/android/
     - apps/shared/
     - apps/linux/
+    - apps/swabble/
     - extensions/device-pair/
   "p8-control-ui":
     - ui/src/
@@ -50,6 +89,11 @@ code_index:
     - src/talk/
     - src/realtime-transcription/
     - src/meeting-bot/
+    - src/media/
+    - src/media-understanding/
+    - src/link-understanding/
+    - packages/media-understanding-common/
+    - packages/media-core/
     - extensions/elevenlabs/
     - extensions/deepgram/
     - extensions/talk-voice/
@@ -58,6 +102,7 @@ code_index:
     - src/cron/
     - src/flows/
     - src/gateway/hooks.ts
+    - extensions/lobster/
   "p11-rust-node-host":
     - crates/Cargo.toml
     - crates/openclaw-node-host/
@@ -74,9 +119,66 @@ code_index:
     - src/gateway/node-registry.ts
     - docs/gateway/pairing.md
   "p12-canvas-dynamic-ui":
+    - src/canvas/
     - extensions/canvas/
     - ui/src/app/gateway-canvas-surface.ts
     - ui/src/components/canvas-widget-view.ts
     - ui/src/lib/chat/tool-display.ts
     - docs/platforms/mac/canvas.md
     - docs/tools/show-widget.md
+  "p13-cloud-workers-session-placement":
+    - src/gateway/worker-environments/
+    - src/worker/
+    - packages/worker-runtime/
+    - docs/gateway/cloud-workers.md
+    - docs/gateway/cloud-workers/
+  "p14-node-host-device-execution":
+    - src/node-host/
+    - src/cli/node-cli/
+    - src/cli/nodes-cli/
+    - docs/nodes/
+  "p15-memory-and-recall":
+    - src/memory/
+    - src/memory-host-sdk/
+    - packages/memory-host-sdk/
+    - extensions/memory-core/
+    - extensions/active-memory/
+    - extensions/memory-lancedb/
+    - extensions/memory-wiki/
+  "p16-context-engine-and-compaction":
+    - src/context-engine/
+    - docs/concepts/context-engine.md
+    - docs/concepts/compaction.md
+  "p17-security-audit-and-secrets":
+    - src/security/
+    - src/audit/
+    - src/secrets/
+    - src/proxy-capture/
+    - src/pairing/
+  "p18-agent-skills-and-workshop":
+    - src/skills/
+    - skills/
+    - custodian-skills/
+  "p19-boards-projects-and-session-cards":
+    - src/boards/
+    - src/projects/
+    - src/session-cards/
+    - packages/workboard-contract/
+    - extensions/workboard/
+  "p20-acp-and-agent-bindings":
+    - src/acp/
+    - packages/acp-core/
+    - src/routing/
+  "p21-storage-databases-and-backups":
+    - src/state/
+    - src/infra/database-engine/
+    - src/snapshot/
+    - src/storage/
+    - docs/reference/database-schemas/
+    - docs/reference/database-engines.md
+  "p22-internal-event-hooks":
+    - src/hooks/
+    - src/cli/hooks-cli.ts
+    - src/cli/native-hook-relay-cli.ts
+    - docs/automation/hooks.md
+    - docs/automation/hooks/
