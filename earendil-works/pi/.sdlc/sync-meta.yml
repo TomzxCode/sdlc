@@ -1,28 +1,61 @@
 # SDLC Sync Metadata
 # Tracks which version of agents was used for the last sync.
 # Used by sync-sdlc to detect process/template changes and migrate existing files.
-agents_ref: "993718a297d6b3a4eff7755ef3c8ff5584129202"
+agents_ref: "fdf8a2e80abd1cf213b575096ca452ae26fe9095"
 agents_remote: "https://github.com/tomzx/agents"
-last_synced: "2026-10-13"
-code_ref: "7d75a0e3eb273dff753d49c066ea29fbe7b3b6f6"
+last_synced: "2026-10-19"
+code_ref: "d2e7d8b7c1d31d3661f769d5caef7ba8d50c3e03"
 code_index:
   "FEAT-0001-llm-provider-abstraction":
-    - packages/ai/
+    - packages/ai/src/
+    - packages/ai/test/
+    - packages/ai/scripts/
+    - packages/ai/README.md
   "FEAT-0002-agent-runtime":
-    - packages/agent/
+    - packages/agent/src/
+    - packages/agent/test/
+    - packages/agent/examples/
+    - packages/agent/README.md
   "FEAT-0003-terminal-ui-framework":
-    - packages/tui/
+    - packages/tui/src/
+    - packages/tui/test/
+    - packages/tui/native/
+    - packages/tui/README.md
   "FEAT-0004-interactive-coding-agent":
+    - packages/coding-agent/src/index.ts
+    - packages/coding-agent/src/main.ts
+    - packages/coding-agent/src/cli.ts
+    - packages/coding-agent/src/config.ts
     - packages/coding-agent/src/core/
-    - packages/coding-agent/src/modes/
     - packages/coding-agent/src/cli/
-  "FEAT-0005-extension-platform":
-    - packages/coding-agent/src/extensions/
+    - packages/coding-agent/src/modes/
+    - packages/coding-agent/src/utils/
+    - packages/coding-agent/test/
     - packages/coding-agent/docs/
+  "FEAT-0005-extension-platform":
+    - packages/coding-agent/src/core/extensions/
+    - packages/coding-agent/src/core/resource-loader.ts
+    - packages/coding-agent/src/core/skills.ts
+    - packages/coding-agent/src/core/prompt-templates.ts
+    - packages/coding-agent/src/core/package-manager.ts
+    - packages/coding-agent/src/core/pi-manifest.ts
+    - packages/coding-agent/src/modes/interactive/theme/
+    - packages/coding-agent/src/extensions/
     - packages/coding-agent/examples/
+    - packages/coding-agent/docs/extensions.md
+    - packages/coding-agent/docs/skills.md
+    - packages/coding-agent/docs/prompt-templates.md
+    - packages/coding-agent/docs/packages.md
+    - packages/coding-agent/docs/themes.md
   "FEAT-0006-session-persistence-branching":
     - packages/coding-agent/src/core/session-manager.ts
     - packages/coding-agent/src/core/agent-session-runtime.ts
+    - packages/coding-agent/src/core/compaction/
+    - packages/coding-agent/src/core/session-export.ts
+    - packages/coding-agent/src/core/project-trust.ts
+    - packages/coding-agent/src/core/trust-manager.ts
+    - packages/coding-agent/src/migrations.ts
+    - packages/coding-agent/test/session-manager/
   "p1-orchestrator": []
   "p2-remote-session-protocol": []
   "p3-remote-session-client": []
@@ -39,6 +72,7 @@ code_index:
   "p10-codemode-sandbox":
     - packages/codemode/
     - packages/coding-agent/src/extensions/codemode/
+    - packages/durable/src/codemode/
   "p11-remote-execution-env":
     - packages/env/
     - packages/durable/src/env/

@@ -1,3 +1,4 @@
+<!-- session_link: http://localhost:10000/?session=ses_6b3f0a1c2d4e5f60718293a4b5c6d7e8 -->
 # Goals and Objectives
 
 ## Purpose
@@ -22,8 +23,8 @@ Pi becomes the go-to open-source terminal coding agent for developers who want a
 
 | Key Result | Target | Measurement Method | Current | Status |
 |---|---|---|---|---|
-| Zero panics/crashes in the agent loop for basic usage | 100% test pass rate | CI test suite | — | On track |
-| Session JSONL format remains stable with migration path | Format version documented | Version constant check | — | On track |
+| Zero panics/crashes in the agent loop for basic usage | 100% test pass rate | CI test suite (`npm test` in the CI workflow) | — | On track |
+| Session JSONL format remains stable with migration path | Format version documented | Version constant check (`CURRENT_SESSION_VERSION`) | v3, with v1 and v2 auto-migrated on load | On track |
 
 ### Provider Coverage
 
@@ -32,8 +33,8 @@ Pi becomes the go-to open-source terminal coding agent for developers who want a
 
 | Key Result | Target | Measurement Method | Current | Status |
 |---|---|---|---|---|
-| 30+ providers supported | 30 | Model catalog | 30+ | On track |
-| Model catalog auto-generated daily | 100% uptime of generation | CI scheduled job | — | On track |
+| 30+ providers supported | 30 | Model catalog | 42 built-in providers | On track |
+| Model catalog regenerated on every CI run to `main` and published on a weekday schedule | Published on every scheduled run | CI scheduled job (`publish-model-catalog`), which has no uptime instrumentation | Weekday cron (Mon-Fri), publishing at 10:17, 12:17, and 14:17 Europe/Vienna | On track |
 
 ### Extension Ecosystem
 
@@ -42,7 +43,7 @@ Pi becomes the go-to open-source terminal coding agent for developers who want a
 
 | Key Result | Target | Measurement Method | Current | Status |
 |---|---|---|---|---|
-| Extension API documented and versioned | Documentation published | docs/ completeness | — | At risk |
+| Extension API documented and versioned | Documentation published | docs/ completeness | Documented in `packages/coding-agent/docs/extensions.md`, with no API version constant | At risk |
 
 ## Strategic Pillars
 
@@ -54,8 +55,9 @@ Pi becomes the go-to open-source terminal coding agent for developers who want a
 ## Non-Goals
 
 - Becoming a full IDE or replacing VS Code/Cursor
-- Built-in MCP, sub-agents, plan mode, or permission popups
-- Chat/Slack automation (lives in pi-chat)
+- Built-in sub-agents, plan mode, or a built-in permission system
+- MCP implementation inside the core agent (it ships as the `mcp` coding-agent extension backed by `@earendil-works/pi-mcp`)
+- Chat/Slack automation (lives in the separate `earendil-works/pi-chat` repo)
 
 ## Alignment
 
@@ -65,14 +67,17 @@ Pi becomes the go-to open-source terminal coding agent for developers who want a
 | FEAT-0002 (Agent Runtime) | Core Stability | Agent loop reliability |
 | FEAT-0003 (Terminal UI Framework) | Core Stability | TUI rendering stability |
 | FEAT-0004 (Interactive Coding Agent) | Core Stability | CLI product |
-| FEAT-0005 (Extension Platform) | Extension Ecosystem | Extension API |
-| FEAT-0006 (Session Persistence) | Core Stability | Session format stability |
+| FEAT-0005 (Extension and Skills Platform) | Extension Ecosystem | Extension API |
+| FEAT-0006 (Session Persistence and Branching) | Core Stability | Session format stability |
+
+The p-prefixed features (p1 to p12) are shipped and cover remote sessions, SQLite session storage, evals, the durable runtime, chord, telemetry, codemode, the remote execution env, and the MCP client.
+They are not mapped to an objective yet.
 
 ## Review Cadence
 
 - **Review frequency:** quarterly
-- **Last reviewed:** 2026-07-20
-- **Next review:** 2026-10-01
+- **Last reviewed:** 2026-10-19
+- **Next review:** 2027-01-19
 
 ## Open Questions
 
