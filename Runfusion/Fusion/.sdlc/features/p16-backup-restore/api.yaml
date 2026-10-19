@@ -1,0 +1,151 @@
+# OpenAPI 3 contract for Database & Memory Backup and Restore.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Database & Memory Backup and Restore API"
+  version: 0.1.0
+  description: >
+    HTTP surface for the database backup feature of Fusion. The API exposes the
+    inventory of stored PostgreSQL dumps together with the automatic backup
+    schedule evidence, and it triggers an immediate backup. Memory backup and
+    restore are not part of this surface; they are command-line only. All
+    /api routes require a bearer token when auth is configured, except the
+    /api/health paths, which are exempt.
+paths:
+  /api/backups:
+    get:
+      summary: List the stored database backup dumps and the automatic backup schedule evidence
+      operationId: listBackups
+      responses:
+        "200":
+          description: >
+            The backup inventory and the schedule evidence. When the inventory
+            could not be produced, the body carries an empty inventory, a
+            listError string, and the schedule evidence.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackupListResponse"
+        "500":
+          description: The schedule could not be loaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a database backup immediately and apply the retention count
+      operationId: createBackup
+      responses:
+        "200":
+          description: The backup was created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackupCreateResponse"
+        "500":
+          description: The backup command reported a failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    BackupFileInfo:
+      type: object
+      additionalProperties: true
+      required: [filename, createdAt, size, path]
+      properties:
+        filename:
+          type: string
+          description: Published dump file name.
+          example: fusion-pg-20260831-120000.dump
+        createdAt:
+          type: string
+          description: ISO 8601 publication time.
+        size:
+          type: number
+          description: File size in bytes.
+        path:
+          type: string
+          description: Absolute path of the published dump file.
+    BackupScheduleStatus:
+      type: object
+      additionalProperties: true
+      required: [enabled, cronExpression, routineRegistered]
+      properties:
+        enabled:
+          type: boolean
+          description: Whether automatic database backups are turned on.
+        cronExpression:
+          type: string
+          description: The configured cron expression.
+          example: 0 2 * * *
+        routineRegistered:
+          type: boolean
+          description: Whether the backup routine exists.
+        nextRunAt:
+          type: string
+          description: Next scheduled run time.
+        lastRunAt:
+          type: string
+          description: Last run time.
+        lastRunSucceeded:
+          type: boolean
+          description: Outcome of the last run.
+        lastRunOutput:
+          type: string
+          description: Output of the last run, truncated to 500 characters.
+        runCount:
+          type: number
+          description: How many times the routine has run.
+    BackupListResponse:
+      type: object
+      additionalProperties: true
+      required: [backups, count, totalSize, schedule]
+      properties:
+        backups:
+          type: array
+          items:
+            $ref: "#/components/schemas/BackupFileInfo"
+        count:
+          type: number
+          description: Number of listed dump files.
+        totalSize:
+          type: number
+          description: Total bytes of the listed dump files.
+        schedule:
+          $ref: "#/components/schemas/BackupScheduleStatus"
+        listError:
+          type: string
+          description: Set when the inventory could not be produced; the inventory is then empty.
+    BackupCreateResponse:
+      type: object
+      additionalProperties: true
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        backupPath:
+          type: string
+          description: Path of the project dump that was written.
+        output:
+          type: string
+          description: Human-readable summary of the run.
+        deletedCount:
+          type: number
+          description: How many old backup files the retention step removed.
+        error:
+          type: string
+          description: Set when the backup failed.
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable failure message.
+        details:
+          type: object
+          additionalProperties: true
+          description: Optional structured detail for the failure.

@@ -1,0 +1,329 @@
+---
+title: "Scheduled Automations & Routines"
+status: done
+---
+
+# Specification: Scheduled Automations & Routines
+
+## Overview
+
+The domain types live in `@fusion/core` under `packages/core/src/automation/`. `automation.ts` holds the schedule, step, and run-result types plus the preset cron map. `routine.ts` holds the routine type, its four trigger types, and its catch-up and execution policies. `automation-store.ts`, `routine-store.ts`, and `global-routine-store.ts` persist them in PostgreSQL through the shared async data layer. The engine schedules the work in `packages/engine/src/scheduling/`: `cron-runner.ts` polls due automations, `routine-scheduler.ts` polls due routines, and `routine-runner.ts` executes a routine either as a command or step sequence or as a heartbeat run for its assigned agent. The dashboard exposes the HTTP surface in `packages/dashboard/src/routes/register-plugins-automation.ts`, with `automation-live-run.ts` owning the replayable server-sent event registry and `automation-step-execution.ts` owning step validation and manual step execution. The React surface is `ScheduledTasksModal.tsx` plus `ScheduleForm.tsx`, `ScheduleStepsEditor.tsx`, `RoutineEditor.tsx`, `RoutineCard.tsx`, and `ScheduleCard.tsx`.
+
+## Architecture
+
+```text
+                    +---------------------------+
+   Browser -------->| Dashboard /api/automations |
+                    | Dashboard /api/routines   |
+                    +------------+--------------+
+                                 |
+                    register-plugins-automation.ts
+                                 |
+            +--------------------+---------------------+
+            |                    |                     |
+   AutomationStore        RoutineStore        GlobalRoutineStore
+   (project.automations)  (project.routines)  (central.global_routines)
+            |                    |                     |
+            +--------+-----------+---------------------+
+                     |
+              PostgreSQL (Drizzle)
+                     ^
+                     |
+   +--------------------------------+   +-------------------------------+
+   | CronRunner (project scope)     |   | RoutineScheduler (project)    |
+   |  - polls due automations       |   |  - polls due routines         |
+   |  - claims the due window       |   |  - claims the central window  |
+   |  - runs command or steps       |   |  - runs catch-up then the run |
+   +--------------------------------+   +-------------+-----------------+
+                                                     |
+                                           RoutineRunner
+                                        /      |       \
+                             command steps   AI steps  create-task steps
+                                                     |
+                                        HeartbeatMonitor (agent routines)
+```
+
+Live output path:
+
+```text
+ POST /automations/:id/run  --+
+ POST /routines/:id/trigger  --+--> AutomationLiveRunRegistry (in memory, 60s TTL)
+                                     |
+ GET /automations/:id/run/stream --+--> text/event-stream (step, output, tool, complete|error)
+ GET /routines/:id/run/stream  --+
+```
+
+## Data Models
+
+### ScheduledTask (automation)
+
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| id | text | PK with projectId, not null | Automation identifier, a UUID |
+| projectId | text | PK with id, not null, defaults to the session project setting | Project partition key |
+| name | text | not null | Operator-facing name |
+| description | text | nullable | Optional description |
+| scheduleType | text | not null | One of hourly, daily, weekly, monthly, custom, every15Minutes, every30Minutes, every2Hours, every6Hours, every12Hours, weekdays |
+| cronExpression | text | not null | Cron expression, derived from the preset unless the type is custom |
+| command | text | not null | Shell command for the legacy single-command mode |
+| steps | jsonb | nullable | Ordered step list, present for multi-step automations |
+| enabled | integer | default 1 | 1 when the automation is active, 0 when it is not |
+| timeoutMs | integer | nullable | Per-automation execution timeout, default 300000 |
+| nextRunAt | text | nullable | ISO-8601 next due time, cleared while disabled |
+| lastRunAt | text | nullable | ISO-8601 start of the last run |
+| lastRunResult | jsonb | nullable | Result of the most recent run |
+| runCount | integer | default 0 | Number of recorded runs |
+| runHistory | jsonb | default [] | Recent run results, newest first, capped at 50 |
+| scope | text | default "project" | "global" or "project" |
+| createdAt | text | not null | ISO-8601 creation timestamp |
+| updatedAt | text | not null | ISO-8601 last update timestamp |
+
+### AutomationStep
+
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| id | text | not null | Step identifier, a UUID generated by the editor |
+| type | text | not null | "command", "ai-prompt", or "create-task" |
+| name | text | not null | Step label |
+| command | text | optional | Shell command for a command step |
+| prompt | text | optional | Prompt text for an AI prompt step |
+| modelProvider | text | optional | Model provider override, must be paired with modelId |
+| modelId | text | optional | Model identifier override, must be paired with modelProvider |
+| thinkingLevel | text | optional | Reasoning effort override, one of the known thinking levels, absent means inherit |
+| allowedTools | string[] | optional | Tool names the AI step may use, absent means all selectable tools, empty means none |
+| taskTitle | text | optional | Title for the task a create-task step creates |
+| taskDescription | text | optional | Description for the task a create-task step creates, required for that step type |
+| taskColumn | text | optional | Target column, absent means the workflow intake column resolves it |
+| timeoutMs | number | optional | Per-step timeout override |
+| continueOnFailure | boolean | optional | When true the sequence continues after this step fails, default false |
+
+### AutomationRunResult and AutomationStepResult
+
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| success | boolean | not null | Whether the run or step succeeded |
+| output | string | not null | Combined output, truncated to 10 KB |
+| error | text | optional | Failure message |
+| startedAt | string | not null | ISO-8601 run start |
+| completedAt | string | not null | ISO-8601 run end |
+| stepResults | AutomationStepResult[] | optional | Per-step results, present for multi-step runs |
+| stepId | text | not null | Step that produced a step result |
+| stepName | text | not null | Step label |
+| stepIndex | number | not null | Zero-based position of the step |
+| stepStartedAt | string | not null | ISO-8601 step start |
+| stepCompletedAt | string | not null | ISO-8601 step end |
+
+### Routine
+
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| id | text | PK with projectId, not null | Routine identifier, a UUID |
+| projectId | text | PK with id, not null | Project partition key |
+| agentId | text | not null, default "" | Agent that runs the routine, required when the routine has no command or steps |
+| name | text | not null | Operator-facing name |
+| description | text | nullable | Optional description |
+| triggerType | text | not null | "cron", "webhook", "api", or "manual" |
+| triggerConfig | jsonb | not null | Trigger payload, holding the cron expression and timezone, the webhook path and secret, or the API endpoint |
+| command | text | nullable | Shell command for the command action mode |
+| steps | jsonb | nullable | Ordered step list, present for multi-step routines |
+| timeoutMs | integer | nullable | Per-routine execution timeout, default 300000 |
+| catchUpPolicy | text | not null, default "run_one" | "run", "skip", or "run_one" |
+| executionPolicy | text | not null, default "queue" | "parallel", "queue", or "reject" |
+| catchUpLimit | integer | default 5 | Maximum catch-up executions when the policy is "run" |
+| enabled | integer | default 1 | 1 when the routine is active, 0 when it is not |
+| lastRunAt | text | nullable | ISO-8601 start of the last run |
+| lastRunResult | jsonb | nullable | Result of the most recent run |
+| nextRunAt | text | nullable | ISO-8601 next due time, set only for an enabled cron routine |
+| runCount | integer | default 0 | Number of recorded runs |
+| runHistory | jsonb | default [] | Recent run results, newest first, capped at 50 |
+| scope | text | default "project" | "global" or "project" |
+| createdAt | text | not null | ISO-8601 creation timestamp |
+| updatedAt | text | not null | ISO-8601 last update timestamp |
+
+### GlobalRoutine (central.global_routines)
+
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| id | text | PK, not null | Routine identifier |
+| name | text | not null, unique | Shared routine name, unique across the cluster |
+| description | text | nullable | Optional description |
+| agentId | text | not null, default "" | Agent that runs the routine |
+| triggerType | text | not null | Trigger type, cron only for a due routine |
+| triggerConfig | jsonb | not null | Trigger payload |
+| command | text | nullable | Shell command for the routine action |
+| enabled | integer | not null, default 1 | 1 when the routine is active |
+| lastRunAt | text | nullable | ISO-8601 start of the last run |
+| lastRunResult | jsonb | nullable | Result of the most recent run |
+| nextRunAt | text | nullable | ISO-8601 next due time |
+| runCount | integer | not null, default 0 | Number of recorded runs |
+| runHistory | jsonb | not null, default [] | Recent run results |
+| createdAt | text | not null | ISO-8601 creation timestamp |
+| updatedAt | text | not null | ISO-8601 last update timestamp |
+
+### AutomationLiveRunRecord (in memory)
+
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| runId | text | PK in the registry | Run identifier |
+| scheduleId | text | not null | Automation or routine the run belongs to |
+| status | string | not null | "running", "complete", or "error" |
+| buffer | SessionEventBuffer | capacity 200 | Buffered server-sent events for replay |
+| listeners | set | runtime only | Connected stream subscribers |
+| output | string | capped at 10240 | Accumulated streamed text |
+| startedAt | number | epoch milliseconds | Wall-clock start, used for the auto-attach freshness window |
+
+## API Contracts
+
+The normative contract is in [`api.yaml`](api.yaml) (OpenAPI 3.1).
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | /api/automations | List automations, optionally filtered by scope |
+| POST | /api/automations | Create an automation, 201 on success |
+| GET | /api/automations/:id | Read one automation |
+| PATCH | /api/automations/:id | Update an automation |
+| DELETE | /api/automations/:id | Delete an automation, returns the deleted record |
+| POST | /api/automations/:id/run | Run an automation now, returns the schedule, the result, and the live run id |
+| GET | /api/automations/:id/run/stream | Stream live run output over server-sent events |
+| POST | /api/automations/:id/toggle | Flip the enabled flag |
+| POST | /api/automations/:id/steps/reorder | Reorder the steps by step ID |
+| GET | /api/routines | List routines, optionally filtered by scope |
+| POST | /api/routines | Create a routine, 201 on success |
+| GET | /api/routines/:id | Read one routine |
+| PATCH | /api/routines/:id | Update a routine |
+| DELETE | /api/routines/:id | Delete a routine, returns the deleted record |
+| POST | /api/routines/:id/run | Run a routine now, an alias of the trigger route |
+| POST | /api/routines/:id/trigger | Run a routine now, the canonical manual trigger |
+| GET | /api/routines/:id/run/stream | Stream live run output over server-sent events |
+| GET | /api/routines/:id/runs | Read the routine run history |
+| POST | /api/routines/:id/webhook | Accept a signed webhook call for a webhook-triggered routine |
+
+Error codes shared across endpoints:
+
+| Status | Code | Description |
+|---|---|---|
+| 400 | INVALID_INPUT | Missing name, missing trigger, invalid schedule or trigger type, invalid cron, invalid policy, invalid step payload, or a routine that is disabled |
+| 401 | UNAUTHORIZED | Missing or invalid webhook signature, or a webhook routine with no secret |
+| 404 | NOT_FOUND | The automation or routine does not exist, or it belongs to another scope |
+| 500 | INTERNAL_ERROR | An unexpected failure inside the handler |
+| 503 | STORE_UNAVAILABLE | No automation store, routine store, or routine runner is resolvable for the requested scope |
+
+## Key Sequences
+
+### Create a multi-step automation
+
+```text
+Operator            Dashboard route            AutomationStore            PostgreSQL
+   |                      |                           |                       |
+   |--POST /api/automations|                          |                       |
+   |--------------------->| validate name, type,      |                       |
+   |                      | cron, and steps           |                       |
+   |                      |--createSchedule---------->|                       |
+   |                      |                           |--BEGIN--------------->|
+   |                      |                           | upsert automation     |
+   |                      |                           | append config revision|
+   |                      |                           |--COMMIT------------->|
+   |<--201 automation------|                          |                       |
+```
+
+### Scheduled automation run
+
+```text
+CronRunner            AutomationStore            PostgreSQL        Shell / Agent
+   |                        |                        |                   |
+   |--getDueSchedules(scope)|                        |                   |
+   |----------------------->|                        |                   |
+   |   |-----due rows------>|                        |                   |
+   |--claimDueSchedule(id, expectedNextRunAt)-------->|                   |
+   |                        |--conditional UPDATE---->|                   |
+   |   |---claimed or lost--|                        |                   |
+   |  (lost claim: skip)   |                        |                   |
+   |--executeSchedule--------------------------------->|--run steps------->|
+   |                        |                        |                   |
+   |--recordRun(result)---->|--upsert------------->|                   |
+   |                        |--emit schedule:run    |                   |
+```
+
+### Routine catch-up and execution
+
+```text
+RoutineScheduler     RoutineRunner        RoutineStore
+   |                      |                    |
+   |--handleCatchUp(routine)->                |
+   |                      |--executeRoutine(missed) for each missed interval
+   |                      |                    |
+   |--executeRoutine(id, "cron")-------------->|
+   |                      |--startRoutineExecution-->|
+   |                      |--run action or heartbeat->|
+   |                      |--completeRoutineExecution->|
+   |                      |                    |
+   (a failure in one routine is logged and the loop continues)
+```
+
+### Signed webhook trigger
+
+```text
+Caller                 Dashboard route             RoutineStore        RoutineRunner
+   |                        |                          |                    |
+   |--POST /api/routines/:id/webhook                    |                    |
+   |                        | read raw body and the   |                    |
+   |                        | x-hub-signature-256 head |                    |
+   |                        |--getRoutine------------>|                    |
+   |                        | verify HMAC over the raw body                 |
+   |                        |--triggerWebhook----------------------------->|
+   |<--200 routine+result---|                          |                    |
+```
+
+### Live run stream
+
+```text
+Client                 LiveRunRegistry             Runner
+   |                          |                       |
+   |--POST .../run----------->|--start(runId)-------->|
+   |                          |                       |--onStep/onText---->|
+   |                          |<--broadcast(step)----|
+   |--GET .../run/stream----->|                       |
+   |   (replay buffer, then subscribe)                 |
+   |<--event: step----------|                       |
+   |<--event: output--------|                       |
+   |<--event: complete------|<--complete(result)----|
+```
+
+## Technical Decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Where the domain types live | `@fusion/core` under `packages/core/src/automation/` | The stores, the engine, and the dashboard all import them from one place, and the barrel file re-exports the whole domain |
+| Storage engine | PostgreSQL through the shared async data layer | The legacy SQLite write path is refused for configuration changes, because it has no durable atomic revision transaction |
+| Configuration history | Every create, update, and delete appends a configuration revision in the same transaction as the row write | A failed revision insert must not leave a definition with no restore point |
+| Cross-process due-window guard | A conditional update that advances next run at claim time | An in-memory guard does not stop a second engine process from running the same still-due row |
+| Shared global routines | A separate central table with a unique name | A project-partitioned table would create one copy per project, and the shared-cluster backup must be singular |
+| Concurrency control | A per-entity promise chain in the stores, plus the atomic claim for due windows | The chain serializes writes to one entity, and the claim stops duplicate execution across processes |
+| Routine command execution | A sandbox backend rather than a bare shell | A routine command is operator-configured and runs unattended, so it must be isolated and audited |
+| Live output transport | Server-sent events over an in-memory registry with a 60 second TTL | The manual run result contract stays unchanged, and a late client can still replay the buffered events |
+| Live stream implementation | One generic handler factory parameterised by store, entity getter, and not-found message | The automation and routine streams are otherwise identical, so a fix applies to both |
+| Step model resolution | Step override first, then the execution lane, then the workflow lane, then project and global defaults | A scheduled AI step has no task or runtime model context, so the lane baseline supplies the default |
+| Create-task target column | The column is omitted when the step names none | The workflow's own intake column resolves it, and an explicit column is still honoured |
+| API trigger surface | The `api` trigger type is stored with its endpoint, but no route reads that endpoint, so the effective API trigger surface is the generic manual trigger route | The code defines no separate endpoint that reads the stored `endpoint` value |
+| Webhook authentication | HMAC over the raw request body using the `x-hub-signature-256` header | The body must be signed exactly as it was sent, so the raw bytes are verified rather than a re-serialised object |
+| Scope selection | A `scope` query parameter or body field, defaulting to project for writes and to no filter for legacy reads | Reads without a scope keep the original behaviour, and writes without a scope default to the project lane |
+| Poll interval | 60 second default, clamped to a 10 second minimum | A tight poll wastes work, and a minimum interval keeps several engines from hammering the table |
+| Scheduler lane | The utility lane, outside the task-lane semaphore | Automation and routine execution is independent of task execution concurrency |
+
+## Risks and Unknowns
+
+1. The routine trigger carries an optional timezone, but every persisted cron computation uses UTC. The code does not show whether the timezone shifts the evaluation.
+2. `catchUpLimit` is stored with a default of 5 while the catch-up path bounds catch-up with a separate constant of 10 intervals. The code does not show which bound is authoritative.
+3. The `api` trigger type stores an endpoint that no route reads, so the effective API trigger surface is the generic manual trigger route.
+4. A routine that names neither a command, nor steps, nor an agent is refused at execution time, but the create route accepts it.
+5. The `thinkingLevel` step field is applied to scheduled, routine, and manual AI prompt runs, and is mapped onto a spawned task, but the stored value is not validated on the routine store path the way the route validates it.
+6. A global routine is read through the central store and is not part of the routine list route, so the dashboard shows global routines through the global lane store rather than the central table.
+
+## Out of Scope
+
+- The task lifecycle, the workflow graph, and the merge pipeline that a create-task step feeds into.
+- The external signal connectors, which ingest webhooks into triage tasks rather than into routines.
+- The knowledge graph, memory, and evals subsystems, except where a scheduled eval batch runs as a command step.
+- The multi-node mesh coordination beyond the shared global routine table and the atomic due-window claim.
+- The database backup policy itself. The backup routine is only covered here as a scheduled entity that the engine reconciles and the settings surface reports.
+- The plugin management endpoints that share the same registrar.

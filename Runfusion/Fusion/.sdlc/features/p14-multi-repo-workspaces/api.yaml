@@ -1,0 +1,518 @@
+# OpenAPI 3 contract for Multi-Repository Workspaces.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Multi-Repository Workspaces API"
+  version: 0.1.0
+  description: >
+    The HTTP surface of Fusion's multi-repository workspace support. It covers detecting the
+    member repositories of a project root, listing and extending the member list of a registered
+    workspace, and browsing files inside a workspace, where a workspace is either the project root
+    or a task worktree. The contract is additive within a major version: new response fields and
+    new optional query parameters may appear, and existing fields and their meaning do not change.
+paths:
+  /projects/detect-workspace:
+    post:
+      summary: Detect the member repositories of a directory
+      description: >
+        Scans the direct children of the given directory and returns the ones that are Git work
+        trees. The excluded names node_modules, .fusion, .git, .pi, and .worktrees are skipped, and
+        a child must carry a .git marker and pass a Git work-tree probe.
+      operationId: detectWorkspaceRepos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DetectWorkspaceRequest"
+      responses:
+        "200":
+          description: Detection completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DetectWorkspaceResponse"
+        "400":
+          description: The path is missing, is not absolute, or does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Detection failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /git/workspace-repos:
+    get:
+      summary: List the registered members of a workspace
+      description: >
+        Returns the member repositories recorded for the project. The detected candidates are
+        returned only when includeAvailable is 1, and they never repeat a registered member.
+      operationId: listWorkspaceRepos
+      parameters:
+        - name: repoPath
+          in: query
+          required: false
+          description: The sub-repository to read, relative to the project root.
+          schema:
+            type: string
+        - name: includeAvailable
+          in: query
+          required: false
+          description: Set to 1 to include the detected candidates that are not registered members.
+          schema:
+            type: string
+            enum: ["1"]
+      responses:
+        "200":
+          description: The registered members
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceRepoList"
+        "400":
+          description: The repoPath resolves outside the project root
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: The project is not a workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The member list could not be read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Add a member repository to a workspace
+      description: >
+        Adds a direct child Git work tree to the member list. The path must be relative, must name a
+        direct child, must not carry an excluded name, and the child must be a Git work tree. The
+        call is idempotent and the member list stays sorted.
+      operationId: addWorkspaceRepo
+      parameters:
+        - name: repoPath
+          in: query
+          required: false
+          description: The sub-repository to write to, relative to the project root.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddWorkspaceRepoRequest"
+      responses:
+        "200":
+          description: The member was added, or it was already a member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddWorkspaceRepoResponse"
+        "400":
+          description: The repo field is missing, or the member path was refused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: The project is not a workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The member list could not be written
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /workspaces:
+    get:
+      summary: List the browsable workspaces of a project
+      description: >
+        Returns the project root and the task worktrees that are still present on disk. A workspace
+        identifier is either the project root or a task id.
+      operationId: listWorkspaces
+      responses:
+        "200":
+          description: The browsable workspaces
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceList"
+        "500":
+          description: The workspaces could not be listed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /files:
+    get:
+      summary: List the files inside a workspace
+      description: >
+        Lists the directory entries at the given path inside the workspace. The workspace identifier
+        defaults to the project root.
+      operationId: listWorkspaceFiles
+      parameters:
+        - name: workspace
+          in: query
+          required: false
+          description: The workspace identifier, either the project root or a task id.
+          schema:
+            type: string
+            default: project
+        - name: path
+          in: query
+          required: false
+          description: The directory path inside the workspace.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The directory entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileListResponse"
+        "400":
+          description: The path was refused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The path is not readable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The workspace or the path does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The listing failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /files/{filepath}:
+    get:
+      summary: Read one file inside a workspace
+      description: >
+        Reads a text file inside the workspace. The filepath is a wildcard path, so it may hold
+        several segments.
+      operationId: readWorkspaceFile
+      parameters:
+        - name: filepath
+          in: path
+          required: true
+          description: The file path inside the workspace.
+          schema:
+            type: string
+        - name: workspace
+          in: query
+          required: false
+          description: The workspace identifier, either the project root or a task id.
+          schema:
+            type: string
+            default: project
+      responses:
+        "200":
+          description: The file content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileContentResponse"
+        "400":
+          description: The path was refused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The file is not readable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The workspace or the file does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: The file is larger than the file service accepts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: The file is binary and cannot be returned as text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The read failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Write one file inside a workspace
+      description: >
+        Writes a text file inside the workspace. The filepath is a wildcard path, so it may hold
+        several segments.
+      operationId: writeWorkspaceFile
+      parameters:
+        - name: filepath
+          in: path
+          required: true
+          description: The file path inside the workspace.
+          schema:
+            type: string
+        - name: workspace
+          in: query
+          required: false
+          description: The workspace identifier, either the project root or a task id.
+          schema:
+            type: string
+            default: project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WriteWorkspaceFileRequest"
+      responses:
+        "200":
+          description: The file was written
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaveFileResponse"
+        "400":
+          description: The content field is missing, or the path was refused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The file is not writable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: The workspace or the parent path does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: The content is larger than the file service accepts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: The file is binary and cannot be written as text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The write failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    DetectWorkspaceRequest:
+      type: object
+      additionalProperties: true
+      required: [path]
+      properties:
+        path:
+          type: string
+          description: The absolute path of the directory to scan.
+          example: /home/operator/mono-root
+    DetectWorkspaceResponse:
+      type: object
+      additionalProperties: true
+      required: [repos, isWorkspace]
+      properties:
+        repos:
+          type: array
+          description: The detected member repository names, sorted.
+          items:
+            type: string
+        isWorkspace:
+          type: boolean
+          description: True when at least one member repository was detected.
+    WorkspaceRepoList:
+      type: object
+      additionalProperties: true
+      required: [repos]
+      properties:
+        repos:
+          type: array
+          description: The registered member repository names.
+          items:
+            type: string
+        available:
+          type: array
+          description: The detected candidates that are not registered members. Present only when includeAvailable is 1.
+          items:
+            type: string
+    AddWorkspaceRepoRequest:
+      type: object
+      additionalProperties: true
+      required: [repo]
+      properties:
+        repo:
+          type: string
+          description: The member path relative to the workspace root.
+          example: api
+    AddWorkspaceRepoResponse:
+      type: object
+      additionalProperties: true
+      required: [outcome, repos]
+      properties:
+        outcome:
+          type: string
+          enum: [added, already-member]
+          description: Whether the member was added or was already registered.
+        repos:
+          type: array
+          description: The member list after the call.
+          items:
+            type: string
+    WorkspaceList:
+      type: object
+      additionalProperties: true
+      required: [project, tasks]
+      properties:
+        project:
+          type: string
+          description: The absolute project root path.
+        tasks:
+          type: array
+          description: The task worktrees that are present on disk.
+          items:
+            $ref: "#/components/schemas/WorkspaceTaskInfo"
+    WorkspaceTaskInfo:
+      type: object
+      additionalProperties: true
+      required: [id, worktree]
+      properties:
+        id:
+          type: string
+          description: The task identifier.
+        title:
+          type: string
+          description: The task title, when the task has one.
+        worktree:
+          type: string
+          description: The absolute worktree path.
+    FileNode:
+      type: object
+      additionalProperties: true
+      required: [name, type]
+      properties:
+        name:
+          type: string
+          description: The entry name.
+        type:
+          type: string
+          enum: [file, directory]
+          description: Whether the entry is a file or a directory.
+        size:
+          type: number
+          description: The entry size in bytes, for files.
+        mtime:
+          type: string
+          description: The entry modification time.
+    FileListResponse:
+      type: object
+      additionalProperties: true
+      required: [path, entries]
+      properties:
+        path:
+          type: string
+          description: The listed path inside the workspace.
+        entries:
+          type: array
+          description: The directory entries.
+          items:
+            $ref: "#/components/schemas/FileNode"
+    FileContentResponse:
+      type: object
+      additionalProperties: true
+      required: [content, mtime, size]
+      properties:
+        content:
+          type: string
+          description: The file content.
+        mtime:
+          type: string
+          description: The file modification time.
+        size:
+          type: number
+          description: The file size in bytes.
+    WriteWorkspaceFileRequest:
+      type: object
+      additionalProperties: true
+      required: [content]
+      properties:
+        content:
+          type: string
+          description: The file content to write.
+    SaveFileResponse:
+      type: object
+      additionalProperties: true
+      required: [success, mtime, size]
+      properties:
+        success:
+          type: boolean
+          description: Always true when the write succeeded.
+        mtime:
+          type: string
+          description: The file modification time after the write.
+        size:
+          type: number
+          description: The file size in bytes after the write.
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: The operator-facing failure message.
+          example: This project is not a workspace
+        details:
+          type: object
+          additionalProperties: true
+          description: The failure details, including the code that classifies the failure.
+          properties:
+            code:
+              type: string
+              example: ENOENT
+            reason:
+              type: string
+              example: not-a-workspace
