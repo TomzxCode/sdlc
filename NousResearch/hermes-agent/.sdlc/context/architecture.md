@@ -10,16 +10,19 @@ flowchart TB
     GW["Gateway Runner (gateway/run.py, asyncio + adapters)"]
     Desk["Desktop (apps/desktop/, Electron + React)"]
     API["API Server (gateway/platforms/api_server.py, HTTP)"]
+    Web["Web Dashboard (web/, Vite + React, FastAPI via hermes_cli/web_server.py)"]
+    ACP["ACP Server (acp_adapter/, editor integrations)"]
     Agent["AIAgent (run_agent.py, conversation + tool-calling loop)"]
     Reg["Tool Registry (tools/registry.py)"]
     Model["Model Client (OpenAI-compatible API)"]
-    Prov["Provider Adapters (Anthropic, Gemini, ...)"]
+    Prov["Provider Registry (providers/, ProviderProfile ABC + plugins/model-providers/)"]
     Mem["Memory Providers (agent/memory_manager.py)"]
     Cron["Cron Scheduler (cron/scheduler.py)"]
     Kanban["Kanban Board (hermes_cli/kanban*.py)"]
-    User --> CLI & TUI & GW & Desk & API
+    User --> CLI & TUI & GW & Desk & API & Web & ACP
+    Web -.->|embeds real TUI via PTY bridge| TUI
     TUI <-->|JSON-RPC over stdio| TG["TUI Gateway (tui_gateway/)"]
-    CLI & TG & GW & Desk & API --> Agent
+    CLI & TG & GW & Desk & API & Web & ACP --> Agent
     Agent --> Reg & Model & Mem
     Model --> Prov
     Reg --> Cron & Kanban
@@ -30,16 +33,19 @@ flowchart TB
 | Component | Responsibility | Technology |
 |---|---|---|
 | AIAgent (run_agent.py) | Core conversation loop — manages chat completions API calls, tool-calling iterations, interrupt handling, budget tracking, subagent spawning | Python, OpenAI SDK |
-| HermesCLI (cli.py) | Interactive CLI orchestrator with prompt_toolkit REPL, Rich panels, skin engine, slash command dispatch (~70 commands) | Python, prompt_toolkit, Rich |
+| HermesCLI (cli.py) | Interactive CLI orchestrator with prompt_toolkit REPL, Rich panels, skin engine, slash command dispatch (~100 commands) | Python, prompt_toolkit, Rich |
 | Tool Registry (tools/registry.py) | Central registry for tool schemas and handlers with a dispatch() entry point, auto-discovering tools from tools/*.py at import time | Python |
-| Tool Implementations (tools/*.py) | ~276 tool modules including topical facade siblings — terminal, file, web, browser, vision, delegation, cron, kanban, etc., each self-registering at import time | Python |
+| Tool Implementations (tools/*.py) | ~320 tool modules including topical facade siblings — terminal, file, web, browser, vision, delegation, cron, kanban, etc., each self-registering at import time | Python |
 | Toolset Definitions (toolsets.py) | Composable tool groupings for platforms and scenarios (hermes-cli, hermes-telegram, web, browser, file, etc.) | Python |
 | Model Tools (model_tools.py) | Orchestration layer — tool discovery, schema collection, handle_function_call() dispatch, gating, MCP integration, approval gates | Python |
+| Provider Registry (providers/) | `ProviderProfile` ABC and lazy registry; provider profiles live as plugins under plugins/model-providers/ and feed auth, model listing, routing and transport kwargs across the codebase | Python |
 | Gateway Runner (gateway/run.py) | Async runtime for all messaging platforms — session lifecycle, stream dispatch, approval flow, slash command dispatch, structured as a facade with run_*.py siblings | Python, asyncio |
-| Platform Adapters (gateway/platforms/ + plugins/platforms/) | Base adapter ABC, shared ingress helpers, and some in-tree adapters (Signal, webhook, API server, Weixin, WhatsApp Cloud, etc.) stay in gateway/platforms/, while the 21 canonical per-platform adapters (Telegram, Discord, Slack, Matrix, email, SMS, etc.) live under plugins/platforms/ | Python |
+| Platform Adapters (gateway/platforms/ + plugins/platforms/) | Base adapter ABC, shared ingress helpers, and some in-tree adapters (Signal, webhook, API server, Weixin, WhatsApp Cloud, etc.) stay in gateway/platforms/, while the 26 canonical per-platform adapters (Telegram, Discord, Slack, Matrix, email, SMS, etc.) live under plugins/platforms/ | Python |
 | TUI Frontend (ui-tui/) | Ink (React) terminal UI with composer, transcript, session picker, slash commands | TypeScript, Ink, React |
 | TUI Gateway (tui_gateway/) | Python JSON-RPC backend over stdio serving the TUI frontend | Python |
 | Electron Desktop (apps/desktop/) | Standalone Electron desktop app with its own React composer and slash-command pipeline | TypeScript, Electron, React, nanostores |
+| Web Dashboard (web/ + hermes_cli/web_server*.py) | Browser dashboard for config, keys, sessions and monitoring; `hermes dashboard`/`serve` serve a FastAPI backend and embed the real `hermes --tui` over a PTY bridge rather than reimplementing chat | TypeScript, Vite, React, FastAPI |
+| ACP Server (acp_adapter/) | Agent Communication Protocol server that exposes the agent to ACP editors over JSON-RPC on stdio | Python |
 | Plugin Manager (hermes_cli/plugins.py) | Discovers and manages plugins (hooks, tools, CLI subcommands) from ~/.hermes/plugins/ and pip entry points | Python |
 | Memory Manager (agent/memory_manager.py) | Orchestrates pluggable memory backends via MemoryProvider ABC with per-turn sync_turn() | Python |
 | Cron Scheduler (cron/scheduler.py) | Tick loop for scheduled jobs — duration, cron expressions, ISO timestamps | Python |
@@ -47,6 +53,7 @@ flowchart TB
 | Configuration System (hermes_cli/config.py) | config.yaml with deep-merge from DEFAULT_CONFIG, profile-aware paths, .env for secrets only | Python |
 | Session Store (hermes_state.py + hermes_state_*.py) | SQLite database with FTS5 full-text search for conversation history, structured as a SessionDB facade with 33 topical siblings | Python, SQLite |
 | Kanban Board (hermes_cli/kanban*.py, tools/kanban_tools.py) | Durable SQLite-backed multi-agent work queue — boards, tasks, assignees, claims, comments, attachments, dependency links, with the dispatcher running inside the gateway by default | Python |
+| Project Store (hermes_cli/projects_db.py, tools/project_tools.py, hermes_cli/projects_cmd.py) | Per-profile `projects.db` of first-class projects, folders and discovered repos; tasks link to a project via `project_id` to anchor worktrees | Python, SQLite |
 | Observer Hooks (agent/monitoring/ + Langfuse plugin) | Backend-neutral telemetry contract (trace/metric/audit/replay/export) consumed by the Langfuse plugin | Python |
 
 ## Data Flow
@@ -68,6 +75,9 @@ erDiagram
     Profile ||--o{ Session : owns
     Profile ||--o{ Plugin : installs
     Profile ||--o{ CronJob : schedules
+    Profile ||--o{ Project : owns
+    Project ||--o{ ProjectFolder : contains
+    Project ||--o{ KanbanTask : anchors
     Session ||--o{ Message : contains
     Session ||--o{ KanbanTask : assigns
     Message ||--o{ ToolCall : requests
@@ -128,6 +138,17 @@ erDiagram
         string task_id
         string status
         string assignee
+    }
+    Project {
+        string project_id
+        string slug
+        string name
+        string board_slug
+    }
+    ProjectFolder {
+        string project_id
+        string path
+        boolean is_primary
     }
     Plugin {
         string name

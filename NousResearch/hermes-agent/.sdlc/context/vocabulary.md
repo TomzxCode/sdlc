@@ -34,6 +34,8 @@
 | MoA | Mixture of Agents — running a prompt through an ensemble of models |
 | NeMo Relay / Langfuse | Observability backends consuming the observer-hook contract for traces and metrics |
 | Observer hooks | Backend-neutral telemetry callbacks (pre/post API request, tool call) reconstructing execution without changing runtime behavior |
+| OTLP | OpenTelemetry Protocol — the wire format used to export gateway health metrics, lifecycle traces and redacted diagnostics over HTTP to an operator-configured collector (e.g. OpenTelemetry Collector, DataDog) |
+| Profile scope | The explicit binding of runtime work (turns, callbacks, threads or RPC calls) to a profile so HERMES_HOME, secrets and terminal policy resolve to that profile; one process serves many profiles, so an unbound read leaks the launch profile |
 | Prompt_toolkit | A Python library for building interactive command-line applications, used by the classic CLI |
 | SDLC | The .sdlc/ lifecycle system tracking features, requirements, specifications, decisions, and progress |
 | wine2e | The on-demand live Windows E2E CI lane that runs windows-venv-e2e.yml only on pushes to wine2e/** branches |
@@ -50,6 +52,7 @@
 | IDE | Integrated Development Environment |
 | MCP | Model Context Protocol |
 | MoA | Mixture of Agents |
+| OTLP | OpenTelemetry Protocol |
 | PTY | Pseudo-terminal |
 | SDLC | Software Development Life Cycle |
 | SPA | Single-Page Application |

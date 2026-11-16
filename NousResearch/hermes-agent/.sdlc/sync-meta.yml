@@ -1,7 +1,7 @@
-agents_ref: f248f3390b3eb828f852ef42dbb4cad98ae5724e
+agents_ref: 31f0fc756d0bbeddde013a51985880c24139f7a8
 agents_remote: https://github.com/tomzx/agents
-last_synced: "2026-10-13"
-code_ref: 63d0b94120027d487c9a5235b9ec64b696af1b26
+last_synced: "2026-11-16"
+code_ref: e2fb450adcf74421fe9514f048319dfcbb5af6c1
 code_index:
   "p1-core-agent":
     - run_agent.py
@@ -56,7 +56,9 @@ code_index:
     - hermes_constants.py
     - providers/
   "p11-mcp-integration":
-    - mcp_serve.py
+    - agent/transports/hermes_tools_mcp_server.py
+    - agent/transports/codex_app_server_session.py
+    - hermes_cli/mcp_*.py
     - tools/mcp_tool.py
     - optional-mcps/
   "p12-acp-protocol":
