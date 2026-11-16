@@ -71,3 +71,42 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact says: "| Styling | CSS (no framework) | Minimal dependencies, full control |" (specification.md:56).
 - Code: styling is plain CSS, but with strict ownership rules: token colors from `ui/src/styles/base.css`, a fixed breakpoint ladder, no `@layer`, and a `:has()` selector restriction enforced by stylelint.
 - Advisory: the decision is still true, but the constraints it now operates under are worth recording.
+
+## Sync drift: 2026-11-16
+
+Fresh analysis of the owned paths under `ui/src/` confirms the drift recorded on 2026-10-19 is still present. Solid packages now sit at `2.0.0-rc.18`, and the `gateway.controlUi` schema has gained fields since the last review.
+
+### The overview and framework decision still describe Lit (blocking)
+
+- Evidence: 0 `lit` imports and 1716 `solid-js` imports under `ui/src`, `ui/package.json:37-38,55`, `ui/vitest.config.ts:207`, and `ui/AGENTS.md:7`.
+- Artifact says: the Overview calls this a "Lit-based web component application" using "legacy decorators", and the technical decision row chooses Lit (specification.md:10, specification.md:55).
+- Code: the application compiles Solid JSX through `@solidjs/vite-plugin`, uses `@solidjs/signals`, and tests with `@solidjs/testing-library`.
+- Blocking: the recorded decision is the opposite of the shipped design.
+
+### The chat flow still names a nonexistent endpoint (blocking)
+
+- Evidence: `src/gateway/server-methods.ts:325,450` dispatches `chat.send`, and `src/gateway/remote-control-ui-http-routing.ts:105` only serves `/api/chat/media/outgoing/`.
+- Artifact says: "Browser → Gateway: POST /api/chat" (specification.md:45).
+- Code: chat is sent over the Gateway Protocol WebSocket as `chat.send`, and there is no `POST /api/chat` route.
+- Blocking: the central sequence names a transport that was replaced.
+
+### The ControlUIConfig table still does not match the schema (blocking)
+
+- Evidence: `src/config/zod-schema.gateway.ts:144-222`.
+- Artifact says: the fields `title`, `theme` (light or dark), and `allowedOrigins` (specification.md:32-36).
+- Code: `gateway.controlUi` has no `title` or `theme` field. It has `enabled`, `basePath`, `experimental` (including `customPlugins`, `templates`, `chatBubbles`, and `composerPredictions`), `root`, `environment`, `communityInvite`, `newSessionModelDefaults`, `github`, `sessionObserver`, `embedSandbox`, `allowExternalEmbedUrls`, `automaticallyFetchFavicons`, `allowedOrigins`, `dangerouslyAllowHostHeaderOriginFallback`, and `dangerouslyDisableDeviceAuth`.
+- Blocking: two of the three documented fields do not exist.
+
+### The architecture diagram and out-of-scope list are still stale (blocking)
+
+- Evidence: `ui/src/pages/terminal/terminal-page.tsx`, `ui/src/components/desktop/desktop-client.ts`, `ui/src/pages/chat/components/file-editor-view.ts`, `ui/src/plugins/control-ui-host.ts`, and `src/plugins/registry-control-ui.ts`.
+- Artifact says: the diagram shows only a browser SPA over REST and WebSocket with three gateway files, and Out of Scope excludes "Plugin-provided UI components" (specification.md:14-26, specification.md:69).
+- Code: the UI also hosts a terminal, a noVNC desktop, a CodeMirror editor, and plugin views, and the gateway now uses a `server-methods/` method family.
+- Blocking: the map leaves out every embedded surface and excludes a shipped capability.
+
+### The risks and styling decision remain partly resolved (advisory)
+
+- Evidence: `specification.md:56,62,63`, `src/gateway/control-ui-csp.ts:42,114`, and the stylesheet policy in `ui/AGENTS.md`.
+- Artifact says: a legacy decorator migration risk, a CSP risk, and a plain CSS styling decision.
+- Code: the decorator migration is complete, CSP computes inline script hashes and frame-ancestor rules, and styling has strict CSS ownership rules for tokens, breakpoints, `@layer`, and `:has()`.
+- Advisory: these items are not harmful, but they no longer describe the current state.

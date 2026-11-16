@@ -50,3 +50,22 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Code: `src/plugin-sdk/plugin-test-api.ts`, `src/plugin-sdk/plugin-test-runtime.ts`, and `src/plugin-sdk/plugin-test-contracts.ts` are the shipped plugin testing utilities behind FR-8, and they have no listed test file.
 - Impact: the plan covers the original facade and registry surface but not the surface that now dominates the plugin system.
 - Classification: advisory.
+
+## Sync drift: 2026-11-16
+
+Fresh analysis confirms the discrepancies recorded on 2026-10-19 remain, since tests.md was not edited.
+
+### Blocking: tests.md:18 still lists `src/plugin-sdk/agent-core.test.ts`, which does not exist.
+
+### Blocking: tests.md:52 still cites `extension-import-boundaries.test.ts`, which does not exist.
+
+- The real suites are `test/plugin-extension-import-boundary.test.ts`, `test/test-helper-extension-import-boundary.test.ts`, and `test/scripts/extension-import-boundary-checker.test.ts`.
+
+### Advisory: tests.md still omits the test areas that now dominate the surface.
+
+- The tree holds hundreds of test files under `src/plugin-sdk/` and `src/plugins/`, covering API baseline, facade loading, channel and provider entry contracts, install provenance, trust, ClawHub verification, and the installed-plugin index.
+- The shipped plugin testing utilities behind FR-8 still have no listed test file.
+
+### Advisory: tests.md:31 still describes a single failing boundary test.
+
+- Enforcement is an inventory report plus narrower guardrail tests.

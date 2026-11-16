@@ -72,3 +72,32 @@ Every finding below is classified as blocking or advisory.
 - Artifact says (lines 72-76): "Fine-tuning or training of models", "Custom model hosting", and "Multi-modal model support beyond text, images, and audio".
 - Code says: `src/context-engine/` and `src/plugins/registry-contribution-types.ts` add pluggable context-engine and provider seams that were not in scope when the artifact was written.
 - Impact: the out-of-scope list is not wrong, but it now omits the seams a reader would most want to extend.
+
+## Sync drift: 2026-11-16
+
+The specification artifact was not changed since the 2026-10-19 review.
+The three blocking and four advisory items in the 2026-10-19 section still apply.
+
+### Blocking: compaction ownership has moved partly into the agent-core package
+
+- Classification: blocking.
+- The artifact says (line 61): "| Compaction strategy | LLM-based summarization | Preserves conversation quality while reducing tokens |".
+- Code says: `src/agents/compaction.ts:1-3` imports `summarization-completion`, `summary-checkpoint-prompt`, and `utils` from `packages/agent-core/src/harness/compaction/`.
+- Code says: the core compaction types now live in `packages/agent-core/src/harness/types.ts`, which the runtime imports.
+- Code says: `packages/agent-core/` holds 83 files and owns part of the compaction flow that the spec attributes entirely to the runtime.
+- Impact: the spec names no package owner for compaction, so a reader would look only under `src/agents/`.
+
+### Blocking: the TranscriptTurn model drift has grown
+
+- Classification: blocking.
+- The artifact still describes a `TranscriptTurn` table with `turnId`, `tokenCount`, and a single `content` JSON column.
+- Code says: `src/state/openclaw-agent-schema.sql:454` defines `transcript_events` with a composite key and adds navigation report fields such as `navigation_last_type`, `navigation_valid`, and zstd byte accounting that the 2026-10-19 review did not list.
+- Impact: the modeled table is further from the real schema than at the last review.
+
+### Advisory: the store box and provider layer omissions remain
+
+- Classification: advisory.
+- The architecture diagram still shows a fixed "SQLite Store (Transcripts)" box and a direct runtime-to-provider hop.
+- Code says: `package.json:7-13` sets `openclaw.databaseEngines` to `["sqlite", "postgres"]`, so the store is engine-selectable.
+- Code says: `src/plugins/registry-registrars-providers.ts` and `src/plugins/provider-catalog.ts` still own the provider layer.
+- Impact: unchanged from 2026-10-19, still misleading.

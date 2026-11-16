@@ -68,3 +68,55 @@ Every finding below is classified as blocking or advisory.
 - Artifact says (line 60): "| Streaming | Chunked draft delivery via draft-stream-loop | Responsive UX; channels display text incrementally |"
 - Code says: `src/channels/draft-stream-loop.ts` and `src/channels/draft-stream-controls.ts` still own chunked draft delivery, and `src/channels/plugins/types.core.ts:302-307` still exposes `ChannelStreamingAdapter` for coalescing defaults.
 - Impact: no drift. Recorded so the next sync does not re-open it.
+
+## Sync drift: 2026-11-16
+
+The specification was reverse-engineered from the code and was last reviewed on 2026-10-19.
+A fresh analysis on 2026-11-16 confirms the recorded drift is unchanged.
+The artifacts were not edited during this sync, so every finding from 2026-10-19 still stands.
+The schema line numbers recorded in the 2026-10-19 review have since shifted.
+
+### Blocking: the ChannelMessage data model still does not match the durable ingress record
+
+- Classification: blocking.
+- Artifact says (lines 31-40): a `ChannelMessage` table with `messageId` as PK, `channelId`, `sessionId` as a NOT NULL foreign key, `text`, `attachments` JSON, and `timestamp`.
+- Code says: `src/state/openclaw-state-schema.sql:1254-1276` defines `channel_ingress_events` with a composite key of `(queue_name, event_id)`, claim, attempt, and completion columns, and no `text` or `attachments` column.
+- Code says: `src/channels/message/ingress-queue.types.ts:4-14` scopes records by `ChannelIngressScope` as `{ channelId, accountId, queueName }`, and the session is bound at turn adoption.
+- Note: the table now sits at lines 1254-1276, up from lines 1273-1294 in the 2026-10-19 review, and the pairing tables moved from lines 777 and 794 to lines 758 and 775.
+- Impact: a reader would model a row that does not exist and miss the columns that carry the durability contract.
+
+### Blocking: the Message Receive Flow still omits the durable ingress lifecycle
+
+- Classification: blocking.
+- Artifact says (lines 46-52): the sequence moves from a normalized envelope straight to routing at the gateway.
+- Code says: `src/channels/message/ingress-drain.ts`, `ingress-monitor.ts`, `ingress-claim-owner.ts`, and `ingress-retry-policy.ts` persist, lease, and retry inbound events before `src/channels/turn/run-channel-turn.ts` adopts them.
+- Impact: the sequence still hides the durability step between the platform and the agent.
+
+### Blocking: the architecture tree still omits the contract owner and mislabels the message directory
+
+- Classification: blocking.
+- Artifact says (lines 16-23): the tree lists `inbound-event/`, `message/` as formatting and delivery, `status/`, `transport/`, and `turn/`.
+- Code says: `src/channels/plugins/` holds the public contract in `types.plugin.ts`, `types.core.ts`, and `types.adapters.ts`, plus the registry, catalog, and config write policy, while `src/channels/message-access/` and `src/channels/allowlists/` own inbound admission.
+- Code says: `src/channels/message/` now holds the durable ingress queue and monitor, not only formatting and delivery.
+- Impact: the tree still points an implementer at the wrong directories for the contract and the ingress guarantee.
+
+### Advisory: the plugin contract owner is still stated indirectly
+
+- Classification: advisory.
+- Artifact says (line 59): the plugin contract is a Channel SDK interface in `@openclaw/plugin-sdk`.
+- Code says: the canonical types live in `src/channels/plugins/types.*.ts`, and `@openclaw/plugin-sdk` re-exports them from `src/plugin-sdk/channel-contract.ts` and `channel-plugin-common.ts`.
+- Impact: the statement is not false, but it names the re-export rather than the owner.
+
+### Advisory: the contract is still a set of optional adapter surfaces
+
+- Classification: advisory.
+- Artifact says (line 10): each channel plugin implements one channel contract.
+- Code says: `src/channels/plugins/types.plugin.ts` defines `ChannelPlugin` as roughly twenty optional adapter surfaces, and `src/channels/plugins/channel-runtime-surface.types.ts` models the surface a plugin actually exposes.
+- Impact: the single-interface phrasing still hides which capabilities are mandatory.
+
+### Advisory: the Technical Decisions table still omits the durable ingress decision
+
+- Classification: advisory.
+- Artifact says (lines 57-62): the table lists the plugin contract, streaming, thread binding, and attachment handling.
+- Code says: the durable ingress decision, the claim and retry lifecycle, and the closed action vocabulary are absent from the table.
+- Impact: the table is incomplete rather than wrong.

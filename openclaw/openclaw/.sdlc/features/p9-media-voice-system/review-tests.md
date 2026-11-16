@@ -56,4 +56,35 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Evidence: `extensions/elevenlabs/media-understanding-provider.ts`, `extensions/elevenlabs/media-understanding-provider.test.ts`, `extensions/elevenlabs/capability-catalog.ts`
 - Artifact says: the integration test table lists `extensions/elevenlabs/tts.test.ts`, `speech-provider.test.ts`, and `shared.test.ts` (tests.md:33-35).
 - Code: the ElevenLabs plugin also ships a media understanding provider with its own test, which is a fourth capability for that plugin and is not listed.
+
+## Sync drift: 2026-11-16
+
+The test plan was not changed since the 2026-10-19 review, so most recorded drift still applies. This run analyzed the tree at HEAD 0eae4c0, which is ahead of the recorded code_ref 8b78b23.
+
+### TC-3 names a config test file that does not exist (blocking)
+
+- Evidence: `src/tts/status-config.ts` exists, but `src/tts/status-config.test.ts` does not. The only config suite present is `src/tts/tts-config.test.ts`.
+- Artifact says: "| TC-3 | TTS configuration | src/tts/tts-config.test.ts, src/tts/status-config.test.ts |" (tests.md:18).
+- This is a new discrepancy not recorded on 2026-10-19. The second source file for TC-3 cannot be opened.
+
+### TC-21 still names a removed file, and its cited replacement also disappeared
+
+- Evidence: `src/media-generation/provider-capabilities.contract.test.ts` is still absent. `src/media-generation/` holds `live-test-helpers.test.ts`, `provider-assets.test.ts`, `registry.test.ts`, and `runtime-shared.test.ts`.
+- The 2026-10-19 review pointed to `src/image-generation/capabilities.test.ts` as a replacement, but that file is now gone. `src/video-generation/capabilities.test.ts` and `src/music-generation/capabilities.test.ts` still exist.
+- The plan still directs a reader to a file that cannot be opened.
+
+### Voice call, talk, meeting bot, and media understanding coverage is still absent
+
+- Evidence: `extensions/voice-call/` has 65 `*.test.ts` files, `src/talk/` has 40, `src/meeting-bot/` has 31, `src/media-understanding/` has 42, and `src/tts/` has 22.
+- Artifact says: the plan lists ten unit cases and five integration cases, none drawn from those suites.
+- The 2026-10-19 count for voice call was 73. The current count is 65 under a `*.test.ts` filter, but the finding that none are listed is unchanged.
+
+### Coverage matrix rows FR-7 and FR-10 remain wrong
+
+- FR-7 still maps to TC-24, which is `extensions/elevenlabs/shared.test.ts` and only asserts shared type shapes. Real transcription suites live in `src/realtime-transcription/websocket-session.test.ts` and the Deepgram provider tests.
+- FR-10 still maps to talk-runtime tests, while the meeting bot has no listed coverage.
+
+### Live test and unlisted suite findings carry forward
+
+- No artifact text changed, so the advisory findings about the live test suffix convention and omitted suites still hold.
 - Advisory.

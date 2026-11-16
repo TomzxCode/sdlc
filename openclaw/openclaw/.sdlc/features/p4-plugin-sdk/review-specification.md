@@ -79,3 +79,36 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Code: `src/cli/program/subcli-command-metadata.ts:20` registers `promos` ("Discover and claim promotional model offers from ClawHub").
 - Impact: ClawHub participates in the core CLI surface, not only as a remote marketplace.
 - Classification: advisory.
+
+## Sync drift: 2026-11-16
+
+Fresh analysis confirms the discrepancies recorded on 2026-10-19 remain, since specification.md was not edited.
+
+### Blocking: specification.md:18-23 still shows four barrel modules instead of narrow subpaths.
+
+- `scripts/lib/plugin-sdk-entrypoints.json` lists 389 public subpaths.
+- `package.json` publishes 368 `./plugin-sdk/<name>` exports.
+- `src/plugin-sdk/AGENTS.md:24` forbids broad convenience barrels.
+- `api.ts` and `runtime-api.ts` are plugin-local files under `extensions/<id>/`, not SDK barrels.
+
+### Blocking: the PluginManifest table at specification.md:36-43 still does not match the code.
+
+- `src/plugins/manifest-types.ts:435-436` declares `id` and a required `configSchema: JsonSchemaObject`, not a nullable Zod schema.
+- `src/plugins/manifest-types.ts:461` uses `kind?: PluginKind | PluginKind[]` rather than a `type` field.
+- `src/plugins/manifest-types.ts:554-560` declares `name?` and `version?` as optional, and there is no `entry` field.
+- The code adds many fields that drive activation, discovery, and configuration, which the table omits.
+
+### Blocking: the install sequence at specification.md:49-55 still omits trust and policy gates.
+
+- `src/cli/plugins-cli.ts` gates installs with capability and policy flags.
+- `src/security/install-policy.ts` can refuse an install outright.
+- `src/plugins/install-provenance.ts` and `src/plugins/plugin-trust.ts` gate trust by source.
+- `src/plugins/loader.ts` and `src/plugins/lifecycle.ts` support activation beyond the next start.
+
+### Advisory: the import boundary scripts are still named differently.
+
+- The scripts are `.mts` files, not the `.mjs` glob in specification.md:10.
+
+### Advisory: ClawHub is still more than a remote marketplace.
+
+- ClawHub participates in the CLI through publish commands and top-level command families.

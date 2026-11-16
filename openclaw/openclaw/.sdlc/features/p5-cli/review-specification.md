@@ -59,3 +59,42 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Code: `src/cli/command-catalog-types.ts` defines a separate `CliCommandCatalogEntry` with `commandPath`, `route`, and a `policy` describing `configGuard`, `loadPlugins`, `networkProxy`, and `ensureCliPath`.
 - Impact: the data model needs the descriptor, the catalog policy entry, and the two-tier registration (placeholder plus lazy load) to be accurate.
 - Classification: advisory.
+
+## Sync drift: 2026-11-16
+
+### Blocking: the command framework and prompt library claims remain wrong
+
+- Artifact says (specification.md:10, 39, 57): the CLI is built on yargs and uses `yargs.Options`.
+- Code: `package.json:2468` declares `"commander": "15.0.0"`, and there is no yargs dependency.
+- Code: `src/cli/program/build-program.ts:12-14` constructs `new OpenClawCommand()`, a Commander subclass defined in `src/cli/program/openclaw-command.ts`.
+- Artifact says (specification.md:60): interactive flows use Inquirer.
+- Code: `package.json:2443` declares `"@clack/prompts": "1.8.1"`, and there is no Inquirer dependency.
+- Code: `src/wizard/clack-prompter.ts` implements wizard prompts on `@clack/prompts`, and `src/wizard/` now holds 75 files.
+- Both discrepancies were recorded on 2026-10-19 and remain unresolved.
+
+### Blocking: the architecture tree still omits the dominant layers
+
+- Artifact shows (specification.md:14-28) eight files under `src/cli/` and no command-handler, program, wizard, system-agent, or TUI layer.
+- Code: `src/cli/program/` holds 81 files, `src/commands/` holds 1560 files, `src/tui/` holds 184 files, `src/wizard/` holds 75 files, and `src/system-agent/` holds 144 files.
+- Code: `src/cli/` itself holds 1402 files, up from 611 on 2026-10-19.
+- The descriptor-driven program layer and the `src/commands/` handler layer are the largest parts of the CLI and are still absent from the diagram.
+
+### Advisory: the registration entry points changed since the earlier review
+
+- Code: `src/cli/program/build-program.ts:2` imports `registerCoreCliCommands` from `command-registry-core.js`, and line 8 imports `registerSubCliCommands` from `register.subclis.js`.
+- Code: `src/cli/program/build-program.ts:17-20` calls `program.exitOverride(...)` to preserve Commander exit codes.
+- The 2026-10-19 review described registration through `core-command-descriptors.ts`, `subcli-command-metadata.ts`, `subcli-descriptors.ts`, `register-command-groups.ts`, and `command-catalog.ts`.
+- Those files still exist, but the builder now delegates to the two registry modules above, so the earlier description is incomplete.
+
+### Advisory: the plugin-owned command registration file was renamed
+
+- The 2026-10-19 review cited `src/plugins/register-plugin-cli-command-groups.ts`.
+- Code: that path no longer exists.
+- Code: the responsibility now lives in `src/plugins/cli-backend-registration.ts`, `src/plugins/cli-registry-loader.ts`, and `src/plugins/cli-root-descriptors.ts`, alongside `src/plugins/cli.ts`.
+- The plugin-owned command path itself still exists and is still absent from the artifact.
+
+### Advisory: the CLICommand data model still does not match the descriptor model
+
+- Artifact says (specification.md:32-39): a `CLICommand` has `name`, `description`, `handler`, and `options` of type `yargs.Options`.
+- Code: `src/cli/program/command-group-descriptors.ts` defines `NamedCommandDescriptor` and `RegisteredCommandDescriptor`.
+- Code: `src/cli/command-catalog-types.ts` defines `CliCommandCatalogEntry` with a policy describing `configGuard`, `loadPlugins`, `networkProxy`, and `ensureCliPath`.

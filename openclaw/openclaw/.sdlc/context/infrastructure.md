@@ -11,22 +11,22 @@ Update this file when tooling, environments, or deployment procedures change.
 
 | Component | Technology | Version |
 |---|---|---|
-| Language | TypeScript (strict ESM, no `any`) | `7.1.0-dev.20261011.1` (devDependency in `package.json`) |
-| Runtime | Node.js (`>=24.16.0 <25 \|\| >=26.1.0`, Node 26 recommended); Bun is an explicit opt-in runtime with a `1.4.3` floor, and the desktop apps use a pinned OpenClaw Bun fork | Floors in `node-version.mjs` (`NODE_RELEASE_FLOORS`, `MINIMUM_BUN_VERSION`) |
-| Package manager | pnpm (isolated linker, `verifyDepsBeforeRun: false`, `packageImportMethod: clone-or-copy`) | `12.12.1` (`packageManager` in `package.json`) |
-| Bundler | tsdown via `scripts/tsdown-build.mts` | `0.23.1` |
-| Type checker | Native TypeScript 7 compiler driven by `scripts/run-tsgo.mts`: `tsrs` where a platform binary exists (`darwin-arm64`, `linux-arm64`, `linux-x64`), otherwise `tsgo`; `OPENCLAW_TYPECHECKER=tsgo\|tsrs` forces one | `tsrs` `0.16.0-ts7.1.0-dev.20260929`; `oxlint-tsgolint` `7.0.2004` |
+| Language | TypeScript (strict ESM, no `any`) | `7.1.0-dev.20261028.1` (devDependency in `package.json`) |
+| Runtime | Node.js (`>=24.16.0 <25 \|\| >=26.1.0`, Node 26 recommended); Bun is an explicit opt-in runtime with a `1.4.4` floor, and the desktop apps use a pinned OpenClaw Bun fork | Floors in `node-version.mjs` (`NODE_RELEASE_FLOORS`, `MINIMUM_BUN_VERSION`) |
+| Package manager | pnpm (isolated linker, `verifyDepsBeforeRun: false`, `packageImportMethod: clone-or-copy`) | `12.15.0` (`packageManager` in `package.json`) |
+| Bundler | tsdown via `scripts/tsdown-build.mts` | `0.23.4` |
+| Type checker | Native TypeScript 7 compiler driven by `scripts/run-tsgo.mts`: `tsrs` where a platform binary exists (`darwin-arm64`, `linux-arm64`, `linux-x64`), otherwise `tsgo`; `OPENCLAW_TYPECHECKER=tsgo\|tsrs` forces one | `tsrs` `0.18.0-ts7.1.0-dev.20260929`; `oxlint-tsgolint` `7.0.2005` |
 | Gateway server | Custom `node:http` server in `src/gateway` (probe routing in `gateway-http-route-contracts.ts`, handlers in `server-http-probes.ts`) | n/a |
-| Control UI | Solid 2 web components built with Vite; embeds a web terminal (`@openclaw/libterminal`, `ghostty-web`, `@novnc/novnc`) and a CodeMirror editor (`@codemirror/*`) | `solid-js` `2.0.0-rc.14`, `@solidjs/signals` `2.0.0-rc.14`, `@solidjs/web` `2.0.0-rc.14`, Vite `8.3.4` |
-| Database | SQLite via `node:sqlite` with the Kysely query builder (default), plus an experimental PostgreSQL engine via `pg` | Kysely `0.29.6`, `pg` `8.23.1` |
-| Lint and format | oxlint (config `.oxlintrc.json`, boundary guards in `config/oxlint/`) and oxfmt (config `.oxfmtrc.jsonc`) | oxlint `1.87.0`, oxfmt `0.72.0` |
-| Test runner | Vitest with per-area configs in `test/vitest/` (124 `vitest.*.config.ts` files) | `5.0.3` |
+| Control UI | Solid 2 web components built with Vite; embeds a web terminal (`@openclaw/libterminal`, `ghostty-web`, `@novnc/novnc`) and a CodeMirror editor (`@codemirror/*`) | `solid-js` `2.0.0-rc.18`, `@solidjs/signals` `2.0.0-rc.18`, `@solidjs/web` `2.0.0-rc.18`, Vite `8.3.5` |
+| Database | SQLite via `node:sqlite` with the Kysely query builder (default), plus an experimental PostgreSQL engine via `pg` | Kysely `0.29.7`, `pg` `8.23.1` |
+| Lint and format | oxlint (config `.oxlintrc.json`, boundary guards in `config/oxlint/`) and oxfmt (config `.oxfmtrc.jsonc`) | oxlint `1.89.0`, oxfmt `0.74.0` |
+| Test runner | Vitest with per-area configs in `test/vitest/` (125 `vitest.*.config.ts` files) | `5.0.5` |
 
 ### Database engines and schema versions
 
 - `package.json` `openclaw.databaseEngines` lists `["sqlite", "postgres"]`; SQLite is the default and PostgreSQL is experimental (`docs/reference/database-engines.md`).
 - `package.json` `openclaw.postgresFamilies` lists the PostgreSQL-backed families: `state`, `agent`, `workboard`, `logbook`, `team-reports`.
-- `package.json` `openclaw.schemaVersions` pins `state` at `28` and `agent` at `31`; the same constants live in `src/state/openclaw-schema-versions.ts` (`OPENCLAW_STATE_SCHEMA_VERSION`, `OPENCLAW_AGENT_SCHEMA_VERSION`).
+- `package.json` `openclaw.schemaVersions` pins `state` at `40` and `agent` at `42`; the same constants live in `src/state/openclaw-schema-versions.ts` (`OPENCLAW_STATE_SCHEMA_VERSION`, `OPENCLAW_AGENT_SCHEMA_VERSION`).
 - Canonical SQLite schemas are `src/state/openclaw-state-schema.sql` and `src/state/openclaw-agent-schema.sql`; the generated PostgreSQL tree is `src/state/postgres-schema.generated/`.
 - PostgreSQL shared-state generation requires PostgreSQL 16 or newer; see `docs/reference/database-schemas.md` and `docs/reference/database-schemas/` for migration, worker access, and recovery rules.
 
@@ -40,7 +40,7 @@ Update this file when tooling, environments, or deployment procedures change.
 | tsgo/tsrs | Type checking | `pnpm tsgo:core` (full: `pnpm tsgo:all`; production set: `pnpm tsgo:prod`) |
 | tsdown | Production build (`scripts/build-all.mts`, Docker variant `pnpm build:docker`) | `pnpm build` |
 | Vitest | Unit tests (fast lane), gateway, channel, contract, and e2e suites | `pnpm test:fast` / `pnpm test` / `pnpm test:e2e` / `pnpm test:live` |
-| tsx | Running TypeScript scripts without a build step | `node --import ./scripts/tsx.mjs scripts/<name>.mts` |
+| tsx | Running a named TypeScript script without a build step | `node --import ./scripts/tsx.mjs scripts/audit-seams.mts` |
 | Control UI dev server | Local UI development | `pnpm ui:dev` (build: `pnpm ui:build`) |
 | Local check graph | Guard preflights, typecheck, lint, and policy guards | `pnpm check` (`scripts/check.mts`), scoped: `pnpm check:changed`, lane mapping: `pnpm changed:lanes` |
 
@@ -66,16 +66,16 @@ Update this file when tooling, environments, or deployment procedures change.
 
 ## CI/CD pipelines
 
-`.github/workflows/` holds 118 workflow files.
+`.github/workflows/` holds 129 workflow files.
 `docs/ci.md` and `docs/ci/` document the job graph, scope gates, and release umbrellas.
 
 | Lane | Workflows | Trigger | What it runs |
 |---|---|---|---|
 | Core CI | `ci.yml` | Hourly at minute 23, `main` push, PR events, manual dispatch | Preflight routing manifest, then lint, tsgo typecheck, format check, Vitest suites, builds, UI tests, and platform lanes; publishes the `openclaw/ci-gate` aggregate |
-| Core CI support | `ci-test-timings-refit.yml` (daily at 09:43), `vitest-cache-warm.yml` (hourly at minute 17), `release-npm-cache-warm.yml` (daily at 08:17), `workflow-sanity.yml` (PR and `main` push), `sandbox-common-smoke.yml` (daily at 05:23, plus PR and `main` push) | Scheduled, PR, or manual | Test-timing refit, dependency cache warming, workflow schema validation, and the sandbox container smoke |
+| Core CI support | `ci-test-timings-refit.yml` (daily at 09:43), `vitest-cache-warm.yml` (hourly at minute 17), `release-npm-cache-warm.yml` (daily at 08:17), `workflow-sanity.yml` (PR and `main` push), `sandbox-common-smoke.yml` (daily at 05:23, plus PR and `main` push), `postgres-conformance-weekly.yml` (weekly) | Scheduled, PR, or manual | Test-timing refit, dependency cache warming, workflow schema validation, the sandbox container smoke, and scheduled PostgreSQL qualification |
 | Testbox and platform lanes | `ci-check-testbox.yml`, `ci-check-focused-testbox.yml`, `ci-check-routine-testbox.yml`, `ci-check-arm-testbox.yml`, `ci-check-high-memory-testbox.yml`, `ci-build-artifacts-testbox.yml`, `ci-android-focused-testbox.yml`, `windows-blacksmith-testbox.yml`, `windows-testbox-probe.yml`, `linux-app.yml` | PR or manual dispatch | Blacksmith testbox runs for focused, routine, ARM, high-memory, artifact-build, Android, and Windows lanes |
-| Release and validation | `full-release-validation.yml`, `full-release-candidate.yml`, `full-release-validation-nightly.yml`, `full-release-artifacts.yml`, `full-release-child-evidence.yml`, `openclaw-release-checks.yml`, `release-validation-skill-runner.yml`, `authorized-beta-focused-validation.yml` | Manual dispatch, `workflow_call` from the release flow, or nightly at `7 */3 * * *` | Full Release Validation over an exact SHA, candidate preparation, artifact assembly, child evidence, and the nightly pinned-main run |
-| Release publication | `openclaw-release-prepare.yml`, `openclaw-release-publish.yml`, `openclaw-release-promote.yml`, `openclaw-npm-release.yml`, `openclaw-npm-preflight.yml`, `package-acceptance.yml`, `openclaw-stable-main-closeout.yml` | Manual dispatch or `workflow_call` | Non-publishing preparation and recovery, the maintainer release button that dispatches a prepared release artifact once, gated npm publication, package acceptance for npm, ref, URL, and artifact candidates, and the stable-main closeout after a version and changelog push |
+| Release and validation | `full-release-validation.yml`, `full-release-candidate.yml`, `full-release-validation-nightly.yml`, `full-release-artifacts.yml`, `full-release-child-evidence.yml`, `openclaw-release-checks.yml`, `release-validation-skill-runner.yml`, `authorized-beta-focused-validation.yml`, `full-release-state-watcher.yml`, `openclaw-cross-os-release-checks-reusable.yml`, `openclaw-live-and-e2e-checks-reusable.yml`, `openclaw-repo-e2e-reusable.yml` | Manual dispatch, `workflow_call` from the release flow, or nightly at `7 */3 * * *` | Full Release Validation over an exact SHA, candidate preparation, artifact assembly, child evidence, the nightly pinned-main run, release state watching, reusable cross-OS and live and e2e checks, and the reusable repo e2e suite |
+| Release publication | `openclaw-release-prepare.yml`, `openclaw-release-publish.yml`, `openclaw-release-promote.yml`, `openclaw-npm-release.yml`, `openclaw-npm-preflight.yml`, `package-acceptance.yml`, `openclaw-stable-main-closeout.yml`, `full-release-receipt-recovery.yml` | Manual dispatch or `workflow_call` | Non-publishing preparation and recovery, the maintainer release button that dispatches a prepared release artifact once, gated npm publication, package acceptance for npm, ref, URL, and artifact candidates, the stable-main closeout after a version and changelog push, and full-release receipt recovery |
 | Install and update lanes | `install-smoke.yml`, `install-smoke-reusable.yml`, `update-migration.yml`, `ci-published-driver-update.yml` | Daily at `17 3 * * *`, Sunday at `17 3 * * 0`, or `workflow_call` | Installer and update smoke against the `latest` baseline, update-survivor migration scenarios, and the published-driver × candidate update cell |
 | Docker distribution | `docker-release.yml`, `docker-release-prepare.yml`, `docker-image-refresh.yml`, `docker-channel-promote.yml`, `vercel-container-registry-publish.yml` | `workflow_call` from the release flow, weekly on Mondays, or manual dispatch | Multi-arch image build and push to GHCR and Docker Hub, dated stable and extended-stable refreshes, channel promotion, and the Vercel registry mirror |
 | Code quality and security | `codeql.yml`, `codeql-critical-quality.yml`, `codeql-android-critical-security.yml`, `codeql-macos-critical-security.yml`, `opengrep-precise.yml`, `opengrep-precise-full.yml`, `security-review.yml`, `dependency-audit.yml`, `browser-mcp-contract.yml`, `real-behavior-proof.yml` | PR, `main` push, scheduled reconciliation, or manual dispatch | CodeQL security and quality profiles, precise OpenGrep rules (`security/opengrep/`), the security-review reconciler, dependency scanning, the browser MCP contract, and PR context and evidence |
@@ -83,8 +83,9 @@ Update this file when tooling, environments, or deployment procedures change.
 | Plugin and channel distribution | `plugin-npm-release.yml`, `plugin-prerelease.yml` (hourly at minute 37), `plugin-clawhub-new.yml`, `plugin-clawhub-release.yml`, `plugin-clawhub-postpublish.yml`, `plugin-clawhub-recovery.yml`, `plugin-init-scaffold-validation.yml`, `npm-telegram-beta-e2e.yml`, `npm-placeholder-bootstrap.yml` | Hourly, `main` push, or manual dispatch | Official plugin npm and ClawHub publication and recovery, the complete extension runtime inventory, plugin scaffold validation, and Telegram beta distribution proof |
 | Mobile and desktop releases | `android-release.yml`, `android-release-e2e.yml`, `android-store-release.yml`, `android-emulator-diagnostic.yml`, `ios-release-e2e.yml`, `ios-store-release.yml`, `macos-release.yml`, `windows-node-release.yml`, `linux-app-release.yml`, `linux-app-mirror.yml`, `linux-app-release-request.yml`, `mobile-store-release-notify.yml` | Weekly store schedules, `workflow_call` from release flows, or manual dispatch | Android APK and Play Store releases, iOS TestFlight and App Store releases, macOS and Windows node releases, and the Linux app release and mirror |
 | Dead-code and native analysis | `ios-periphery.yml`, `ios-periphery-comment.yml`, `macos-periphery.yml`, `shared-openclawkit-periphery.yml` | PR, `workflow_call`, or `workflow_run` | Periphery dead-code scans for the iOS app, macOS app, and the shared OpenClawKit library, with a PR comment lane |
+| Native bindings and platform probes | `apple-node-native.yml`, `iroh-ffi.yml`, `iroh-ffi-audit.yml`, `iroh-node.yml`, `aot-artifacts.yml`, `pr-tooling-darwin.yml`, `windows-link-service-diagnostic.yml` | PR, `main` push, schedule (iroh audit), or manual dispatch | Apple node native transport, iroh FFI and Node bindings plus the binding audit, the experimental macOS AOT artifact build, Darwin PR tooling, and the Windows synthetic link-service diagnostic |
 | QA and live proof | `qa-live-transports-convex.yml`, `qa-profile-evidence.yml`, `mantis-scenario.yml`, `mantis-discord-smoke.yml`, `mantis-discord-status-reactions.yml`, `mantis-discord-thread-attachment.yml`, `mantis-slack-desktop-smoke.yml`, `mantis-telegram-bot-e2e-proof.yml`, `mantis-web-ui-chat-proof.yml`, `mantis-clear-reaction.yml`, `mantis-resolve-request.yml`, `openclaw-scheduled-live-checks.yml`, `openclaw-release-telegram-qa.yml`, `live-media-runner-image.yml`, `crabbox-hydrate.yml`, `pr-crabbox-gate-publisher.yml` | Scheduled, `workflow_call`, or manual dispatch | QA Lab transport lanes, Mantis scenario and channel proof, scheduled live and e2e checks, Telegram release QA, and the Crabbox gate publisher |
-| Performance and maturity | `openclaw-performance.yml`, `maturity-scorecard.yml` | Daily at `11 5 * * *` or manual dispatch | Kova diagnostic, deep-profile, and live-OpenAI performance lanes plus a Vitest paired benchmark, and the maturity scorecard render from QA evidence |
+| Performance and maturity | `openclaw-performance.yml`, `maturity-scorecard.yml`, `ci-planner-benchmark.yml` | Daily at `11 5 * * *`, PR, or manual dispatch | Kova diagnostic, deep-profile, and live-OpenAI performance lanes plus a Vitest paired benchmark, the maturity scorecard render from QA evidence, and the CI planner benchmark |
 | Node runtime channels | `node-runtime-compat.yml`, `node-runtime-conformance.yml` | Weekly on Mondays, hourly, `main` push, and PR | Minimum-Node 26 compatibility and the hourly node runtime conformance suite |
 | FRV proof | `frv-proof-broker.yml`, `frv-proof-fixture.yml` | Manual dispatch | Targeted job rerun boundary proof for merged recovery-controller changes |
 | Repository maintenance | `stale.yml`, `labeler.yml`, `duplicate-after-merge.yml`, `dated-todo-sweep.yml`, `pr-ci-sweeper.yml`, `sticky-disk-cleanup.yml`, `auto-response.yml`, `clawsweeper-dispatch.yml`, `maintainer-command-reactions.yml` | Scheduled, issue or PR events, or manual dispatch | Stale PR handling, path labeling, duplicate detection, dated TODO sweeps, PR CI sweeping, runner disk cleanup, and maintainer automation |
@@ -130,7 +131,7 @@ All three accept `GET` and `HEAD` only and return `405` for other methods.
 - `docs/install/` documents additional targets: DigitalOcean, Hetzner, Hostinger, GCP, Azure, Railway, Northflank, Oracle Cloud, Raspberry Pi, Kubernetes, Cloudflare Containers, Upstash Box, Podman, Nix, and Ansible.
 - Scaling follows a one-cell-per-tenant model where multi-user hosting means one Gateway container per tenant, not a shared server.
 - Infrastructure as code lives at the repo root (`Dockerfile`, `docker-compose.yml`, `fly.toml`, `render.yaml`) with deployment guides in `docs/install/`.
-- The Docker image builds on `node:24-trixie` and ships Bun `1.4.3`; `docker-compose.yml` runs the Gateway plus a CLI sidecar that shares the Gateway network namespace.
+- The Docker image builds on a digest-pinned `node:24.22.1-trixie` base and ships a digest-pinned Bun `1.4.4`; `docker-compose.yml` runs the Gateway plus a CLI sidecar that shares the Gateway network namespace.
 
 ## Secrets management
 
@@ -138,7 +139,7 @@ All three accept `GET` and `HEAD` only and return `405` for other methods.
 - Real secrets are never committed, and the Gateway refuses to start when `OPENCLAW_GATEWAY_TOKEN` still holds the documented example placeholder.
 - Opt-in SecretRefs keep credentials out of plaintext config via the `env`, `file`, `exec` (1Password, Bitwarden, Vault, `pass`, sops), and `store` sources.
 - The `store` source is backed by the shared secret store in the shared state SQLite database (`state/openclaw.sqlite`); store values are unencrypted at rest and rely on the database's `0600` file and `0700` directory permissions.
-- Model-provider credentials backed by SecretRefs resolve to an opaque process-local sentinel (`oc-sent-v2.<authenticated-ciphertext>.end`) and are substituted immediately before egress; unknown sentinel-shaped values block the request.
+- Model-provider credentials backed by SecretRefs resolve to an opaque process-local sentinel in the `oc-sent-v2` family that carries authenticated ciphertext between fixed delimiters, and substitution happens immediately before egress; unknown sentinel-shaped values block the request.
 - The secret egress proxy is default off and runs in a dedicated Gateway Worker; each protected secret must name the exact HTTPS hosts where substitution is allowed.
 - The CLI lifecycle is `openclaw secrets audit --check` to find plaintext residue, then `openclaw secrets configure` and `openclaw secrets apply` to migrate, plus `openclaw secrets reload` to re-resolve refs and swap the runtime snapshot.
 - `openclaw secrets store list|set|get|rm|import` manages the team-scoped store, with `secret` entries write-only and `env` entries agent-readable.

@@ -71,3 +71,39 @@ One file listed in the unit test table no longer exists, and two coverage-matrix
 - Code says: unlisted but notable areas include the code-mode execution suite in `src/agents/code-mode-*.test.ts`.
 - Code says: unlisted but notable areas include the agent bundle MCP lifecycle in `src/agents/agent-bundle-mcp-*.test.ts`.
 - Impact: the plan under-represents the runtime by a wide margin, which matters for future coverage planning.
+
+## Sync drift: 2026-11-16
+
+The test plan artifact was not changed since the 2026-10-19 review.
+The three blocking and four advisory items in the 2026-10-19 section still apply.
+Two replacement paths cited in that review no longer exist, so the code has moved again.
+
+### Blocking: two replacement paths in the 2026-10-19 review are now stale
+
+- Classification: blocking.
+- The 2026-10-19 review cites `src/agents/sessions/agent-session-compaction.test.ts` as compaction coverage and `src/agents/sessions/session-manager-async-message.test.ts` as transcript persistence coverage.
+- Code says: neither path exists on disk.
+- Code says: current compaction coverage includes `src/agents/sessions/agent-session-compaction-boundary.test.ts`, `src/agents/sessions/agent-session-compaction-headroom.test.ts`, `src/agents/sessions/session-compaction-persistence.test.ts`, and suites under `src/agents/embedded-agent-runner/compact.*.test.ts` and `run.overflow-compaction*.test.ts`.
+- Code says: current async message coverage includes `src/agents/sessions/session-manager-async-message-custody.test.ts` and `src/agents/sessions/session-manager-async-entries.test.ts`.
+- Impact: a reader following the prior review would again land on dead paths.
+
+### Blocking: the FR-4 row still points at a deleted file
+
+- Classification: blocking.
+- The artifact still lists `src/agents/subagent-spawn.test.ts` in the unit test table and the coverage matrix.
+- Code says: that path does not exist, and the split subagent suites under `src/agents/subagents/spawn/` do exist.
+- Impact: unchanged from 2026-10-19, still wrong.
+
+### Advisory: the test inventory has grown again
+
+- Classification: advisory.
+- The 2026-10-19 review counted more than 1,000 test files under `src/agents/`.
+- Code says: there are now 2,437 `*.test.ts` files under `src/agents/`.
+- Code says: new areas include the compaction safeguard hooks in `src/agents/agent-hooks/compaction-safeguard*.test.ts` and the native compaction suite in `src/agents/cli-runner/prepare.native-compaction.test.ts`.
+- Impact: the plan's ten listed files represent an even smaller share of the runtime.
+
+### Advisory: the coverage matrix still omits five requirements
+
+- Classification: advisory.
+- Code says: FR-5, FR-6, FR-9, FR-10, and FR-11 still have no row in the coverage matrix.
+- Impact: unchanged from 2026-10-19, still incomplete.

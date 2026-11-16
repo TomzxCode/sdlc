@@ -75,3 +75,56 @@ Every finding below is classified as blocking or advisory.
 - Code says: `src/channels/plugins/message-action-names.ts:62-` is the closed, core-owned vocabulary of 56 actions, including `edit`, `delete`, `unsend`, `react`, `poll`, `pin`, `sticker`, `thread-create`, and `upload-file`.
 - Code says: `src/channels/plugins/message-action-dispatch.ts` dispatches those actions with a write-authority path, and `src/channels/plugins/message-action-discovery.ts` discovers them.
 - Impact: the requirements are satisfied. They would be more precise if they named the shared action vocabulary that replaces per-plugin behavior.
+
+## Sync drift: 2026-11-16
+
+The requirements were reverse-engineered from the code and were last reviewed on 2026-10-19.
+A fresh analysis on 2026-11-16 confirms the recorded drift is unchanged.
+The artifacts were not edited during this sync, so every finding from 2026-10-19 still stands.
+No new requirement drift was found beyond those findings.
+
+### Blocking: no requirement covers the durable inbound delivery guarantee
+
+- Classification: blocking.
+- Artifact says (lines 22-32): the functional requirements cover sending, receiving, formatting, attachments, typing, thread binding, rate limiting, editing, voice, and reactions, but state no inbound durability guarantee.
+- Artifact says (line 38): NFR-1 covers only connection auto-recovery with exponential backoff on disconnect.
+- Code says: `src/channels/message/ingress-drain.ts`, `ingress-monitor.ts`, `ingress-claim-owner.ts`, and `ingress-retry-policy.ts` implement a leased, retried, tombstoned durable ingress pipeline.
+- Code says: the queue is stored in `channel_ingress_events` at `src/state/openclaw-state-schema.sql:1254-1276`, with claim, attempt, and completion columns.
+- Impact: a reader still cannot tell that inbound messages survive a gateway restart.
+
+### Blocking: no requirement covers sender access control
+
+- Classification: blocking.
+- Artifact says (lines 36-39): the non-functional requirements cover only connection reliability and credential secrecy.
+- Code says: `src/channels/message-access/` owns admission through `allowlist.ts`, `effective-allow-from.ts`, `dm-allow-state.ts`, `identifier-authentication.ts`, `sender-gates.ts`, `decision.ts`, and `runtime-access-groups.ts`.
+- Code says: `src/pairing/`, `docs/channels/pairing.md`, and `docs/channels/access-groups.md` add pairing and named sender groups on top of the allowlist.
+- Impact: the requirements still omit who may talk to the assistant.
+
+### Blocking: FR-1 and FR-2 refer to all integrated channels without defining the set
+
+- Classification: blocking.
+- Artifact says (lines 23-24): FR-1 and FR-2 promise sending and receiving across all integrated channels.
+- Artifact says (line 62): open question 2 asks whether capability discovery is needed.
+- Code says: `src/channels/bundled-channel-ids.generated.ts` lists 28 bundled channel ids, `src/channels/plugins/types.plugin.ts` defines roughly twenty optional adapter surfaces, and `src/channels/plugins/message-action-names.ts` holds 56 core-owned actions.
+- Impact: the code effectively answers the open question, and the promised uniform channel surface does not exist.
+
+### Advisory: the 30+ platforms claim remains unanchored
+
+- Classification: advisory.
+- Artifact says (line 10): the system spans 30+ messaging platforms.
+- Code says: `extensions/` now holds 188 extension directories, 184 of them with a package.json.
+- Impact: the claim still holds, but the artifact names no source of truth for the channel set.
+
+### Advisory: FR-7 conflates debounce and durable retry
+
+- Classification: advisory.
+- Artifact says (line 29): FR-7 merges rate limiting and debouncing into one requirement.
+- Code says: `src/channels/inbound-debounce-policy.ts` owns debounce, and `src/channels/message/ingress-retry-policy.ts` owns durable retry.
+- Impact: the requirement is satisfied but imprecise.
+
+### Advisory: FR-8 through FR-10 omit the closed action vocabulary
+
+- Classification: advisory.
+- Artifact says (lines 30-32): FR-8, FR-9, and FR-10 describe editing, voice, and reactions without naming an implementation seam.
+- Code says: the 56 actions in `src/channels/plugins/message-action-names.ts` implement these behaviors through `src/channels/plugins/message-action-dispatch.ts`.
+- Impact: the requirements are satisfied but would be clearer if they named the shared vocabulary.

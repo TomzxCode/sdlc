@@ -65,3 +65,42 @@ Several large areas of the gateway have no listed coverage.
 - Code says: unlisted but notable areas include the worker placement suite in `src/gateway/server.worker-placement.*.test.ts`.
 - Code says: unlisted but notable areas include the plugin in-process dispatch suite in `src/gateway/server-plugin-in-process-dispatch.*.test.ts`.
 - Impact: the plan under-represents the gateway by a wide margin, which matters for future coverage planning.
+
+## Sync drift: 2026-11-16
+
+Fresh analysis of the owned test paths confirms the 2026-10-19 drift is still unresolved. All ten test files listed in the artifact still exist, so no file has been removed. The coverage-map findings below still hold, and the code has advanced further. Paths refer to the current checkout at version 2026.11.4.
+
+### Persisting: FR-6 and NFR-1 are still mapped to a file that tests neither shutdown nor crash recovery
+
+- Classification: blocking.
+- Artifact says (lines 18, 61, and 62): `src/gateway/gateway-stability.test.ts` covers graceful shutdown and crash recovery.
+- Code says: that file has a single `it("keeps diagnostics bounded and queues drained under synthetic gateway churn")` at line 67 and imports only diagnostic helpers. It never starts, drains, or restarts a gateway. Real coverage still lives in `src/gateway/server-shutdown.test.ts`, `src/gateway/server-shutdown.runtime.test.ts`, `src/gateway/drain-active-sessions-for-shutdown.test.ts`, and the recovery tests.
+- Impact: the mapped test still cannot fail for the requirements it claims to cover.
+
+### Persisting: FR-5 is still mapped to a file that never touches the HTTP probe routes
+
+- Classification: blocking.
+- Artifact says (line 60): `src/gateway/gateway.test.ts` covers the health check.
+- Code says: the `health` references at lines 130, 254, 371, and 921 all exercise the `health` gateway RPC method, not the HTTP probe routes. The HTTP probe contract is covered in `src/gateway/server-http.probe.test.ts`, which is present, and in the server health lifecycle tests.
+- Impact: the mapped test still cannot catch a broken `/health`, `/readyz`, or `/startupz` route.
+
+### Persisting: the coverage matrix still omits five functional requirements
+
+- Classification: advisory.
+- Artifact says (lines 55-63): FR-4, FR-7, FR-8, FR-9, and FR-10 have no row.
+- Code says: their tests still exist, including `src/gateway/server-reload-handlers.hot-reload-status.test.ts` for FR-4, `src/gateway/auth-rate-limit.test.ts` for FR-7, and `src/gateway/node-registry-pairing.test.ts` for FR-8. New: one file named in the 2026-10-19 review, `src/gateway/server-broadcast-live-text.test.ts`, is no longer present, so the equivalent FR-9 coverage should be re-located before the matrix is updated.
+- Impact: the map is still incomplete, and one previously cited file needs a fresh reference.
+
+### Persisting: the Test Infrastructure section still describes a mocked transport
+
+- Classification: advisory.
+- Artifact says (lines 49-50): mock HTTP and WebSocket servers and an in-memory SQLite database.
+- Code says: `src/gateway/server-http.ts:18-24` creates a real `node:http` or `node:https` server, `src/gateway/server-runtime-state.ts:312-313` creates a real WebSocket server, and the store is worker-backed and engine-selectable per `src/infra/database-engine/registry.ts`.
+- Impact: the infrastructure description still does not match how the gateway is exercised.
+
+### Persisting: large gateway areas remain unlisted
+
+- Classification: advisory.
+- Artifact says (lines 12-35): the plan lists four unit files, one integration file, and five live files.
+- Code says: `src/gateway/` still holds thousands of test files. Unlisted areas still include RPC method dispatch and authorization, plugin reload and recovery, event broadcast and subscription, worker placement, and plugin in-process dispatch. New: version 2026.8 session goal methods at `src/gateway/methods/core-descriptors.ts:251-252` indicate another area with no listed coverage.
+- Impact: the plan still under-represents the gateway, which matters for future coverage planning.

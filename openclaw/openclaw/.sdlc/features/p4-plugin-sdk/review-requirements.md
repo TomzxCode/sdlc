@@ -58,3 +58,33 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Code: `src/cli/plugins-cli.ts:158-168` exposes `--accept-capabilities` and `--acknowledge-install-policy-warning` gates.
 - Impact: the requirement is listed but its priority understates a shipped security boundary.
 - Classification: advisory.
+
+## Sync drift: 2026-11-16
+
+Fresh analysis confirms the discrepancies recorded on 2026-10-19 remain, since requirements.md was not edited.
+
+### Blocking: requirements.md:43 and requirements.md:49 point authors at a private package name.
+
+- `packages/plugin-sdk/package.json` still declares `@openclaw/plugin-sdk` as private with version `0.0.0-private`.
+- `docs/plugins/sdk-overview/imports.md:22` directs authors to specific subpaths such as `openclaw/plugin-sdk/channel-core`.
+- `scripts/lib/plugin-sdk-entrypoints.json` lists 389 public subpaths, up from 380 at the prior review.
+- FR-1 acceptance criteria still tell developers to import from the private name.
+
+### Blocking: NFR-2 still promises compatibility the code disclaims.
+
+- `docs/plugins/sdk-overview.md:27` states all plugin APIs are experimental and may change between releases.
+- requirements.md:60 still lists the semver policy as an open question.
+
+### Blocking: FR-2 and requirements.md:44 still limit installs to npm.
+
+- `src/plugins/install-provenance.ts` classifies install sources as git, local-archive, local-path, marketplace, npm, and npm-pack.
+- ClawHub, git, and local installs have no matching requirement.
+
+### Blocking: the SDK boundary rules are still absent from the artifact.
+
+- `src/plugin-sdk/AGENTS.md:22-38` defines narrow subpaths, cheap acyclic facades, and versioned required capabilities with a deprecation window.
+- A reader cannot use requirements.md to review SDK surface changes.
+
+### Advisory: FR-9 is still ranked May despite shipped permission gates.
+
+- `docs/plugins/plugin-permission-requests.md` and `src/security/install-policy.ts` implement shipped approval and install-policy gates.

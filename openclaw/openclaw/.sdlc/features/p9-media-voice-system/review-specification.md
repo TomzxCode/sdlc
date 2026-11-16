@@ -63,4 +63,30 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Evidence: `specification.md:63-66`, `extensions/voice-call/src/tunnel.ts`, `extensions/voice-call/src/webhook-security.ts`, `extensions/voice-call/src/webhook-replay.ts`, `src/media/ffmpeg-exec.ts`, `src/media/ffmpeg-limits.ts`
 - Artifact says: the risks are "Quality varies significantly across providers for the same prompt" and "Voice call reliability depends on provider WebSocket stability" (specification.md:65-66).
 - Code: the voice call plugin also carries a public webhook surface that needs signature verification, replay protection, and an exposure tunnel, and the media runtime shells out to ffmpeg with explicit limits.
+
+## Sync drift: 2026-11-16
+
+The specification was not changed since the 2026-10-19 review, so most recorded drift still applies. This run analyzed the tree at HEAD 0eae4c0, which is ahead of the recorded code_ref 8b78b23.
+
+### The API contracts section still omits a surface that grew to nine RPC methods
+
+- Evidence: `extensions/voice-call/src/cli-gateway-call.ts:21-29` defines nine `voicecall.*` methods, up from the six counted on 2026-10-19. The `voice_call` tool and `openclaw voicecall` CLI remain as previously recorded.
+- Artifact says: `specification.md:53` only says capabilities are agent tools and not standalone HTTP endpoints.
+- The public contract is still unnamed in the artifact, and the RPC family is now larger.
+
+### The generation request type evidence moved files
+
+- Evidence: `src/image-generation/provider-types.ts:21-41` declares `ImageGenerationRequest`. The file `src/image-generation/types.ts` no longer holds it.
+- The 2026-10-19 review cited `src/image-generation/types.ts:57-75`, so that location is stale.
+- No `MediaGenerationRequest` or `TTSRequest` type exists. The shipped types are `SpeechSynthesisRequest` at `src/tts/provider-types.ts:24-31` and `ResolvedTtsConfig` at `src/tts/tts-types.ts:16-32`.
+
+### Media understanding is now in scope but still absent from the architecture diagram
+
+- Evidence: `.sdlc/sync-meta.yml` p9 code_index lists `src/media/`, `src/media-understanding/`, `src/link-understanding/`, `packages/media-understanding-common/`, and `packages/media-core/`.
+- The diagram at `specification.md:12-30` still shows two cores and no shared media runtime, link understanding, or media core package.
+- The 2026-10-19 finding holds as a documentation gap, but its boundary framing is stale because the paths are now owned by p9.
+
+### Technical decision and risk items carry forward
+
+- No artifact text changed, so the advisory findings about the realtime call path and the omission of webhook and ffmpeg risks still hold.
 - Advisory.

@@ -95,3 +95,57 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: the plugin owns the agent-driven visual surface, with no mention of a skill.
 - What the code actually does: the plugin ships an agent-facing skill that shapes how the model is expected to use the Canvas and `show_widget` paths, including the exact route prefix and the disable switch. The import boundary is unchanged.
 - Needed change: note the skill and that it is the agent-facing contract for the Canvas surface.
+
+## Sync drift: 2026-11-16
+
+### The A2UI approach, data models, routes, and sequences are obsolete
+
+- Status: BLOCKING
+- Evidence:
+  - A2UI was retired. See `src/commands/doctor-a2ui-widgets.ts:76-207`, `docs/gateway/doctor/config-migrations.md:62-64`, and the `REMOVED_A2UI_ERROR` constant in `src/canvas/widget-tool.ts:43`.
+  - No `@a2ui/*` dependency remains, `extensions/canvas/src/a2ui-jsonl.ts` and `extensions/canvas/src/board-widget.ts` are gone, the `src/host/a2ui-app/` renderer source is gone, and no `/__openclaw__/a2ui/` route exists.
+  - The `registerBoardWidgetContentKind` Plugin SDK API was removed per `docs/gateway/doctor/config-migrations.md:62`.
+- Artifact currently says: the Overview promises versioned A2UI renderer bundles and an A2UI board-widget content kind, the Data Models define v0.9 and v0.8 A2UI messages, the API Contracts list the `/__openclaw__/a2ui/*` route, the Sequences include an A2UI dashboard widget flow and an A2UI interaction return flow, and the Technical Decisions define the A2UI dialect, renderer stack, and renderer delivery.
+- What the code actually does: Canvas hosts HTML documents in core storage and presents them inline, on a node panel, or pinned to a dashboard. There is no A2UI dialect, renderer, content kind, or route.
+- Needed change: delete the A2UI data models, route row, sequences, and technical decisions, and rewrite the Overview around the HTML document flow.
+
+### The architecture diagram does not match the current module layout
+
+- Status: BLOCKING
+- Evidence:
+  - The diagram's Plugin subgraph names `src/board-widget.ts`, `src/a2ui-jsonl.ts`, and `src/host/a2ui.ts`, none of which exist.
+  - Core `src/canvas/` now owns `documents.ts`, `serve.runtime.ts`, `constants.ts`, `config.ts`, `widget-tool.ts`, `wrap.ts`, and the `widget-script-*.ts` family.
+  - `extensions/canvas/` keeps `index.ts`, `cli-metadata.ts`, `doctor-contract-api.ts`, `setup-api.ts`, `runtime-api.ts`, and `src/` modules for tool, CLI, config, config migration, and node eligibility.
+- Artifact currently says: a single plugin block with five modules plus a Gateway route block that includes the A2UI asset route.
+- What the code actually does: Canvas is split between a core document host and a multi-entry plugin, with no A2UI route.
+- Needed change: redraw the diagram with the current core and plugin modules and remove the A2UI route node.
+
+### The API contract table is stale
+
+- Status: BLOCKING
+- Evidence:
+  - `src/canvas/constants.ts:4-6` sets the document path to `/__openclaw__/canvas/documents`, and `src/canvas/documents.ts:193` builds entry URLs as `/__openclaw__/canvas/documents/<id>/index.html`.
+  - `src/canvas/serve.runtime.ts:43-101` serves those documents for GET and HEAD only, returns 405 for other methods, and adds a per-document CSP sandbox and no-referrer header.
+  - No `CANVAS_DISABLED` string exists in `src/` or `extensions/`.
+  - `extensions/canvas/src/tool-schema.ts:9-21` still matches the canvas tool parameter table, and the CLI rows still match `extensions/canvas/src/cli.ts`.
+- Artifact currently says: the route table lists `/__openclaw__/a2ui/*` and a generic `/__openclaw__/canvas/*`, and the error code table lists `CANVAS_DISABLED`.
+- What the code actually does: only the core document subtree is served, with a stricter path and a different method and header contract, and the `CANVAS_DISABLED` code is gone from the codebase.
+- Needed change: correct the path, document GET and HEAD plus the 405 behavior, and remove `CANVAS_DISABLED`.
+
+### Risks and unknowns include retired risks
+
+- Status: ADVISORY
+- Evidence: risk 1 depends on two A2UI dialects, and risk 4 depends on renderer root resolution across source, dist, and packaged layouts. Both subsystems were removed.
+- Artifact currently says: risks 1 and 4 are open.
+- What the code actually does: neither risk can occur. Risks 2 and 3 about capability URL expiry and agent-authored HTML exposure still apply.
+- Needed change: remove risks 1 and 4 and recheck risks 2 and 3 against current code.
+
+### Previously recorded drift remains open
+
+- Status: BLOCKING
+- Evidence:
+  - The core document data model, the dual host gate, the board surface split, and the Canvas skill are unchanged from the 2026-10-19 findings.
+  - The 2026-10-19 advisory about board content-kind registration constraints is now moot because the `registerBoardWidgetContentKind` API was removed.
+- Artifact currently says: those 2026-10-19 entries remain open in this review file.
+- What the code actually does: the drift persists except where A2UI removal superseded it.
+- Needed change: apply the still-relevant 2026-10-19 needed changes.

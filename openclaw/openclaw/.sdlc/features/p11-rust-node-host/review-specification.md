@@ -52,3 +52,14 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: "JavaScript/TypeScript adapters must use `BigInt` for the feature-mask intersection because native `&` truncates to 32 bits; the negotiation fixture pins a bit above that range."
 - What the code actually does: unchanged. The fixture still pins a bit above the 32-bit range and the Rust side still enforces the 2^53-1 ceiling.
 - Needed change: none. This row records that the constraint was re-verified and still holds.
+
+## Sync drift: 2026-11-16
+
+### Previously recorded drift items remain unaddressed
+
+- The crate module layout paragraph still omits `lib.rs` from the list of node-host source modules.
+- The connect envelope table still groups commands, caps, and permissions into one row instead of separating the advertised set from the declared set that `activate()` copies.
+- Risk 1 still omits the rustdoc deny-warnings gate that the conformance workflow enforces with `RUSTDOCFLAGS`.
+- The feature-mask risk statement about JavaScript adapters still holds and needed no change.
+
+No new discrepancies were found in specification.md during this reconciliation.

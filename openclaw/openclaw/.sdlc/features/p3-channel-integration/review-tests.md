@@ -76,3 +76,65 @@ Several large areas of the channel system have no listed coverage.
 - Code says: unlisted but notable areas include the channel contract shards in `src/channels/plugins/contracts/plugin.registry-backed-shard-a.contract.test.ts` through `plugin.registry-backed-shard-h.contract.test.ts`.
 - Code says: unlisted but notable areas include the per-turn delivery suite in `src/channels/turn/run-channel-turn.*.test.ts` and `src/channels/turn/durable-delivery.test.ts`.
 - Impact: the plan under-represents the channel system by a wide margin, which matters for future coverage planning.
+
+## Sync drift: 2026-11-16
+
+The test plan was reverse-engineered from the code and was last reviewed on 2026-10-19.
+A fresh analysis on 2026-11-16 confirms the deleted test files and coverage gaps recorded then.
+It also finds that four paths cited in the 2026-10-19 review no longer exist.
+The artifacts were not edited during this sync, so every finding from 2026-10-19 still stands.
+
+### Blocking: the FR-1 row still points at a deleted test file
+
+- Classification: blocking.
+- Artifact says (lines 20 and 52): `src/channels/plugins/outbound/direct-text-media.test.ts` is listed as unit coverage and as the FR-1 coverage row.
+- Code says: that test file does not exist, while the module `src/channels/plugins/outbound/direct-text-media.ts` does.
+- Code says: outbound coverage now lives in `src/channels/plugins/contracts/outbound-payload.contract.test.ts` and `src/channels/plugins/outbound/presentation-delivery.test.ts`.
+- Impact: the reader still follows a path that returns nothing.
+
+### Blocking: the Telegram and Slack message adapter tests are still missing
+
+- Classification: blocking.
+- Artifact says (lines 28-29): `channel.message-adapter.test.ts` is listed for Telegram and Slack.
+- Code says: neither file exists.
+- Code says: Telegram coverage is now split across `extensions/telegram/src/bot-message-context.*.test.ts` and `bot-message-dispatch-*.test.ts`, and Slack coverage across `extensions/slack/src/outbound-adapter.test.ts`, `client-delivery.payload.test.ts`, `message-action-dispatch.test.ts`, and `channel.presentation.test.ts`.
+- Impact: two listed integration files still resolve to nothing.
+
+### Advisory (new): four coverage paths cited in the 2026-10-19 review no longer exist
+
+- Classification: advisory.
+- Prior review says: NFR-1 was covered in `src/channels/channel-health-monitor.test.ts` and `src/channels/channel-health-policy.test.ts`.
+- Prior review says: FR-8 and FR-10 were covered in `src/channels/plugins/message-action-dispatch.write-authority.test.ts`, and pairing-store coverage in `src/pairing/pairing-store.test.ts`.
+- Code says: none of those four files exists.
+- Code says: health and retry coverage now lives in `src/channels/message/ingress-queue-health.test.ts`, `ingress-queue-health.kernel.ts`, and `ingress-retry-policy.test.ts`.
+- Code says: the dispatch suite now has only `message-action-dispatch.registry.test.ts`, and pairing coverage is split across `pairing-store-keys.test.ts`, `pairing-store.worker.test.ts`, and `pairing-allowlist.*.test.ts` under `src/pairing/`.
+- Impact: four coverage pointers in the prior drift record are now stale and need correction before the next review.
+
+### Advisory: the coverage matrix still omits FR-8 through FR-10 and NFR-1
+
+- Classification: advisory.
+- Artifact says (lines 50-58): the matrix covers FR-1 through FR-7 only.
+- Code says: the missing requirements are covered in `message-action-dispatch.registry.test.ts`, `outbound/interactive.test.ts`, `ingress-queue-health.test.ts`, and the ingress suites.
+- Impact: the map is incomplete rather than wrong.
+
+### Advisory: the FR-3 row still points at a Control UI test
+
+- Classification: advisory.
+- Artifact says (line 54): FR-3 is covered in `markdown.test.ts` from the Control UI.
+- Code says: `ui/src/components/markdown.test.ts` covers the Control UI renderer, while channel markdown coverage lives in `extensions/discord/src/markdown.test.ts` and `extensions/feishu/src/markdown.test.ts`.
+- Impact: the parenthetical still names a file that does not cover the channel side.
+
+### Advisory: the Test Infrastructure section still omits the ingress harnesses
+
+- Classification: advisory.
+- Artifact says (lines 43-46): the section lists Vitest, mock servers, an in-memory session store, and SDK test helpers.
+- Code says: `src/channels/plugins/contracts/inbound-testkit.ts`, `outbound-payload-testkit.ts`, `src/channels/message/ingress-drain.test-helpers.ts`, and `ingress-monitor.test-harness.ts` are the harnesses a new channel test would use.
+- Impact: the description still omits the ingress harnesses.
+
+### Advisory: large channel areas remain unlisted
+
+- Classification: advisory.
+- Artifact says (lines 12-30): the plan lists six unit files and four integration files.
+- Code says: `src/channels/` holds well over 1,000 test files, and `extensions/` adds more per channel.
+- Code says: unlisted areas include `src/channels/message-access/message-access.test.ts`, `identifier-authentication.test.ts`, `src/channels/plugins/pairing-adapters.test.ts`, and the `plugin.registry-backed-shard-*.contract.test.ts` files.
+- Impact: the plan still under-represents the channel system by a wide margin.

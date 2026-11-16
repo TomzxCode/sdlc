@@ -110,3 +110,77 @@ Every finding below is classified as blocking or advisory.
 - Artifact says (lines 86-88): "WebSocket scaling with many concurrent connections needs benchmarking" and "Plugin-provided HTTP endpoints may have security implications for auth enforcement".
 - Code says: `src/gateway/server/event-loop-health.ts`, `src/gateway/server/health-state.ts`, and `src/gateway/server/readiness.ts` now cover event-loop and readiness health, and `src/gateway/server/plugins-http/route-auth.ts` plus `src/gateway/security-path.ts` now own plugin route auth.
 - Impact: the risks have been addressed in code, so the list no longer points at live uncertainty.
+
+## Sync drift: 2026-11-16
+
+Fresh analysis of the owned source paths confirms the 2026-10-19 drift is still unresolved. The artifact was not edited since that review, so every earlier finding still stands. The code has advanced further, which adds the items marked new below. Line numbers refer to the current checkout at version 2026.11.4.
+
+### Persisting: the Gateway is still not built on Hono
+
+- Classification: blocking.
+- Artifact says (lines 10, 15, and 80): the Gateway is built on Hono with a router and middleware.
+- Code says: `src/gateway/server-http.ts:1-2` imports `createServer` from `node:http` and `node:https`. `src/gateway/server-runtime-state.ts:312-313` creates a real WebSocket server with `new NpmWebSocketServer({ noServer: true })`. No file under `src/` imports `hono` and `package.json` has no `hono` dependency.
+- Impact: every architecture, sequence, and technical-decision statement naming Hono is still wrong.
+
+### Persisting: the Session data model still does not match the session store
+
+- Classification: blocking.
+- Artifact says (lines 27-36): a flat `Session` table keyed by `sessionId` with `metadata` and `state` columns.
+- Code says: `src/state/openclaw-agent-schema.sql:16-26` defines `session_nodes` keyed by `session_key`, with a `status` column constrained to `running|done|failed|killed|timeout` and no `metadata` or free-form `state` column. Related tables include `session_entry_snapshots`, `session_participants`, `session_key_contract`, `session_windows`, `conversations`, `session_conversations`, `session_members`, and `transcript_events`.
+- Impact: a reader would still look for a table and columns that do not exist.
+
+### Persisting: storage is not SQLite-only and the Out of Scope list is still contradicted
+
+- Classification: blocking.
+- Artifact says (lines 10, 82, and 94): session state is SQLite via Kysely, and PostgreSQL is out of scope.
+- Code says: `package.json:7-13` sets `databaseEngines` to `["sqlite", "postgres"]` with five `postgresFamilies`. `src/infra/database-engine/registry.ts` marks those families as PostgreSQL-capable and resolves per-family overrides.
+- Impact: the artifact still rules out a capability the product ships today.
+
+### Persisting: the `POST /api/sessions` REST contract does not exist
+
+- Classification: blocking.
+- Artifact says (lines 40-54 and 69-74): a REST route that creates a session and returns `sessionId` plus `token`.
+- Code says: no `/api/sessions` route exists. Session creation is the `sessions.create` RPC method at `src/gateway/methods/core-descriptors.ts:253`, reached over the WebSocket JSON-RPC protocol in `docs/gateway/protocol.md`. HTTP routes are limited to probes, Control UI routes, plugin HTTP routes, and node watch routes per `src/gateway/gateway-http-route-contracts.ts`.
+- Impact: a reader would still build against a nonexistent endpoint and expect a token the RPC path does not return.
+
+### Persisting: the `GET /health` response contract is still wrong and incomplete
+
+- Classification: blocking.
+- Artifact says (lines 56-63): a single `GET /health` returning `status` of `ok` or `degraded` plus `uptime` in seconds.
+- Code says: `src/gateway/gateway-http-route-contracts.ts:1-8` defines six routes across three classes. `src/gateway/server-http-probes.ts:155` returns `{"ok":true,"status":"live"}` for the live class with no `uptime` field. New: the ready and startup classes now return richer bodies, including `ready`, `recentCrashes`, `ok`, `status`, and `uptimeMs`, at `src/gateway/server-http-probes.ts:115-124`.
+- Impact: an operator or supervisor reading the artifact would still monitor the wrong route and parse the wrong body.
+
+### Persisting: the auth model is still understated
+
+- Classification: blocking.
+- Artifact says (lines 10 and 81): bearer tokens, device pairing, and bootstrap tokens only.
+- Code says: `src/gateway/auth.ts:55-61` lists eight methods including `password`, `tailscale`, `trusted-proxy`, and `remote-ingress`. New: `src/gateway/auth.ts:63-66` adds a `delegation` field and an OpenClaw ID tunnel principal for trusted-proxy results.
+- Impact: a reader would still mis-plan a deployment behind a reverse proxy.
+
+### Persisting: plugin dispatch is still a scoped, entitlement-gated registry, not a middleware pipeline
+
+- Classification: blocking.
+- Artifact says (line 10): a plugin-based architecture for method handlers and middleware.
+- Code says: `src/gateway/methods/core-descriptors.ts` holds the canonical core method policy table. New: that table now uses array descriptors and includes methods introduced in version 2026.8 such as `sessions.goal.update` at lines 251-252. `src/gateway/methods/registry.ts`, `src/gateway/methods/descriptor.ts`, and `src/gateway/server-methods/request-authorization.ts` enforce scope, lifetime, and access axes with pre-dispatch authorization.
+- Impact: the artifact still describes a middleware chain that does not exist and omits the scope and entitlement model.
+
+### Persisting: the config reload decision still names one of four modes
+
+- Classification: advisory.
+- Artifact says (line 83): file watcher plus hot-reload.
+- Code says: `src/config/types.gateway.ts:92` defines `GatewayReloadMode` as `off`, `restart`, `hot`, or `hybrid`.
+- Impact: wording and granularity only. The requirement that reload exists still holds.
+
+### Persisting: the architecture diagram still omits probes, the method registry, and session projections
+
+- Classification: advisory.
+- Artifact says (lines 14-23): the diagram shows a Hono router, auth middleware, and two method branches over a SQLite store.
+- Code says: the probe routes, the descriptor-based method registry, and the session-row projection tables are all absent from the diagram.
+- Impact: the diagram remains a simplification once the Hono naming is corrected.
+
+### Persisting: the Risks and Unknowns list is still out of date
+
+- Classification: advisory.
+- Artifact says (lines 86-88): WebSocket scaling and plugin HTTP auth are open risks.
+- Code says: event-loop and readiness health plus plugin route auth now exist in the paths cited in the 2026-10-19 review.
+- Impact: the list still does not point at live uncertainty.

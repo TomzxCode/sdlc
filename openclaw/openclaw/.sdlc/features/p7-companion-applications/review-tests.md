@@ -50,3 +50,22 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact says: no desktop client scenario driver appears in the plan (tests.md:8-45).
 - Code: the Tauri client has Python drivers that exercise real X11 pointer input, native title bar geometry, Gateway switching, first-run onboarding, inline browser behavior, Quick Chat, and desktop sharing, plus unit tests for the reporting and packaged runtime smoke paths.
 - Advisory: a new client surface with substantial test coverage is invisible in the plan.
+
+## Sync drift: 2026-11-16
+
+The 2026-10-19 drift remains present. The listed `test/scripts/ios-pull-gateway-log.test.ts` is still absent, the native table is still Android-only, the scope still excludes macOS app testing, and the coverage matrix still asserts proof that does not exist.
+
+### Native suites grew since 2026-10-19 (advisory)
+
+- Evidence: current file counts are iOS `Tests` 145, `UITests` 20, `WatchTests` 5, macOS `OpenClawIPCTests` 328, shared `OpenClawKit/Tests` 244, macos-mlx-tts `Tests` 2, Android app `src/test` 300, and Linux `src-tauri/tests` 7. The 2026-10-19 review recorded 118, 11, 4, 294, 201, 1, 278, and 5 respectively.
+- Artifact says: the native platform table lists only two Android rows (tests.md:31-34).
+- Code: all twelve native suite locations have grown, so the plan understates coverage further.
+- Advisory.
+
+### New script and gateway test lanes are undocumented (advisory)
+
+- Evidence: `test/scripts/ios-behavior-grade.test.ts`, `ios-resource-timeline.test.ts`, `ios-simulator-headroom.test.ts`, `ios-test-results.test.ts`, `ios-release-e2e-diagnostics.test.ts`, `android-release-e2e-diagnostics.test.ts`, `macos-mlx-native.test.ts`, `macos-mlx-settings.test.ts`, `mac-elevation-artifact.test.ts`, `mac-elevation-host.test.ts`, `watch-pr-ci-conditional.test.ts`, `watch-pr-ci-dependencies.test.ts`, `package-mac-dist.test.ts`, `upgrade-survivor-watchos-direct-node.test.ts`.
+- Also `src/gateway/server.browser-pair.test.ts`, `src/gateway/server-http.device-pairing-join.test.ts`, `src/infra/device-pairing-join-code.worker.test.ts`, `src/infra/device-pairing-browser-code.worker.test.ts`, `extensions/device-pair/index.test.ts`, `extensions/device-pair/notify.test.ts`, `extensions/device-pair/notify-cas.test.ts`.
+- Artifact says: the CI and script test table lists 11 files plus a helper glob (tests.md:14-27).
+- Code: new browser-pairing, join-code, and notify test lanes exist with no counterpart in the plan.
+- Advisory: these are release and behavior lanes added since 2026-10-19.

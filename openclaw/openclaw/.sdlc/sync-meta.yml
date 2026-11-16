@@ -1,10 +1,10 @@
 # SDLC Sync Metadata
 # Tracks which version of agents was used for the last sync.
 # Used by sync-sdlc to detect process/template changes and migrate existing files.
-agents_ref: fdf8a2e80abd1cf213b575096ca452ae26fe9095
+agents_ref: 31f0fc756d0bbeddde013a51985880c24139f7a8
 agents_remote: https://github.com/tomzx/agents
-last_synced: "2026-10-19"
-code_ref: 8b78b230a1c109fe6456964e59cb0eeefe63b7e5
+last_synced: "2026-11-16"
+code_ref: 0eae4c0423cdf46fc94059ce1435ec96a0c37d15
 code_index:
   "p1-gateway-server":
     - src/gateway/
@@ -122,7 +122,7 @@ code_index:
     - src/canvas/
     - extensions/canvas/
     - ui/src/app/gateway-canvas-surface.ts
-    - ui/src/components/canvas-widget-view.ts
+    - ui/src/components/canvas-widget-view.tsx
     - ui/src/lib/chat/tool-display.ts
     - docs/platforms/mac/canvas.md
     - docs/tools/show-widget.md
@@ -159,6 +159,7 @@ code_index:
     - src/skills/
     - skills/
     - custodian-skills/
+    - extensions/skill-workshop/
   "p19-boards-projects-and-session-cards":
     - src/boards/
     - src/projects/

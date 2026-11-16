@@ -54,3 +54,23 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: one line describing the Rust test invocation.
 - What the code actually does: the conformance workflow enforces four separate Rust gates, including a `--locked` dependency lock check, a formatting check, a clippy pedantic deny-warnings gate, and a rustdoc deny-warnings gate. A reader of the plan would not know that formatting, clippy, and doc warnings are build-blocking.
 - Needed change: enumerate the four gates and the toolchain version.
+
+## Sync drift: 2026-11-16
+
+### One documented integration test was split into two tests
+
+- Status: BLOCKING
+- Evidence:
+  - The artifact's TC-I-session-10 row names `native_signed_connect_preserves_product_fields_and_rejects_invalid_node_manifests` in `crates/openclaw-node-host/tests/node_session.rs`.
+  - That combined identifier does not exist anywhere in the repository.
+  - The suite now holds 11 tests, and lines 1159 and 1213 of that file define `native_signed_connect_preserves_product_fields` and `native_signed_connect_rejects_invalid_node_manifests` as separate tests.
+- Artifact currently says: TC-I-session-10 is one test covering both product-field preservation and invalid-manifest rejection, and the session suite has 10 tests.
+- What the code actually does: those two checks are separate tests, so the plan undercounts the session suite by one and names a test that cannot be found.
+- Needed change: split TC-I-session-10 into two rows for the two test names and raise the session suite count from 10 to 11.
+
+### Previously recorded drift items remain unaddressed
+
+- The representative case `shared_authority_handoff_contract_matches_openclaw` is still absent from the runtime suite.
+- The per-file counts are still off by one for protocol at 17, runtime at 16, and node at 6, giving 98 unit cases instead of 99.
+- The two TypeScript contract suites and their conformance job are still not named in the test infrastructure section.
+- The infrastructure line still lists only `cargo test` and omits the fmt, clippy, and rustdoc gates on Rust 1.99.0.
