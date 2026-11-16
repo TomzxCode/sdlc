@@ -12,12 +12,13 @@
 ## Directory Structure
 
 The project organizes code into purpose-driven directories at the repo root:
-- Root-level Python files for core entry points and facades (run_agent.py, cli.py, model_tools.py, toolsets.py, hermes_constants.py, hermes_state.py, hermes_logging.py, hermes_time.py, batch_runner.py, utils.py)
+- Root-level Python files for core entry points and facades (run_agent.py, cli.py, model_tools.py, toolsets.py, hermes_constants.py, hermes_state.py, hermes_logging.py, hermes_time.py, batch_runner.py)
 - `agent/` — Agent internals: provider adapters, memory manager, context compressor, prompt builder, curator
 - `hermes_cli/` — CLI subsystem: commands, config, plugins, skins, setup, profile management, web server, curses UI
-- `tools/` — Tool implementations, auto-discovered via tools/registry.py. Subdirectory `environments/` for terminal backends.
+- `tools/` — Tool implementations, auto-discovered via tools/registry.py. Subdirectories `environments/` for terminal backends and `connectors/` for provider connectors.
 - `gateway/` — Messaging gateway: run.py, session.py, plus platforms/ for the base adapter and support modules; canonical per-platform adapters migrated to plugins/platforms/ (21 adapters, back-compat re-exports retained)
 - `plugins/` — Plugin system: memory/ (byterover, retaindb providers), model-providers/ (42 backends), platforms/ (21 adapters), kanban/, image_gen/, context_engine/, observability/, plus individual plugins
+- `plugin-catalog/` — YAML manifests for the plugin catalog
 - `cron/` — Scheduler: jobs.py, scheduler.py, lifecycle_guard.py
 - `skills/` — Built-in skills organized by category directory (13 categories)
 - `optional-skills/` — Heavier/niche skills shipped but inactive by default (23 categories)
@@ -26,11 +27,16 @@ The project organizes code into purpose-driven directories at the repo root:
 - `apps/desktop/` — Electron desktop app
 - `apps/shared/` — Shared JSON-RPC client package
 - `acp_adapter/` — ACP server for IDE integration
+- `hermes_platform/` — Host facts and executable resolvers
 - `web/` — Dashboard SPA (xterm.js + PTY bridge)
 - `website/` — Docusaurus documentation site
 - `tests/` — Pytest test suite mirroring source structure
+- `evals/` — Live-model A/B evaluation and probe harnesses
 - `scripts/` — Development and release scripts
+- `pm/` — Package management: pinned environments, extras, and dependency resolution
 - `providers/` — Legacy provider discovery (backward-compat)
+- `hermes_agent/` — Compatibility layer for relocated modules
+- `utils/` — Shared utility helpers
 - `optional-mcps/` — Optional MCP server catalogs
 
 ## Coding Standards
@@ -47,7 +53,7 @@ The project organizes code into purpose-driven directories at the repo root:
 - **No `\033[K`** (ANSI erase-to-EOL) in spinner/display code — use space-padding instead
 - **Do not write change-detector tests** — tests should assert invariants (how data must relate), not freeze current values (model lists, version numbers, enumeration counts)
 - **Run tests via `scripts/run_tests.sh`, never bare `pytest`** (it enforces CI parity: credential vars unset, `TZ=UTC`, temp `HERMES_HOME`, per-file subprocess isolation)
-- **Pin dependencies exactly** (`==X.Y.Z` plus regenerated `uv.lock`): version ranges are rejected, so every version change arrives as an intentional reviewed pin bump
+- **Dependencies carry upper bounds** (`>=floor,<next_major`) with most core dependencies exact-pinned (`==X.Y.Z`); after editing `pyproject.toml` run `hermes pm lock` and commit `uv.lock`, and never mutate a Hermes environment with raw pip/uv
 - **Former god files are facades plus `<stem>_<topic>.py` siblings** (e.g. `hermes_state*.py`, `gateway/run_*.py`): new behavior goes in a topical sibling, never appended to a facade
 - **Plugins must NOT modify core files** — expand the generic plugin surface (new hook, new ctx method) instead
 

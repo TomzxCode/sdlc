@@ -3,7 +3,7 @@
 ## Purpose
 
 Hermes Agent is a persistent, self-improving personal AI agent built by Nous Research.
-It runs the same agent core across five surfaces (CLI, TUI, messaging gateway, Electron desktop, and web dashboard) while maintaining memory, skills, and a deepening user model across sessions.
+It runs the same agent core across six surfaces (CLI, TUI, messaging gateway, Electron desktop, web dashboard, and ACP editors) while maintaining memory, skills, and a deepening user model across sessions.
 The agent autonomously creates and improves skills from its own experience, persists knowledge across conversations, and is reachable from wherever the user is — Telegram, Discord, Slack, Signal, WhatsApp, email, Matrix, Mattermost, Google Chat, IRC, Teams, Line, and a dozen more platforms — all from a single install that can run on infrastructure as cheap as a $5 VPS or serverless backends that hibernate when idle.
 
 ## Key Stakeholders
@@ -19,7 +19,7 @@ The agent autonomously creates and improves skills from its own experience, pers
 ## Scope
 
 **In scope:**
-- Multi-platform personal AI agent (CLI, messaging, TUI, desktop, web dashboard)
+- Multi-platform personal AI agent (CLI, messaging, TUI, desktop, web dashboard, ACP editors)
 - Persistent conversation store with full-text search and cross-session recall
 - Autonomous skill creation and self-improvement from experience
 - Real terminal and browser automation with multiple backend options
