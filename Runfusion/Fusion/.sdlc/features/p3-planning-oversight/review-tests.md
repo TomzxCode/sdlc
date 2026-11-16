@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -19,3 +19,12 @@ reviewed_at: 2026-10-19
 - **A significant new test area has no coverage in the plan at all: the session advisor.** `packages/engine/src/__tests__/overseer-advise-tool.test.ts`, `packages/engine/src/__tests__/overseer-advisor-runtime.test.ts`, `packages/engine/src/__tests__/overseer-advisor-service.test.ts`, `packages/engine/src/__tests__/overseer-session-delta.test.ts` and `packages/engine/src/__tests__/overseer-watchdog.test.ts` test a shipped oversight tier that no test case and no coverage matrix row mentions.
 
 - **A second significant new test area has no coverage in the plan: the no-op finalize veto and the spec lock.** `packages/engine/src/__tests__/overseer-noop-finalize-veto.test.ts`, `packages/core/src/__tests__/planner/spec-lock.test.ts`, `packages/core/src/__tests__/plan-evidence-next-version.test.ts`, `packages/engine/src/__tests__/spec-staleness.test.ts` and `packages/engine/src/__tests__/spec-drift-reconciler.test.ts` cover behaviors that no test case describes. The plan approval surface is also untested in the plan, with `packages/core/src/__tests__/plan-approval.test.ts`, `packages/engine/src/__tests__/plan-approval-hold-invariant.test.ts` and `packages/engine/src/__tests__/triage-per-task-plan-approval.test.ts` outside the listed files.
+
+## Sync drift: 2026-11-16
+
+`tests.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- The key test file `register-planning-subtask-routes.parent-close.test.ts` still does not exist.
+- TC-1 still has no active test; the confirmation lifecycle suite remains `describe.skip`.
+- The Coverage Matrix still omits FR-7, NFR-2, and NFR-3; the session-advisor, no-op finalize veto, spec-lock, plan-approval, and dashboard component suites remain unplanned.
+- The full test-file and coverage inventory is in the 2026-10-19 section above.

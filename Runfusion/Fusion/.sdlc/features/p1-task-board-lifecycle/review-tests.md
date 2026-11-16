@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -35,3 +35,12 @@ Significant test areas the plan does not cover:
 - Task document revisions and archived publications are absent: `packages/core/src/__tests__/postgres/artifacts-documents-evals.pg.test.ts` covers the `task_documents` and `artifacts` tables, and no plan entry names it.
 - Recommendations and steering are absent: `packages/core/src/__tests__/task-recommendations-list.test.ts` and `packages/dashboard/src/routes/__tests__/task-recommendation-routes.test.ts`.
 - The hard-cancel move contract has no plan entry, although the specification's Sequences section names it: `packages/core/src/__tests__/postgres/task-move-hard-cancel-ordering.pg.test.ts` and `packages/core/src/__tests__/task-move-disposer.test.ts`.
+
+## Sync drift: 2026-11-16
+
+`tests.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- Key test files `task-creation` and `task-document-concurrency` under `packages/core/src/__tests__/` still do not exist.
+- TC-9 "Board move across columns" still asserts a multi-task move the product does not implement.
+- The Coverage Matrix still omits FR-5, FR-8, FR-9, NFR-2, and NFR-4.
+- The concrete test-file gaps (move-bypassguards / task-not-found-404 route suites, board/column component suites, and the TC-3/TC-5/TC-11 coverage items) remain; see the 2026-10-19 section above for the full inventory.

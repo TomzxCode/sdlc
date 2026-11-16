@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -40,3 +40,12 @@ Technical Decisions:
 - The "Shared backend" row states the outcome but omits the constraint that decides whether the topology is possible. Embedded PostgreSQL is per-machine only, so a shared board needs an external `DATABASE_URL` (`docs/shared-mesh-protocol.md`, `docs/multi-project.md:24` to `:29`).
 - The decision table omits the port convention for managed node containers. They default to `4041` because `4040` is reserved for the production dashboard (`packages/core/src/mesh/mesh-config-generator.ts:13`, `docs/architecture.md:570`).
 - The decision table omits the node auth rule that the mesh routes enforce, described under API Contracts above.
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the drift recorded on 2026-10-19 still holds:
+
+- The architecture diagram still has no CLI layer and omits the cloud-link control plane and managed Docker host; `fn cloud` and `fn desktop` are registered in `packages/cli/src/bin.ts`.
+- Data models still wrong: the node `url` column is nullable text and `status` is text defaulting to `offline` (`packages/core/src/postgres/schema/central.ts:59-61`); there is no `claims/leases` json column (claims live in `task_claims`).
+- API contracts still document only `POST /api/projects`; the real route requires `name` and absolute `path` and answers 201, and the project/node/mesh/discovery/Docker registrars expose far more endpoints.
+- The node onboarding sequence still does not match `fn node connect` (register + health check in one step) and omits the `/api/mesh/sync` membership exchange and distributed task-id allocation routes.

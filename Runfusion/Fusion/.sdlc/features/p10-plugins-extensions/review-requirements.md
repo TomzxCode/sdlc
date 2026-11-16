@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -47,3 +47,28 @@ reviewed_at: 2026-10-19
 - NFR-2 says plugin interop drift is checked at lint time. The check is a separate script and a separate CI step. `package.json:48` defines lint as `eslint .` and `package.json:30` defines the interop check as its own script, and `.github/workflows/pr-checks.yml:89-90` runs it as a named step inside the job named Lint. A local `pnpm lint` does not run it.
 
 - Open question 1 is partly answered but the answer is inconsistent. The code now holds four plugin inventories. `packages/core/src/plugins/bundled-plugin-install.ts:32` lists seventeen bundled ids, `packages/dashboard/src/routes/plugin-bundled-runtimes.ts:39` lists a different set of sixteen, `packages/cli/src/commands/plugin.ts:29` lists seven builtins, and `packages/dashboard/src/registry-manifest.json` lists sixteen registry entries, three of which (`fusion-plugin-slack-bridge`, `fusion-plugin-github-insights`, `fusion-plugin-local-llm-runtime`) have no package under `plugins/`. The question should be replaced by the inventory the product actually ships.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. Every 2026-10-19 discrepancy is still present; `requirements.md` continues to omit or misstate shipped behavior.
+
+### Still missing from requirements
+
+- Plugin workflow traits and workflow extensions: registration in `plugin-trait-adapter.ts` and `plugin-workflow-extension-adapter.ts`, sync in `plugin-runner.ts`, registry in `workflow-extension-registry.ts`, and move-policy consumption in `task-store/project-store-ops.ts`. FR-3 names only manifest, SDK, routes, tools, UI and runtime contributions.
+- Plugin step parsers (`plugin-parser-adapter.ts` `registerPluginStepParsers`, `plugin-runner.ts` `syncPluginStepParsers`).
+- Plugin gate verdict contract (`plugin-gate-verdict.ts` `resolveColumnPluginGates` plus the in-lock recheck in `task-store/moves.ts`).
+- Opt-in AI security scan on load (`plugin-loader.ts` `aiScanOnLoad` gate, `plugin-security-scan.ts`, CLI refusal in `commands/plugin.ts`). NFR-1 is silent on scanning.
+- Plugin setup hooks (`plugin-loader.ts`, `register-plugins-automation.ts` setup-status/install/uninstall routes, CLI `fn plugin setup`).
+- Plugin activation analytics (`plugin-activation-analytics.ts`, `plugin_activations` table).
+- Plugin-owned PostgreSQL tables (`postgres/schema/plugin.ts`, `postgres/schema-applier.ts` isolation refusal).
+- Plugin prompt, MCP server, workflow step/template and CLI provider contributions (`plugin-prompt-condition.ts`, `plugin-mcp-servers.ts`, `plugin-runner.ts` getters).
+- Bundled plugin auto-install and version refresh (`bundled-plugin-install.ts` `BUNDLED_PLUGIN_IDS`, still 17 ids) and the curated registry catalog (`registry-manifest.json`, `plugin-routes.ts`).
+- Plugin authoring CLI (`plugin-scaffold.ts`, `plugin-dev.ts`, `plugin-publish.ts`). FR-6 covers only management.
+
+### Still stale
+
+- NFR-3: MCP discovery is keyed on normalized project root plus enabled `id:updatedAt` in `plugin-mcp-servers.ts`, not per plugin.
+- NFR-1: bundled plugins register and enable with no user action (`bundled-plugin-install.ts`, `async-plugin-store.ts`).
+- FR-1: no user-facing update action exists (reload and rescan only).
+- NFR-2: `pnpm lint` runs `eslint .`; the interop drift check is a separate script.
+- Open question 1: four divergent plugin inventories remain (bundled 17, bundled-runtimes 16, CLI builtins 7, registry 16).

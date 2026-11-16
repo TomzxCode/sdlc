@@ -12,33 +12,38 @@ A plugin layer (`@fusion/plugin-sdk` and `plugins/*`) extends dashboard routes, 
 Two npm packages are published: `@runfusion/fusion` (the CLI plus a `pi` extension) and `runfusion.ai` (a thin alias that boots the same CLI).
 The `@fusion/*` packages are not published on their own, they are bundled into the published CLI.
 
-```
-┌───────────────┬──────────────────────────────────────────────────────────────┐
-│  Surfaces                                                                    │
-│  Dashboard SPA (React)   CLI/TUI (fn)   Desktop (Electron)   Mobile          │
-│  ──────────────────────────────────────────────────────────────────────────  │
-│  @runfusion/fusion   (fn commands, terminal TUI, serve/daemon, pi extension) │
-│  @fusion/dashboard   (web UI + Express API, domain routes, /api/events)      │
-│  @fusion/plugin-sdk + plugins/*   (dashboard routes, engine runtimes, tools) │
-└───────────────┬──────────────────────────────────────────────────────────────┘
-                │  static imports / REST + SSE event bus
-┌───────────────▼──────────────────────────────────────────────────────────────┐
-│  @fusion/core   (domain model + task store: task-store/, workflows/,         │
-│                 planner/, agents/, missions/, goals/, research/, secrets/,   │
-│                 settings, mesh/, plugins/)                                   │
-└───────────────┬──────────────────────────────────────────────────────────────┘
-                │  Domain API (no raw DB access outside core)
-┌───────────────▼──────────────────────────────────────────────────────────────┐
-│  @fusion/engine   (scheduler, triage, executor, merger, review,              │
-│                    workflow-graph execution, self-healing, sandbox,          │
-│                    agent heartbeat)                                          │
-└───────────────┘
-                │
-      ┌────────▼────────┐      ┌─────────────────────┐
-      │ PostgreSQL      │      │ Git worktrees /     │
-      │ (embedded/runtime│      │ remote PRs (GitHub  │
-      │  storage)        │      │  / GitLab)          │
-      └─────────────────┘      └─────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Surfaces["Surfaces"]
+        SPA["Dashboard SPA (React)"]
+        CLI["CLI / TUI (fn)"]
+        Desktop["Desktop shell (Electron)"]
+        Mobile["Mobile shell (Capacitor)"]
+    end
+
+    subgraph Entry["Entry packages"]
+        Fusion["@runfusion/fusion<br/>fn commands, TUI, serve / daemon, pi extension"]
+        Dashboard["@fusion/dashboard<br/>React UI + Express API, domain routes, /api/events SSE"]
+        Plugin["@fusion/plugin-sdk + plugins/*<br/>dashboard routes, engine runtimes, tools"]
+    end
+
+    Core["@fusion/core<br/>domain model + task store: tasks, workflows, planner, agents,<br/>missions, goals, research, secrets, settings, mesh, plugins"]
+    Engine["@fusion/engine<br/>scheduler, triage, executor, merger, workflow review,<br/>workflow-graph, self-healing, sandbox, agent heartbeat"]
+
+    PG[("PostgreSQL<br/>project / central / archive schemas")]
+    Git["Git worktrees /<br/>remote PRs (GitHub / GitLab)"]
+
+    SPA --> Dashboard
+    Desktop --> Dashboard
+    Mobile --> Dashboard
+    CLI --> Fusion
+    Fusion --> Core
+    Dashboard --> Core
+    Plugin --> Dashboard
+    Plugin --> Engine
+    Engine --> Core
+    Core --> PG
+    Engine --> Git
 ```
 
 ## Entity Relationship Diagram
@@ -50,6 +55,116 @@ Column types, constraints, and indexes live in `schema.dbml`.
 
 ```mermaid
 erDiagram
+    projects {
+        text id PK
+        text name
+        text path
+        text node_id FK
+        text status
+        text isolation_mode
+    }
+    nodes {
+        text id PK
+        text name
+        text type
+        text url
+        integer max_concurrent
+        text status
+    }
+    tasks {
+        text project_id PK
+        text id PK
+        text title
+        text column
+        text status
+        text branch
+        text worktree
+        text assigned_agent_id FK
+        text mission_id FK
+        text created_at
+    }
+    workflows {
+        text project_id PK
+        text id PK
+        text name
+        jsonb ir
+        text kind
+    }
+    workflow_work_items {
+        text project_id PK
+        text id PK
+        text run_id
+        text task_id FK
+        text node_id
+        text state
+    }
+    agents {
+        text project_id PK
+        text id PK
+        text name
+        text role
+        text state
+        text task_id FK
+    }
+    missions {
+        text project_id PK
+        text id PK
+        text title
+        text status
+        text base_branch
+        text branch_strategy
+    }
+    goals {
+        text project_id PK
+        text id PK
+        text title
+        text status
+    }
+    chat_sessions {
+        text id PK
+        text agent_id FK
+        text project_id
+        text title
+        text status
+    }
+    pull_requests {
+        text project_id PK
+        text id PK
+        text source_type
+        text repo
+        text head_branch
+        text state
+        integer pr_number
+    }
+    secrets {
+        text project_id PK
+        text id PK
+        text key
+        bytea value_ciphertext
+        text access_policy
+    }
+    run_audit_events {
+        text project_id
+        text id
+        text task_id FK
+        text run_id
+        text domain
+        text mutation_type
+        text timestamp
+    }
+    eval_runs {
+        text project_id PK
+        text id PK
+        text status
+        text trigger
+        text scope
+    }
+    research_runs {
+        text id PK
+        text query
+        text status
+        text project_id
+    }
     projects ||--o{ tasks : "scopes"
     projects ||--o{ automations : "schedules"
     projects ||--o{ secrets : "holds"

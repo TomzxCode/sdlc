@@ -87,6 +87,7 @@ Fusion becomes the neutral orchestration layer for software delivery: a software
 | FEAT-p10 (Plugins & extensions) | Ecosystem & adaptability | Plugin SDK, pi extensions |
 | FEAT-p1 (Task board & lifecycle) | Outcome signal | The board that tracks completion |
 | FEAT-p5 (Automated review, merge & PR) | Outcome signal | Shipment of code via Fusion |
+| Agent companies (companies.sh import) | Ecosystem & adaptability | Shipped: import 440+ agents across 16 companies through the dashboard import flow and the companies.sh catalog |
 
 ## Review Cadence
 
@@ -97,4 +98,3 @@ Fusion becomes the neutral orchestration layer for software delivery: a software
 ## Open Questions
 
 1. KPI targets and measurement sources are not all instrumented; this file should be reconciled against actual dashboard metrics during the next goals review.
-2. "Agent companies" (from STRATEGY.md) is not yet implemented in the codebase; confirm whether it is a roadmap concept or a shipped feature.

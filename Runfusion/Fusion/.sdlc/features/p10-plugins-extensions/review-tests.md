@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -35,3 +35,13 @@ reviewed_at: 2026-10-19
 - The pi extension discovery surface has no test area. `packages/core/src/__tests__/pi-extensions.test.ts`, `packages/core/src/__tests__/pi-extensions-format.test.ts` and `packages/core/src/__tests__/pi-extensions-write-path-durability.test.ts` cover the discovery, the source formatting and the durable write path for `packages/core/src/plugins/pi-extensions.ts`. FR-4 names the pi extensions but the plan names no discovery test.
 
 - TC-3 names only the engine isolation test, while the same contract has two more tests. `packages/core/src/__tests__/plugin-mcp-servers-discovery-isolation.test.ts:51-105` covers the core provider and `packages/dashboard/src/__tests__/context-plugin-mcp-discovery-isolation.test.ts` covers the dashboard context.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain.
+
+- Key test files still name nonexistent `packages/dashboard/app/__tests__/api-plugins` (actual: `packages/dashboard/app/api/__tests__/plugin-setup-api.test.ts`) and `register-approval-routes...` as a plugin route test (actual: `packages/dashboard/src/__tests__/plugin-routes.routes.test.ts` and `plugin-routes-wiring.test.ts`).
+- TC-6/TC-7/TC-8: the CLI extension tests still assert path resolution and settings toggles only. Routing is covered in `packages/pi-claude-cli/src/__tests__/provider.test.ts` and `packages/droid-cli/src/__tests__/provider.test.ts`, which the plan never names; Llama.cpp has no provider test.
+- Coverage matrix still maps no case to FR-5, FR-6, FR-7, NFR-1 or NFR-3.
+- Missing test areas unchanged: plugin SDK, authoring CLI, permission/data surfaces, extension surfaces, dashboard UI and pi extension discovery.
+- TC-3 still names only the engine isolation test; the core and dashboard isolation tests remain unnamed.

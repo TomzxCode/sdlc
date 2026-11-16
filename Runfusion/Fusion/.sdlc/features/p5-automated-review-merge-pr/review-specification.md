@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -19,3 +19,12 @@ reviewed_at: 2026-10-19
 - **Sequences (PR lifecycle)** states `pr-create node → PR monitor → PR checks → response-run → finalize → merge`. The built-in PR workflow has the nodes `pr-create`, `await-review` (hold), `pr-respond`, `gate`, `pr-merge`, and `end`, with no PR monitor node and no PR checks node. Evidence `packages/core/src/workflows/builtin-pr-workflow-ir.ts:80-172`.
 - **Technical Decisions** row "Smart prefer-main overlap, overlap-guard flip" describes code in the deprecated path only. Evidence `packages/engine/src/merger.ts:8659-8690` and `packages/core/src/types/settings/settings-scope.ts:1740-1742`, which shows `mergeStrategyOverlapBehavior` is not read by `runAiMerge`.
 - **Technical Decisions** omits the choices that now govern the merge: the clean-room worktree plus CAS fast-forward, the reviewer inside the merge with `merger.maxReviewPasses`, the workflow merge trait policy, the workspace per-repository land, the auto-merge off human-review contract, and durable merge proof. Evidence `packages/engine/src/merge/merger-ai.ts:15-33`, `packages/engine/src/merge/merge-trait.ts:118-168`, `packages/core/src/merge/task-merge.ts:166-171`, and `packages/engine/src/merge/auto-merge-finalization.ts:212`.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain. Verified in `builtin-pr-workflow-ir.ts`, `pull_requests` schema and `register-gitlab.ts`.
+
+- Architecture / Sequences still list the deleted diff-volume guard, the inert overlap/prerebase/smart-pull steps, and a `GitHub | GitLab` PR target; PR automation is GitHub only.
+- Data Models still describe a non-existent `Merge Plan / Branch Group`: `taskId: int` (ids are text), a `strategy` column (it is a setting plus per-task override), and `landedSha` (no such column). The real `branch_groups`, `pull_requests`, `merge_queue` and `merge_requests` tables remain undocumented.
+- API Contracts is still absent despite the wide HTTP PR surface; the PR lifecycle sequence still names PR-monitor and PR-checks nodes that the built-in PR workflow does not define (`await-review`, `pr-respond`, `pr-merge`, `end`).
+- Technical Decisions still describe the deprecated overlap-guard path and omit clean-room CAS fast-forward, the in-merge reviewer, merge-trait policy, workspace per-repo land, the auto-merge-off human-review contract and durable merge proof.

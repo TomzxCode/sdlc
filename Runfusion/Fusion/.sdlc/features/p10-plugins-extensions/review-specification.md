@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -41,3 +41,17 @@ reviewed_at: 2026-10-19
 ### Risks and unknowns
 
 - Risk 1 still asks to confirm the canonical plugin inventory, and the code now holds four divergent inventories. `packages/core/src/plugins/bundled-plugin-install.ts:32` lists seventeen bundled ids, `packages/dashboard/src/routes/plugin-bundled-runtimes.ts:39` lists a different set of sixteen, `packages/cli/src/commands/plugin.ts:29` lists seven builtins, and `packages/dashboard/src/registry-manifest.json` lists sixteen registry entries whose three non-shipped ids are `fusion-plugin-slack-bridge`, `fusion-plugin-github-insights` and `fusion-plugin-local-llm-runtime`.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain.
+
+- Architecture still names a nonexistent `register-plugin-routes` registrar. The router is `packages/dashboard/src/plugin-routes.ts` (`createPluginRouter`, mounted at `/plugins`) plus `packages/dashboard/src/routes/register-plugins-automation.ts`.
+- Architecture still names a nonexistent engine `plugin-skill-integration` module; only a test file with that name exists.
+- `GET /api/plugins` still returns a bare array (`res.json(plugins)` in `register-plugins-automation.ts`), not a `{ plugins: [...] }` envelope.
+- `POST /api/plugins/:id/enable` still maps an unknown id through a plain ENOENT Error to HTTP 500, not 404.
+- API contracts still omit `POST /api/plugins` and the registry, ui-slots, ui-contributions, dashboard-views, runtimes, settings, PATCH, reload, rescan, setup, DELETE and plugin-defined route surface.
+- No Data models section. `plugin_installs`, `project_plugin_states`, `plugin_activations` and plugin-owned tables remain undocumented.
+- Plugin run sequence still omits the security scan, version check, dependency resolution and schema-contract gates that run before `onLoad`.
+- Technical decisions still omit the plugin-owned table contract, trait/workflow extension registration, gate verdict contract and security scan.
+- Risk 1 still asks to confirm the canonical inventory while four divergent inventories ship.

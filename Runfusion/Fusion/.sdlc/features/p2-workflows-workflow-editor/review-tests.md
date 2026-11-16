@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -37,3 +37,13 @@ reviewed_at: 2026-10-19
 ### Test infrastructure
 
 - The stated test infrastructure omits the PostgreSQL harness that the workflow suites depend on. Evidence: `packages/dashboard/src/routes/__tests__/workflow-validate-route.test.ts:6` (imports `createTaskStoreForTest` and `pgDescribe` from the shared harness), `packages/core/src/__test-utils__/pg-test-harness.ts`.
+
+## Sync drift: 2026-11-16
+
+`tests.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- Stale key test files remain missing: `packages/core/src/__tests__/custom-v1-workflow-dispatch.test.ts`, `packages/core/src/__tests__/legacy-workflow-ir-callsite-allowlist.test.ts`, and core `legacy-tombstones.test.ts` (the ratchet lives at `packages/engine/src/__tests__/legacy-tombstones.test.ts`).
+- The board-workflows suite is at `packages/dashboard/src/__tests__/board-workflows.test.ts`, not under `routes/__tests__` as listed.
+- The Coverage Matrix still omits FR-6, FR-7, and NFR-3; fragment/advisor/design/extension test areas remain unplanned.
+- TC-8 still claims invalid definitions return 400; the route returns 200 with `valid: false`.
+- The full stale/missing test inventory is in the 2026-10-19 section above.

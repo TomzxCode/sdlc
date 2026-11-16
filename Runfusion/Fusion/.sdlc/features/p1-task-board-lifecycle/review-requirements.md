@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -32,3 +32,13 @@ Acceptance criteria gaps:
 
 - The acceptance criteria list has no entry for FR-5, FR-8, FR-9, NFR-2, or NFR-4, so five stated requirements are unverified.
 - Every acceptance criterion checkbox is unchecked while the document frontmatter reads `status: done` (`requirements.md:51` to `:74`).
+
+## Sync drift: 2026-11-16
+
+`requirements.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- FR-5 "board-level moves" remain unimplemented: `packages/core/src/task-store/moves.ts` exports only per-task operations (`moveTaskImpl` :258, `moveTaskIfImpl` :284, `handoffToReviewImpl` :305, `moveTaskInternalImpl` :421), and no board-level move route exists in `register-task-workflow-routes.ts`.
+- FR-9 "subtasks with their own lifecycle" and "GroupTask" remain stale: migration `0062_remove_task_subtask_splitting.sql` dropped splitting and the create route still rejects `breakIntoSubtasks` with 400 (`register-task-workflow-routes.ts:1732`).
+- FR-3 "subtasks" remains stale; no `planning` column exists (`packages/core/src/types/board/board.ts:27` lists triage/todo/in-progress/in-review/done/archived).
+- Missing requirements still uncovered by any FR/NFR: duplicate intake, checkout leasing, steering comments, attachments, spec revise/rebuild, reset/revert, cross-task overlap waits, multi-lane boards, archive outbox, and tombstone identifier reservation. Their implementing code and routes are present; the full evidence inventory is in the 2026-10-19 section above.
+- Acceptance criteria are still all unchecked, and FR-5/FR-8/FR-9/NFR-2/NFR-4 still have no criterion.

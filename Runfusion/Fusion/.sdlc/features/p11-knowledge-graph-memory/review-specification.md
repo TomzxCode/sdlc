@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -35,3 +35,16 @@ reviewed_at: 2026-10-19
 ### Out of Scope
 
 - The out-of-scope list contradicts shipped code. specification.md:126 excludes "LLM calls, embeddings, vector recall, and MCP tools". The tree ships a model-driven semantics pass at `packages/engine/src/memory/memory-semantics.ts:43-50`, an MCP memory server under `packages/core/src/memory/mcp/` with the CLI entry at `packages/cli/src/commands/mcp-memory-server.ts`, and durable recall records with graph cross-references at `packages/core/src/postgres/schema/project.ts:713-718`. The exclusion holds only for the deterministic extraction layer.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain. Verified in `graph-types.ts`: `GraphManifest` is `{ schemaVersion, extractorVersion, files: Record<string, GraphManifestEntry> }`, `GraphManifestEntry` is `{ hash, importRefs? }`, and `GraphNode`/`GraphEdge` carry `name`, `owner`, `ownerPath` and a `SourceLocation` `source` object.
+
+- Data Models: the Manifest model (`fingerprints` plus `importRefs` maps) does not match the code; there is no top-level fingerprints map.
+- Data Models: Node omits `name`, `owner` and `ownerPath`; Edge omits `id`, `from`, `to`, `owner` and `ownerPath` and mis-types `source` as a string foreign key.
+- Data Models: no RecallRecord model and no `knowledgeGraphDir` setting model.
+- Architecture: persistence is attributed to `graph-manifest.ts` (only `fingerprintContent`); the code persists in `graph-store.ts` with serialization in `graph-serialization.ts`.
+- Architecture: the Memory Keeper data flow (consolidation tick, recall capture, cross-reference, semantics) is absent.
+- API contracts: none of `GRAPH_NOT_BUILT`, `NODE_NOT_FOUND` or `INVALID_ARTIFACT` exist. The code returns `ApiError(404, loaded.recoveryReason)` with `missing-artifact`/`invalid-artifact`/`version-mismatch`/`inconsistent-artifact`/`forced`, and `"Unknown graph node"`.
+- API contracts: `GET /api/knowledge/query`, `POST /api/knowledge/refresh`, `fn mcp serve-memory` and `fn memory-backup` are unlisted.
+- Out of Scope still excludes LLM calls, MCP tools and vector recall while the shipped semantics pass, MCP memory server and durable recall records contradict that exclusion outside the deterministic extraction layer.

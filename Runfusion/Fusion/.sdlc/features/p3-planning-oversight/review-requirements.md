@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -23,3 +23,13 @@ reviewed_at: 2026-10-19
 - **FR-4 no longer matches the code, because the live path never reaches a human confirmation.** `decidePlannerRecovery` returns `action: "none"` for the `merger` and `pull-request` stages whenever `autoMergeWillProceed === true` (`packages/core/src/planner/planner-recovery.ts:240-253`). `PlannerRecoveryController.tick` computes `autoMergeWillProceed = allowsAutoMergeProcessing(task, ...)` (`packages/engine/src/overseer/planner-recovery-controller.ts:300`) but withholds the whole task first when `allowsAutoMergeProcessing` is false (`:251-265`), so the only reachable tick state has `autoMergeWillProceed === true` and the `await_confirmation` branch is never taken. `resolveConfirmation` has no production call site (the other references are the definition, doc comments and the test file), the PR-advance handler is a deliberate no-op (`packages/engine/src/project-engine.ts:2700-2709`), and no destructive or external handler is wired at all (`packages/engine/src/project-engine.ts:2711-2715`). The classification itself is also level-independent: `packages/core/src/planner/planner-confirmation.ts:1-19` states that merge/PR and destructive actions are confirmation-required "regardless of the effective oversight level", so no level selects it. The dedicated suite states the unreachability directly and is skipped: `packages/engine/src/__tests__/planner-recovery-controller-confirmation.test.ts:39-43`.
 
 - **NFR-3 names the wrong surface for the oversight level.** The level is not a Settings control. It is a workflow setting edited in the Workflow Editor Values tab (`packages/dashboard/app/components/workflow-setting-display.ts:169-181` groups `plannerOversightLevel` under the workflow `oversight` group; the write path is `packages/dashboard/app/api/system/workflows.ts:148`). `docs/settings-reference.md:454` states that the project or global default is set through the Workflow Editor Values tab and not in Project Settings. The Settings modal carries only the session-advisor default (`packages/dashboard/app/components/settings/sections/GeneralSection.tsx:746-771`), and the per-task override lives in the New Task dialog and Task Detail. NFR-3 should say "Workflow Editor Values tab plus Task Detail".
+
+## Sync drift: 2026-11-16
+
+`requirements.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- The session-advisor tier still has no FR/NFR: `packages/engine/src/overseer/` contains `overseer-advisor-service.ts`, `overseer-advisor-runtime.ts`, `overseer-advise-tool.ts`, `overseer-session-delta.ts`, and `overseer-watchdog.ts`.
+- Spec-lock and drift-report still have no FR: `packages/core/src/planner/spec-lock.ts` and `packages/core/src/planner/drift-report.ts` are present.
+- FR-6 and Constraints still omit the `approval-blocked` withhold reason: `OverseerHumanControlWithholdReason = "user-paused" | "approval-blocked" | "auto-merge-off-human-review"` (`overseer-human-control-policy.ts:59`).
+- FR-4 still claims a human confirmation gate on merge/PR/destructive; the live path suppresses it, and the confirmation suite is skipped. Nudge/Stop/Explain operator controls and the no-op finalize veto still have no FR.
+- The full missing/stale requirement inventory is in the 2026-10-19 section above.

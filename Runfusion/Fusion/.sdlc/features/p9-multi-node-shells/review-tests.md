@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -38,3 +38,11 @@ Significant test areas the plan does not cover:
 - The cross-node settings sync surface is absent: `packages/dashboard/src/routes/__tests__/settings-sync-attribution.test.ts:84` onward covers the pull, the receive, and the auth-receive attribution, and `packages/dashboard/src/__tests__/routes-system.test.ts:371` to `:375` covers the route inventory.
 - The native shell package suites are absent: `packages/mobile/src/__tests__/native-shell.test.ts`, `packages/mobile/src/__tests__/qr-scanner.test.ts`, `packages/mobile/src/__tests__/shell-handoff.test.ts`, `packages/mobile/src/__tests__/connection-profiles.test.ts`, and `packages/desktop/src/__tests__/preload.test.ts` and `packages/desktop/src/__tests__/main-local-mode.test.ts`.
 - The remaining shell surface suites are absent: `packages/dashboard/app/__tests__/shell-native.test.ts` and `packages/dashboard/app/__tests__/onboarding-overlay-layering.test.ts`.
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the drift recorded on 2026-10-19 still holds:
+
+- Key Test Files still names paths that do not exist: `packages/dashboard/src/routes/__tests__/api-node.test.ts` and `api-projects.test.ts` (the suites live under `packages/dashboard/app/__tests__/`).
+- TC-1 still asserts mesh task replication, which was removed at the PostgreSQL cutover (`packages/core/src/mesh/mesh-task-replication.ts`); the named test file now covers PROMPT.md seed builders only.
+- The Coverage Matrix still has no rows for FR-5, FR-6, NFR-2, or NFR-3, and the plan still omits on-disk suites for mesh HTTP routes, Docker nodes, cloud-link, node discovery, remote access, cross-node settings sync, and native shells.

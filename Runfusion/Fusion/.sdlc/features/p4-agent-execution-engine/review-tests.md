@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -15,3 +15,12 @@ reviewed_at: 2026-10-19
 - Missing test area: NFR-3 has no test case. The rule is enforced by `packages/engine/src/__tests__/engine-no-blocking-shellout.test.ts` and `packages/engine/src/__tests__/user-configured-command-no-execsync.test.ts`, and neither appears in the plan.
 - Stale Key Test Files: the glob `agent-heartbeat-*.test.ts` (tests.md line 57) does not match the file that covers TC-11. The heartbeat error-recovery test is `packages/engine/src/__tests__/heartbeat-error-recovery.test.ts`, and it is not matched by any listed glob. The same gap hides `packages/engine/src/__tests__/heartbeat-executor.test.ts`, `heartbeat-scheduler.test.ts`, `heartbeat-monitor.test.ts`, and `heartbeat-monitor-per-agent-config.test.ts`.
 - Missing test area: the dashboard permission editing route, which is the FR-6 surface for "permission editing", has no test case and no listed test file. The route is registered at `packages/dashboard/src/routes/register-agent-runtime-routes.ts:91` as `PATCH /api/agents/:id/permissions`, and no file under `packages/dashboard/src/routes/__tests__/` exercises it. A search of that directory for `permissions` returns nothing, and a search of the dashboard tests for `permissionPolicy` returns only `packages/dashboard/src/__tests__/chat-manager.test.ts`.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain. Verified present: 14 `run-audit*.test.ts` files, `sandbox/__tests__/`, `agent-action-gate.test.ts`, `bash-containment.test.ts` and the heartbeat suites.
+
+- Coverage matrix still omits FR-6, FR-7 and NFR-1/2/3; FR-7 is still mapped to scheduler cases that assert no run-audit event.
+- Missing test areas unchanged: run-audit emission, the sandbox backend matrix, the runtime permission gate plus bash containment, and the NFR-1/NFR-3 guards.
+- Stale key-test glob: `agent-heartbeat-*.test.ts` still misses the TC-11 file `heartbeat-error-recovery.test.ts` and the `heartbeat-executor`/`heartbeat-scheduler`/`heartbeat-monitor` files.
+- The dashboard permission-editing route (`PATCH /api/agents/:id/permissions`) still has no test case or listed test file.

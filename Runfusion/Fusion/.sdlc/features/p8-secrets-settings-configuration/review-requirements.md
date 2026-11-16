@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -22,3 +22,13 @@ reviewed_at: 2026-10-19
 - FR-5 states that secrets and provider operations are exposed via CLI. There is no `fn secrets` command and no provider command. `packages/cli/src/bin.ts` registers `fn settings` at line 1724 and `fn mcp` at line 1782 and no other settings-adjacent command, while secret and provider CRUD live only in the dashboard (`packages/dashboard/src/routes/register-secrets-routes.ts:79`, `packages/dashboard/src/routes/register-custom-provider-routes.ts:609`).
 - NFR-3 states that settings sync must reconcile across nodes. On the default PostgreSQL backend the node settings sync routes refuse to reconcile and return HTTP 409 with code `settings-sync-disabled-postgres` (`packages/dashboard/src/routes/register-settings-sync-routes.ts:152`), because all nodes share one database (`packages/core/src/task-store/settings-ops-2.ts:26`).
 - Open Question 1 asks how secrets sync between nodes authenticates. The inbound route already requires a matching Bearer `apiKey` and returns HTTP 401 otherwise (`packages/dashboard/src/routes/register-secrets-sync-inbound-routes.ts:100`, `:114`, `:117`), so the question is answered by the code.
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the artifacts still carry `status: done` with unchecked acceptance criteria and the same gaps:
+
+- FR-5 still claims a CLI surface for secrets and provider operations. `packages/cli/src/bin.ts` registers settings and mcp commands but no `fn secrets` or provider command; secret and provider CRUD live only in dashboard routes (`register-secrets-routes.ts`, `register-custom-provider-routes.ts`).
+- FR-6 still inverts the model hierarchy. `docs/settings-reference.md:337` documents task-specific selections and the project-lane baseline winning over global and per-workflow values; the requirement states global → project → task → lane.
+- NFR-3 still claims cross-node settings reconciliation, but the default PostgreSQL backend returns 409 with code `settings-sync-disabled-postgres` (`packages/dashboard/src/routes/register-settings-sync-routes.ts:156`).
+- Implemented behavior still has no FR: worktree secret env materialization (`packages/engine/src/worktree/secrets-env-writer.ts`), master key lifecycle (`packages/core/src/secrets/master-key.ts`), cross-node secrets sync (`secrets-sync.ts`, `secrets-sync-passphrase.ts`), the `fn_secret_get` agent tool with approval policy (`packages/cli/src/extension.ts`), and configuration revisions (`packages/core/src/config/configuration-revision-store.ts`).
+- Open Question 1 is still answered in code: the inbound sync route requires a Bearer `apiKey` and returns 401 otherwise (`register-secrets-sync-inbound-routes.ts:101-118`).

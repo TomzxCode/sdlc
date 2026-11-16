@@ -77,6 +77,8 @@ Update it when the monitoring stack changes.
 
 Alert rules live inside the engine's notification dispatcher and provider stack (`packages/core/src/notification/`, `packages/engine/src/notification/`).
 The ntfy and webhook event allowlists are project settings (`ntfyEvents`, `webhookEvents` in `packages/core/src/config/settings-schema.ts`).
+The `task-created` and `workflow-notify` events cover agent-created tasks and workflow `notify` nodes, and both stay off unless added to an event allowlist.
+The `memory-dreams-processed` event is in the default ntfy allowlist for manual dream processing.
 External alerting is pulled into Fusion over signal connectors rather than pushed out to on-call.
 
 ## Dashboards

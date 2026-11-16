@@ -9,7 +9,7 @@ The default workflow (`builtin:coding`) declares six columns: triage, todo, in-p
 It is neutral by design across models, workflows, and surfaces: the same board is driven from an Electron desktop app, a browser web dashboard, a Capacitor mobile app, and the `fn` CLI with its terminal UI, and it runs across many machines (nodes) in a fleet.
 Two npm packages are published: `@runfusion/fusion` (the `fn` CLI plus a `pi` extension) and the `runfusion.ai` alias package.
 The `@fusion/*` packages are private and ship bundled inside the published CLI.
-Current workspace version: `0.78.0-beta.7` (root `package.json`, package name `fusion-workspace`).
+Current workspace version: `0.78.0-beta.9` (root `package.json`, package name `fusion-workspace`).
 
 ## Key Stakeholders
 

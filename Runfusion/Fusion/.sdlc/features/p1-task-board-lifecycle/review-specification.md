@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -39,3 +39,14 @@ Technical Decisions:
 - "Board move | `moves.ts` | Supports per-task and board-level moves with guard rails" is wrong. `moves.ts` supports per-task moves only, as its four exports show (`packages/core/src/task-store/moves.ts:258`, `:284`, `:305`, `:421`).
 - The decision table omits the workflow-owned column model, which is the decision behind the move guards, the resolved column order, and the degraded role flags (`packages/core/src/column-roles.ts:56` to `:123`, `packages/core/src/types/board/board-config.ts:194`).
 - "Soft-delete tombstone | keep tombstone | Preserves audit trail, prevents resurrect" is too absolute. An operator can authorize resurrection through `allowResurrection` or `forceResurrect` (`packages/core/src/task-store/task-id-integrity.ts:383` and `:420`, `packages/core/src/postgres/schema/project.ts:288`), and the delete route accepts `allowResurrection` as a query parameter (`packages/dashboard/src/routes/register-task-workflow-routes.ts:7834`).
+
+## Sync drift: 2026-11-16
+
+`specification.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- Architecture still lists `register-tasks.ts` as a registrar, but it is an empty stub superseded in FN-2541 (`packages/dashboard/src/routes/register-tasks.ts:1-6`) and is not mounted.
+- Data models still claim an `int` PK, a `planning` column, and `userPaused | bool`; current code uses a text id with composite `(projectId, id)` key, no `planning` column, and `integer("user_paused")` (`packages/core/src/types/board/board.ts:27`, `packages/core/src/postgres/schema/project.ts`).
+- POST /api/tasks contract still says `title` required / `column` optional / 200 with a `task` field; the route requires `description`, accepts ~25 more fields, and answers 201 with the bare task.
+- Sequences still claim task creation takes a per-task advisory lock; `packages/core/src/task-store/task-creation.ts` has no such call.
+- The "Board move | moves.ts | per-task and board-level" decision is still false: `moves.ts` has only four per-task exports.
+- The full data-model, API, and technical-decision discrepancy inventory remains in the 2026-10-19 section above.

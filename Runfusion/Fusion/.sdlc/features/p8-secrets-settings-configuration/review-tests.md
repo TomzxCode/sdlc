@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -26,3 +26,11 @@ reviewed_at: 2026-10-19
 - The TC-14 dangling instance fallback test files are not in Key Test Files. The behavior is at `packages/engine/src/agents/agent-session-helpers.ts:1110`, covered by `packages/engine/src/__tests__/agent-session-helpers.test.ts` and `packages/core/src/__tests__/postgres/credential-instance-selection.pg.test.ts`.
 - The worktree env materialization acquisition and cleanup tests are not in Key Test Files. `packages/engine/src/__tests__/worktree-acquisition-secrets-env.test.ts` and `packages/engine/src/__tests__/worktree-pool-secrets-env-cleanup.test.ts` cover `packages/engine/src/worktree/worktree-acquisition.ts:870`.
 - The model lane effective-settings test is not in Key Test Files. `packages/engine/src/__tests__/effective-settings-model-lane.test.ts` covers the lane overlay implemented at `packages/core/src/config/effective-settings-overlay.ts:12`.
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the drift recorded on 2026-10-19 still holds:
+
+- Key Test Files still names `packages/core/src/__tests__/automation.test.ts` (cron automation only, no secrets/settings/MCP assertions), and TC-10 "Settings memory routes" still has no dedicated matching test file.
+- Behaviors with tests on disk are still unmapped from the plan: master key (`master-key.test.ts`), secret access policy, redaction, OAuth interop, provider-instance key grammar, the `fn_secret_get` policy tests, secrets PostgreSQL round-trip, MCP resolution, and credential rotation.
+- The secrets-sync passphrase reserved-row test named in `docs/secrets.md` still does not exist in the repository.

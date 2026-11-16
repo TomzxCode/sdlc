@@ -19,10 +19,14 @@ Terms within each table are sorted alphabetically by the first column.
 | Chat | Persistent chat sessions and rooms for operator and agent conversation, backed by the chat store |
 | Checkout lease | Exclusive execution ownership of a task, held through a claim row plus lease metadata and validated on every heartbeat |
 | Claim | The authoritative ownership row for a task in the central database, keyed by project and task, used to fence out stale owners |
+| CLI executor | An executor type (`cli-agent`) that drives a Fusion agent session through an interactive CLI coding agent in a Fusion-owned PTY, distinct from the non-interactive script-running `cli` executor kind |
+| CLI session | A server-owned PTY bound to a task or chat entity, with a persisted CLI-native session id so a dead PTY or engine restart resumes through the CLI's own resume mechanism |
+| Cloud Link | The cloud control-plane feature that pairs a Fusion instance with a cloud service and keeps its reachability URL updated through heartbeats, exposed through `fn cloud` and engine presence tracking |
 | Column | A workflow-defined unit of task state with an id, a display name, and a set of traits, where a task's board position is its current column |
 | Column agent | A permanent agent binding on a workflow-defined column that staffs the session-running work attributable to that column |
 | Command Center | The operator "mission control" dashboard for the agent fleet, signals, and usage |
 | Compound engineering session | A single interactive run of a compound engineering stage, where an agent drives a question-and-answer flow and produces the stage artifact |
+| Computer use | The `fn computer` CLI feature that inspects and operates local desktop application windows through a snapshot, act, snapshot loop using operating-system-provided accessibility and screenshot commands |
 | Contamination | Foreign commits from other tasks that appear on a task's branch beyond its recorded fork point |
 | Contract assertion | A checkable acceptance criterion on a mission feature, judged by an AI validator to decide whether the feature is genuinely done |
 | Custom task field | A workflow-declared typed task field whose values live in `tasks.customFields` and are validated against the resolving workflow's schema |
@@ -53,6 +57,7 @@ Terms within each table are sorted alphabetically by the first column.
 | Planning mode | A dedicated human-in-the-loop planning chat and Plan Review node for shaping a task before execution |
 | PR entity | The single first-class record of a pull request Fusion manages, whether it came from one task or a shared branch group |
 | Project | A registered workspace Fusion can operate on, with a canonical local path, project-scoped settings, and a usable git work tree |
+| Remote access | The global-scoped feature that exposes the dashboard through operator-configured tunnels (Tailscale or Cloudflare), available from the dashboard, TUI, and headless node modes and configured under `/api/remote/*` |
 | Research | Cited search-and-synthesis pipeline that runs bounded investigations into actionable task context |
 | Review-response loop | The process where an agent acts on pull request review feedback, either by pushing a fix and replying to the thread or by posting its reasoning and leaving the thread open |
 | Routine | A recurring task automation with a trigger mode (cron, webhook, API, or manual) plus execution and catch-up policies |
@@ -80,6 +85,7 @@ Terms within each table are sorted alphabetically by the first column.
 
 | Term | Definition |
 |---|---|
+| Affected-package test selection | How `pnpm test` chooses what to run for the working diff: changed mode runs the merge gate plus the touched packages and their dependents, while gate mode runs only the merge gate suite |
 | Boot smoke | The gate's "the app starts and serves" proof, where the CLI answers its help command and a server boots on a throwaway port, answers its health endpoint, and shuts down cleanly |
 | Bounded run-audit emitter | The engine and core seam that records a run-audit row without letting telemetry delay, abort, or wedge the owning branch, by absorbing absent, throwing, rejecting, and hanging sinks |
 | Deletion ratchet | The standing policy that a test observed failing without a corresponding bug is quarantined on sight and then deleted two weeks later, never appeased with widened timeouts or retries |

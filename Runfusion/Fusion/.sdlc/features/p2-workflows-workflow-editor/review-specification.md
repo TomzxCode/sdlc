@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -50,3 +50,13 @@ reviewed_at: 2026-10-19
 ### Out of scope
 
 - The out-of-scope list is accurate. Evidence: `packages/engine/src/__tests__/legacy-tombstones.test.ts:60-108` ratchets the deleted legacy execution path.
+
+## Sync drift: 2026-11-16
+
+`specification.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- Data model `kind | enum | builtin/custom/v1` is wrong: `WorkflowDefinitionKind = "workflow" | "fragment"` (`packages/core/src/workflows/workflow-definition-types.ts:15`), and builtin-ness comes from the `builtin:` id prefix.
+- The per-node runner list still names a nonexistent review runner.
+- API contract still documents a `definition` request field and an always-valid/errors response; the route reads `ir` or `workflowId` (`register-workflow-routes.ts:141`) and returns `{ valid: true }` on success (`:331`).
+- Technical decisions for a single IR module and a single review authority remain stale: the IR is split across type/parser/resolver/settings modules, and two review paths exist (node handler primitive plus service seam).
+- The full architecture, data-model, API, and sequence inventory is in the 2026-10-19 section above.

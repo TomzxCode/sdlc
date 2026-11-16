@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -46,3 +46,12 @@ Out of Scope:
 
 - The out-of-scope list does not name the Insights surface. Insights is a separate top-level dashboard view with its own store, run executor, and sweeper, mounted at `/api/insights` (`packages/dashboard/app/App.tsx:141` and `:1880`, `packages/dashboard/src/routes.ts:1552` to `:1557`, `packages/core/src/insights/`). It is not a Command Center section (`packages/dashboard/app/components/command-center/CommandCenter.tsx:44` to `:62`).
 - The out-of-scope list does not name Ideation. `IdeationPanel.tsx` lives inside the command-center directory but is rendered by the top-level Ideation view, not by the Command Center (`packages/dashboard/app/components/dashboard/MainContent.tsx:705`, `packages/dashboard/app/components/command-center/CommandCenter.tsx:108` to `:113`).
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the drift recorded on 2026-10-19 still holds:
+
+- API contract still wrong. The route is `POST /api/signals/:provider` with the provider as a path parameter and the signature in a provider-specific header, not body fields (`packages/dashboard/src/routes/register-signal-routes.ts:293-347`). Status codes are 201/200/400/401/413/429 (`:186-283`, `:303-347`); no code path returns 202.
+- Data model still wrong. `packages/core/src/postgres/schema/project.ts` defines `usage_events` (`:2018`), `deployments` (`:2074`), `incidents` (`:2131`), and `chat_token_usage` (`:2362`); there is no `tokens` json or `costMs` column, and cost is not persisted.
+- Diagram still omits the core analytics aggregators (`packages/core/src/board/*-analytics.ts`, `command-center-live.ts`) and the OTLP/Prometheus export surfaces; `register-diagnostics-routes` is a resume-instrumentation ring buffer, not health data.
+- The cost decision is still stale: cost is derived at read time from recorded token counts and a maintained pricing table, never stored.

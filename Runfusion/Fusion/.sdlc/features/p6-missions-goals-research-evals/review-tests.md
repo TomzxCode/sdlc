@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -18,3 +18,12 @@ reviewed_at: 2026-10-19
 - Missing: experiment sessions have no test case. The shipped tests are `packages/engine/src/__tests__/experiment-finalize-service.test.ts`, `experiment-finalize-plan.test.ts`, `experiment-git-policy.test.ts`, `experiment-metric-parser.test.ts`, `experiment-benchmark-runner.test.ts`, `packages/core/src/__tests__/experiment-session-types.test.ts`, `packages/dashboard/src/__tests__/experiment-routes.finalize.test.ts`, and `packages/cli/src/__tests__/experiment-finalize.test.ts`.
 - Missing: the agent-tool surface for this feature has no test case. The shipped tests are `packages/engine/src/__tests__/agent-mission-tools.test.ts` and `packages/cli/src/__tests__/extension-mission-goal-tools.test.ts`, `packages/cli/src/__tests__/extension-goal-tools.test.ts`, `packages/cli/src/__tests__/extension-manager-eval-tools.test.ts`.
 - Missing: the "Test Infrastructure" line says "Vitest in core/engine/dashboard; engine mission/goal/research suites" and does not mention the CLI package, the PostgreSQL-backed test suites, or the dashboard component test suites, all of which carry this feature's coverage (for example `packages/core/src/__tests__/postgres/mission-store.pg.test.ts` and `packages/dashboard/app/components/__tests__/MissionManager.goal-links.test.tsx`).
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain. Verified: no `commands/research.ts` or `commands/__tests__/research.test.ts`; `routes/__tests__/mission-*.test.ts` holds only three files; ideation, experiment and eval suites are present.
+
+- Stale Key Test Files still name the non-existent CLI research test and a mission-route glob that misses the bulk of the suite.
+- Coverage matrix mismatches unchanged: FR-6 mapped to a data edge case (TC-14), FR-7 absent, FR-4 covered only by provider failure (TC-15).
+- Uncovered areas remain: ideation, mission validation/contract assertions, mission state reconcile and symbol admission, eval scoring and automation, goal citation persistence and injection diagnostics, experiment sessions, and the agent-tool surface.
+- Test Infrastructure still omits the CLI, PostgreSQL-backed and dashboard component suites that carry this feature's coverage.

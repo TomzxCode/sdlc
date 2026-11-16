@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -16,3 +16,13 @@ reviewed_at: 2026-10-19
 - Significant new test areas are not covered: the workspace per-repository land (`packages/engine/src/__tests__/workspace-e2e.test.ts`, `packages/engine/src/__tests__/workspace-finalize-cleanup.real-git.test.ts`), the group and shared-branch merge (`packages/engine/src/__tests__/group-merge-coordinator.test.ts`), merge proof and merge-boundary recovery (`packages/core/src/__tests__/workflow-merge-proof.test.ts`, `packages/engine/src/__tests__/merge-boundary-unproven-park.test.ts`), the pre-merge approval gate and the operator bypass (`packages/core/src/__tests__/pre-merge-approval-gate.test.ts`), the merge write fence and orphan writes (`packages/engine/src/__tests__/merge-write-fence.test.ts`), and the bounded PR rework (`packages/engine/src/__tests__/pr-rework-bound.test.ts`).
 - The plan has no end-to-end test section, and the PR workflow is the natural end-to-end subject. Evidence `packages/core/src/workflows/builtin-pr-workflow-ir.ts:80-172` and `packages/engine/src/__tests__/pr-rework-bound.test.ts`.
 - No path named under "Key Test Files" is missing, so that section has no stale entry. Verified `packages/engine/src/__tests__/already-merged-detector.real-git.test.ts`, `packages/engine/src/__tests__/auto-merge-fact-providers.test.ts`, `packages/engine/src/__tests__/auto-merge-retry-cap-settings.test.ts`, `packages/dashboard/src/routes/__tests__/register-task-workflow-routes.merge-advance-events.test.ts`, `packages/dashboard/src/routes/__tests__/register-task-workflow-routes.merge.test.ts`, `packages/dashboard/src/routes/__tests__/task-review-routes.test.ts`, `packages/cli/src/commands/__tests__/pr-lock-retry.test.ts`, and `packages/cli/src/commands/__tests__/git.test.ts`.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain; no path under "Key Test Files" is missing.
+
+- TC-4 (diff-volume gate) still has no implementation or test; the gate was deleted 2026-08-16, while the plan Scope still lists diff-volume.
+- TC-5 (overlap guard) and TC-9 (auto-prerebase) still exercise only the deprecated `aiMergeTask` helpers, not the sole production `runAiMerge` path.
+- TC-1 / FR-4 acceptance still expect a `FileScopeViolationError` even though the default mode warns and continues.
+- Coverage matrix mismatches unchanged: NFR-3 mapped to contamination recovery (TC-15), FR-1 mapped to the already-merged detector (TC-2), and no row for NFR-4.
+- Uncovered areas remain: workspace per-repo land, group/shared-branch merge, merge proof and boundary recovery, pre-merge gates and operator bypass, merge write fence, bounded PR rework, and an end-to-end PR workflow section.

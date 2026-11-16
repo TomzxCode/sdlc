@@ -6,7 +6,7 @@ This file captures the project's technology stack, development tooling, CI/CD pi
 
 | Component | Technology | Version |
 |---|---|---|
-| Workspace | pnpm monorepo, root package `fusion-workspace`, published CLI `@runfusion/fusion` | 0.78.0-beta.7 |
+| Workspace | pnpm monorepo, root package `fusion-workspace`, published CLI `@runfusion/fusion` | 0.78.0-beta.9 |
 | Language | TypeScript | ^5.7.0 (the CLI package pins 5.9.3) |
 | Runtime | Node.js | `engines.node` >=22.19.0, CI composite defaults to Node 24, Dockerfile uses `node:22-slim` |
 | Executable runtime | Bun (`bun build` for the single-file CLI binary) | via `pnpm build:exe` and `pnpm build:exe:all` |
