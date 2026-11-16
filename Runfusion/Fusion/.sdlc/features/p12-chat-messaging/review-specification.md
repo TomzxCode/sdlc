@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -27,3 +27,15 @@ reviewed_at: 2026-10-19
 - Technical Decisions drift: the spec does not record the responder routing rules, the per-room thinking level default, or the room token accounting that the code implements. `packages/dashboard/src/chat.ts:2132-2185` covers routing, `packages/core/src/postgres/schema/project.ts:2620` covers the thinking level, and `packages/dashboard/src/chat.ts:2292-2302` covers token accounting.
 - Overview drift: the Overview says attachments are stored with basename and prefix validation, but the room upload path has no prefix validation. `packages/dashboard/src/routes/register-chat-room-routes.ts:31-42` and `:439-442` show basename and character-class sanitization only.
 - Risks and Unknowns drift: the only listed risk is room-to-task linking, but the larger open question is whether the removed room UI returns. `packages/dashboard/app/components/ChatView.tsx:846-850` and `packages/dashboard/app/hooks/useChatRooms.ts` show an API-only surface with an orphaned hook.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain. Verified in `register-messaging-scripts.ts`: routes are GET/POST/DELETE on `/scripts` plus `POST /scripts/:name/run`, and the mailbox `/api/messages/*` and `/api/agents/*/mailbox` routes are present.
+
+- API contracts: the scripts row lists PUT, which does not exist, and omits `POST /scripts/:name/run`, the mailbox endpoints, the message-attachment endpoint and the `chat:room:*` event stream.
+- API contracts: room message endpoints accept only `content`, `senderAgentId`, `mentions` and `attachments`, narrower than the model implies.
+- Architecture: the direct chat session registrar (`register-chat-routes.ts`, present) is omitted, the diagram still shows ChatView reaching room routes, and there is no node for the PostgreSQL chat tables.
+- Data Models: ChatRoom omits `name`, `description`, `projectId`, `createdBy`, `createdAt`, `updatedAt`; slug uniqueness is per project, not global; ChatRoomMember omits `role` and `addedAt`; there is no ChatRoomMessage model and no chat token usage model.
+- Key Sequences: upload does not basename, containment-check or prefix-validate (upload sanitizes with a character class and `writeFile`; basename/containment live on the download route); post message does not validate metadata; reply generation is mandatory when a room has members.
+- Technical Decisions: the read/write rate-limit split is false for messaging/scripts routes; the direct chat surface is unassigned; responder routing, thinking level and token accounting are unrecorded.
+- Risks omit the removed room UI and orphaned `useChatRooms` hook.

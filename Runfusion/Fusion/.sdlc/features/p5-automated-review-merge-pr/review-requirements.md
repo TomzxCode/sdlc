@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -28,3 +28,19 @@ reviewed_at: 2026-10-19
 - No FR covers the durable merge queue and merge request leasing. `packages/core/src/postgres/schema/project.ts:1079-1108` defines the tables and `packages/core/src/task-store/merge-coordination.ts:10` keeps the enqueue transactional.
 - No FR covers the PR lifecycle as a first-class workflow with bounded rework cycles and an auto-merge gate. `packages/core/src/workflows/builtin-pr-workflow-ir.ts:80-172` defines the nodes and edges.
 - No FR covers the recovery of a divergent push through a remote safety branch and a non-fatal aborted push. `packages/engine/src/merge/recover-confirmed-merge-push.ts` and `packages/engine/src/merge/push-after-merge-policy.ts` implement it.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain; `requirements.md` still describes the soft-deprecated merge path. Verified in `merger-ai.ts`, `merger-ai-squash-gates.ts` and `merger.ts`.
+
+### Still stale
+
+- FR-4 diff-volume guard: deleted 2026-08-16; file scope is the sole pre-land guard and the post-squash audit is the shrinkage backstop.
+- FR-4 overlap guard: `detectMergeOverlap` is only called from the deprecated `aiMergeTask` path (`merger.ts`), never from the sole production path `runAiMerge`.
+- FR-4 / NFR-1 `FileScopeViolationError`: outcome is mode dependent; default resolution is a warning (`merge-trait.ts`), so an out-of-scope squash is not always rejected.
+- FR-3 auto-prerebase and smart pull: both inert in the live path (`runAutoPrerebase` only in deprecated `merger.ts`; `smartPull` exported but has no production caller).
+- FR-5 GitHub and GitLab PRs: PR automation is GitHub only (`gh` CLI); GitLab is import only and MR lifecycle/auto-merge is explicitly deferred.
+
+### Still missing from requirements
+
+- Workflow merge-trait policy (including the `pr-only` route), the auto-merge-off hold, shared-branch group integration and promotion, workspace per-repository land, the in-merge reviewer, durable merge proof, pre-merge gates and operator bypass, the durable merge queue and leasing, the bounded-rework PR workflow, and divergent-push recovery.

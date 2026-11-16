@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -37,3 +37,26 @@ reviewed_at: 2026-10-19
 - FR-5 at requirements.md:32 understates the markdown rule. It says "markdown HTML comments outside fenced code", but `packages/core/src/knowledge-graph/extract-fnxc.ts:101-107` also refuses to open a comment inside narrowly defined indented code, which is four spaces or a tab after a blank line or another indented line. `docs/knowledge-graph.md` describes both fences and indented code.
 
 - NFR-2 at requirements.md:42 and the code disagree about whether the artifact can be committed. NFR-2 says the artifact stays untracked and `.gitignore:134` ignores `.fusion-knowledge/`, but `packages/core/src/knowledge-graph/graph-store.ts:8-10` still says "The graph is review-visible and committable, while .fusion is ignored, so artifacts live under .fusion-knowledge/graph". The requirement matches the gitignore and `docs/knowledge-graph.md`, so the code comment is the stale part.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain; `requirements.md` still omits or misstates shipped behavior.
+
+### Still missing from requirements
+
+- The memory subsystem: `packages/core/src/memory/index.ts` still exports the memory, backup, compaction, dreams, insights, project-memory, recall, MCP and pre-steering barrels, but no FR covers them.
+- Memory Keeper consolidation tick (`engine/src/memory/memory-consolidation.ts`, `memory-consolidation-adapters.ts`).
+- Durable recall records and graph cross-reference (`memory/recall/recall-store.ts`, `memory_recall_records` table) and recall material derived from rationale nodes (`memory-consolidation-material.ts`).
+- MCP memory server (`core/src/memory/mcp/`, `commands/mcp-memory-server.ts`, `fn mcp serve-memory`); the specification still lists MCP tools as out of scope.
+- Memory backup and restore (`memory-backup.ts`, `fn memory-backup`).
+- Dashboard read and build surface (`register-knowledge-routes.ts` status/nodes/node/neighbors/path/build plus `/query` and `/refresh`).
+- `knowledgeGraphDir` project setting (`graph-store.ts`, `knowledge-graph-access.ts`, `commands/knowledge-graph.ts`).
+- Inferred edges retained and re-anchored across incremental rebuild (`graph-builder.ts`).
+- Inferred-edge writer family restriction and outcome counts (`inferred-edge-writer.ts`).
+- Semantics pass skip when graph material is unchanged (`memory-semantics.ts`).
+
+### Still stale
+
+- Open question 1 is answered: reads report a missing artifact and the operator rebuilds explicitly; the Memory tab does not rebuild implicitly.
+- FR-5 understates the markdown rule: `extract-fnxc.ts` also refuses comments inside indented code, not only fenced code.
+- NFR-2 says the artifact stays untracked (matching `.gitignore` and `docs/knowledge-graph.md`), while `graph-store.ts` still describes the graph as committable.

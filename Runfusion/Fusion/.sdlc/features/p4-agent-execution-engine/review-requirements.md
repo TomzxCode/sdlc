@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -18,3 +18,19 @@ reviewed_at: 2026-10-19
 - Missing: credential instance rotation on provider limit events has no FR. `packages/engine/src/credential-instance-rotation.ts:8` sets a 15 minute cooldown and `packages/engine/src/credential-instance-rotation.ts:31` builds the round-robin candidate plan across the executor-step, executor-agent, and agent-heartbeat lanes.
 - Missing: cross-runtime fallback has no FR. `packages/engine/src/agents/cross-runtime-fallback.ts:215` and `packages/engine/src/agents/cross-runtime-fallback.ts:304` implement a single retryable-failure handoff from a primary runtime to a deferred CLI runtime and record `session:cross-runtime-fallback-engaged`.
 - Missing: the durable agent activity stream has no FR. `packages/engine/src/agents/agent-logger.ts` writes the activity events and `docs/agent-activity-contract.md` fixes the wire format, cursor, and filter contract of `GET /api/agent-activity`. FR-7 covers run-audit rows only, and the two surfaces are separate.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain; `requirements.md` still misstates or omits shipped behavior. Verified in `sandbox-prompt-override.ts`, `bash-containment.ts`, `agents.ts` and `agent-provisioning-policy.ts`.
+
+### Still stale
+
+- Constraint: `needs-review` is not a live task status. A search of `packages/core/src` and `packages/engine/src` finds only the unrelated planner-alignment value `diverged-needs-review` (`planner/drift-report.ts`, `missions/mission-types.ts`).
+- FR-5 acceptance: sandbox isolation is off by default. `resolveSandboxBackend` returns `{ backend: "native", source: "default" }` whenever the experimental `sandbox` flag is off, and the native backend enforces no filesystem or network policy.
+- Open Question: `.docs/agents.md` does not exist and no "solver lane" concept is present; capacity is implemented as per-workflow and per-column gates in `scheduler.ts`.
+
+### Still missing from requirements
+
+- Unconditional bash privilege-escalation floor (`bash-containment.ts`), which holds at every preset including `unrestricted`.
+- Agent provisioning approval (`agent-provisioning-policy.ts`), sandbox host-provisioning approval (`sandbox/provisioning-gate.ts`), secret access policy (`SECRET_ACCESS_POLICIES`), and the durable approval-request lifecycle.
+- Ephemeral task-worker exclusion from heartbeat timers, credential instance rotation (`credential-instance-rotation.ts`), cross-runtime fallback (`agents/cross-runtime-fallback.ts`), and the durable agent activity stream (`docs/agent-activity-contract.md`).

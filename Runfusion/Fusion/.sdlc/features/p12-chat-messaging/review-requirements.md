@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -20,3 +20,23 @@ reviewed_at: 2026-10-19
 - Stale requirement: FR-6 lists saving, listing, and running scripts, but not deleting them. `packages/dashboard/src/routes/register-messaging-scripts.ts:70-85` implements `DELETE /api/scripts/:name`.
 - Stale constraint: the constraint that chat message metadata is validated against the core message schema does not hold for room messages. `packages/dashboard/src/routes/register-chat-room-routes.ts:351-372` accepts only `content`, `senderAgentId`, `mentions`, and `attachments`, and never validates client metadata. `validateMessageMetadata` (`packages/core/src/types.ts:1502`) is applied to mailbox messages only, at `packages/dashboard/src/routes/register-messaging-scripts.ts:333`.
 - Stale requirement: FR-2 describes adding and removing agent members but not the member role. `packages/dashboard/src/routes/register-chat-room-routes.ts:278-286` accepts a `role` of `owner` or `member`, and `packages/core/src/chat/chat-types.ts:312` defines `RoomMemberRole` as `owner` or `member`.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain; `requirements.md` still omits or misstates shipped behavior.
+
+### Still missing from requirements
+
+- Mailbox messaging API (`register-messaging-scripts.ts` `/api/messages/*` and `/api/agents/*/mailbox` routes, verified present).
+- CLI messaging and chat commands (`commands/message.ts`, `commands/chat.ts`).
+- Agent-side room participation (`fn_post_room_message` in `agent-tools.ts`, heartbeat room-message prefetch, `triage-domain/room-coordination.ts` and `room-ambiguity.ts`).
+- Room mention routing and multi-responder rules, the eight `chat:room:*` SSE events (`dashboard/src/sse.ts`), room token accounting (`chat.ts`, `chat_token_usage` table), the per-room thinking level override, and the direct chat session API (`register-chat-routes.ts`, present).
+
+### Still stale
+
+- FR-1 to FR-5: the dashboard no longer renders rooms (`ChatView.tsx` FNXC:ChatDirectOnly), so the reachable room surface is HTTP-only; the requirements do not say so.
+- FR-3: no next-page cursor is returned (`{ messages }` only) and room messages order by `created_at` with no id tiebreak.
+- NFR-2: `register-messaging-scripts.ts` carries no rate limiting; the split holds only for room routes.
+- FR-6 omits script deletion (`DELETE /api/scripts/:name`, verified present).
+- The metadata-validation constraint does not hold for room messages; `validateMessageMetadata` is applied to mailbox messages only.
+- FR-2 omits the `owner`/`member` member role.

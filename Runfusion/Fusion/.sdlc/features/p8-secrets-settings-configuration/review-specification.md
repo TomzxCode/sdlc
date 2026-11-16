@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -36,3 +36,12 @@ reviewed_at: 2026-10-19
 ### Risks and Unknowns
 
 - The risk "Secrets sync between nodes authentication parity is an open security review area" is resolved. The inbound route requires a Bearer `apiKey` that matches the local node key and returns HTTP 401 on a missing or mismatched token (`packages/dashboard/src/routes/register-secrets-sync-inbound-routes.ts:100` to `:119`).
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the drift recorded on 2026-10-19 still holds:
+
+- Architecture still names a non-existent `register-provider-routes`; the shipped registrars include secrets-sync, settings-sync, runtime-provider, and settings-memory variants. The `mcp-builtin-servers` module lives at `packages/core/src/config/mcp-builtin-servers.ts`; there is no file at `packages/core/src/mcp-builtin-servers.ts`.
+- Data models still wrong: `SettingsScope` is `"global" | "project"` only (`packages/core/src/types/settings/settings-scope.ts:70`), settings are JSON documents rather than per-key rows, and `SecretRecord` (`packages/core/src/secrets/secrets-store.ts:16-28`) uses `id`/`key` with `envExportable` and last-read fields rather than the documented `name`/`ciphertext` task-scope shape.
+- API contract still documents a `POST /api/settings/mcp` endpoint that does not exist; MCP is configured through `/api/mcp/*` and settings endpoints.
+- The model hierarchy decision row is still inverted versus `docs/settings-reference.md:337`.

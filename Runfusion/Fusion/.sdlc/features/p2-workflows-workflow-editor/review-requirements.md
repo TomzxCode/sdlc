@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -22,3 +22,13 @@ reviewed_at: 2026-10-19
 - FR-1 lists "six-column" and "custom v1" as built-in workflows. Neither is a built-in id in the catalog. "six-column" is a board shape kept by `builtin:legacy-coding`, and "custom v1" describes a custom workflow authored against IR version 1. The catalog now holds 13 built-ins and one of them, `builtin:brainstorming`, is deprecated. Evidence: `packages/core/src/workflows/builtin-workflows.ts:517-1004` (`BUILTIN_WORKFLOWS`), `packages/core/src/workflows/builtin-stepwise-coding-workflow-ir.ts:83` (six-column shape note), `packages/core/src/__tests__/no-selection-default-workflow-move.test.ts:168` ("custom v1 workflow dispatch characterization").
 - FR-2 names "review" as one of the per-node runners. There is no review runner file. The engine runner directory holds code, exit-gate, gate, merge, notify, parse-steps, and verification-gate runners, and review is a node handler plus a service. Evidence: `packages/engine/src/workflow-node-runners/` (directory listing, 7 files, no review runner), `packages/engine/src/workflows/workflow-node-handlers.ts:541` (`createStepReviewHandler`), `packages/engine/src/workflows/workflow-node-handlers.ts:593` (`createPrimitiveStepReviewHandler`), `packages/engine/src/workflows/workflow-review-service.ts:20`.
 - The constraint "`task.status === "needs-review"` ... are graph signals, not legacy" names a status that no longer exists. Only `needs-replan` survives as a live graph signal. Evidence: `packages/core/src/db/legacy-adoption.ts:89` (`"needs-replan": { kind: "preserve" }`) with no `needs-review` row, and a repository-wide search finds `needs-review` only as a mission spec-alignment value and as a code-node runner outcome, never as a task status.
+
+## Sync drift: 2026-11-16
+
+`requirements.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- FR-1 still lists "six-column" and "custom v1" as built-ins; the catalog uses `builtin:` ids (`BUILTIN_WORKFLOWS` at `packages/core/src/workflows/builtin-workflows.ts:517`), with no such ids.
+- FR-2 still names a "review" runner. `packages/engine/src/workflow-node-runners/` contains seven files (code, exit-gate, gate, merge, notify, parse-steps, verification-gate) and no review runner; review lives in node handlers and a service.
+- FR-4/FR-5/FR-7 gaps persist: prompt-based design (`POST /workflows/design`, rate-limited at 10/hour, `builtin` workflows), workflow vs fragment kinds (`WorkflowDefinitionKind = "workflow" | "fragment"` at `workflow-definition-types.ts:15`), plugin-gated/deprecated built-ins, and agent/CLI workflow tools remain uncovered by any FR.
+- The constraint naming `needs-review` as a live task status remains stale (only `needs-replan` survives).
+- The full missing/stale requirement inventory is in the 2026-10-19 section above.

@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -24,3 +24,19 @@ reviewed_at: 2026-10-19
 - Missing: mission to goal linking has no FR. `MissionStore.linkGoal`, `unlinkGoal`, `listGoalIdsForMission`, `listMissionIdsForGoal`, `listGoalIdsForTask`, and `listGoalsForTask` live at `packages/core/src/missions/mission-store.ts:1459-1582`; the routes are `GET` / `PUT` / `POST` / `DELETE /api/missions/:missionId/goals` (`packages/dashboard/src/mission-routes.ts:1136-1188`) and `GET /api/goals/:id/missions` (`packages/dashboard/src/goals-routes.ts:150-169`). FR-3 covers goals, citations, and anchoring, but not the mission link surface that the `mission_goals` table exists for (`packages/core/src/postgres/schema/project.ts:1677-1687`).
 - Missing: the eval scoring contract and scheduled evaluation have no FR. `EVAL_SCORE_CATEGORIES` is `agentPerformance` / `taskOutcomeQuality` / `processCompliance` on a 0-100 scale with five bands (`packages/core/src/eval/eval-types.ts:21-40`), the per-category `finalScore` blends a deterministic and an AI score (`packages/core/src/eval/eval-scoring.ts`), the score is persisted per category with evidence (`eval-types.ts:235-244, 318-338`), and scheduled batches are created by `syncScheduledEvalBatchAutomation` from `TASK_EVALUATION_SCHEDULE_COMMAND = "fn eval --scheduled-batch"` (`packages/core/src/eval/eval-automation.ts:10-82`). FR-5 covers scoring and evidence only.
 - Missing: experiment sessions have no FR. `packages/core/src/eval/experiment-session-store.ts` and `packages/core/src/eval/experiment-session-types.ts` persist the `experiment_sessions` and `experiment_session_records` tables (`packages/core/src/postgres/schema/project.ts:1400-1441`), `packages/engine/src/eval/experiment-executor.ts` executes them, `packages/dashboard/src/experiment-routes.ts` mounts `GET /api/experiments/:id/finalize/plan` and `POST /api/experiments/:id/finalize`, and `packages/cli/src/commands/experiment-finalize.ts` exposes the CLI. The only trace in the artifact is the one-line constraint at `requirements.md:42`.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain; `requirements.md` still misstates or omits shipped behavior. Verified in `mission-types.ts`, `goal-types.ts`, `eval-types.ts`, `provider-registry.ts` and `register-integrated-routers.ts`.
+
+### Still stale
+
+- FR-1: the hierarchy has a fourth slice level (Mission → Milestones → Slices → Features), with slices as the scheduling unit.
+- FR-3: no objective or key-result field, type or table exists; a goal is `{ id, title, description?, status, createdAt, updatedAt }`.
+- FR-5: evals score tasks only (`taskId`, no feature column); feature-level scoring is the separate validation loop.
+- FR-4: no broad-scope research mode; the registry instantiates five fixed providers. NFR-1 overstates run-audit reach because the research and eval domains emit no audit rows.
+- NFR-2: features belong to slices, not milestones. FR-6 omits EvalsView and InsightsView. Both Open Questions are answered in code (`/insights` and `/evals` are mounted; goal refinement is governed by a written gate).
+
+### Still missing from requirements
+
+- Ideation, the mission validation loop, mission branch strategy/prefix, research run lifecycle/exports/token usage, finding-to-task promotion, the goal cap and citations, mission-goal linking, the eval scoring contract and scheduled evaluation, and experiment sessions.

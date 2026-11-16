@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -24,3 +24,13 @@ reviewed_at: 2026-10-19
 - Missing Technical Decisions: no row records the serial slice admission rule, which admits only the first pending slice after every earlier slice is complete and blocks on a blocked, empty, or stale milestone (`packages/core/src/missions/mission-types.ts:940-973`).
 - Missing Technical Decisions: no row records the deterministic duplicate guard that decides whether a triaged feature creates a new board task or reuses an existing one (`packages/core/src/missions/mission-store.ts:4560-4568, 4645-4649`).
 - Stale Risks and Unknowns: item 1 says the `evaluations` and `insights` integrated routers are "not fully mapped to a canonical feature surface at sync time", but the mapping is in the code: `packages/dashboard/src/routes/register-integrated-routers.ts:50-51` mounts `/insights` to `createInsightsRouter` and `/evals` to `createEvalsRouter`.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain. Verified in `register-integrated-routers.ts` (`/missions`, `/ideation`, `/insights`, `/evals`, `/research`, `/experiments`, `/goals`, `/roadmaps` are mounted).
+
+- Architecture still omits the CLI and agent-tool surfaces, the EvalsView/InsightsView and Command Center panels, and the eval/experiment/ideation stores; the autopilot source is `packages/engine/src/missions/mission-autopilot.ts`.
+- Data Models still miss the slice level, the feature's loop/provenance fields, and the goal, research, eval, ideation and validator tables.
+- API Contract still wraps the mission in a `mission` field, while the route returns fields at the top level, and still documents one route instead of the full router set.
+- Sequences still omit the research, eval and ideation-converge flows.
+- Technical Decisions still omit the eval scoring authority, goal cap, serial slice admission and duplicate guard, and overstate run-audit reach; Risks still lists the already-resolved router question.

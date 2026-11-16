@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -25,3 +25,12 @@ Acceptance criteria gaps:
 
 - The acceptance criteria list has no entry for FR-5, FR-6, NFR-2, or NFR-3, so four stated requirements are unverified.
 - Every acceptance criterion checkbox is unchecked while the document frontmatter reads `status: done` (`requirements.md:46` to `:61`).
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the artifacts still carry `status: done` with unchecked acceptance criteria and the same gaps:
+
+- FR-6 still claims node/project scoped events on `/api/events`. `packages/dashboard/src/sse.ts` carries only `projectId` (`:99`, connection matching at `:123-154`); node events use a separate proxy stream (`register-proxy-routes.ts`).
+- FR-4 still lists only serve/daemon/dashboard/project/node/mesh. The CLI also ships `fn cloud` (`packages/cli/src/commands/cloud.ts`) and `fn desktop` (`packages/cli/src/commands/desktop.ts`), and a TUI exists only for `fn dashboard`.
+- Implemented behavior still has no FR: Docker-managed node provisioning (`packages/core/src/docker/docker-provisioning.ts`, `mesh/mesh-config-generator.ts`, `register-docker-provisioning-routes.ts`), cloud-link pairing/presence (`packages/core/src/cloud-link/client.ts`), LAN node discovery (`mesh/node-discovery.ts`, `register-discovery-routes.ts`), cross-node settings sync, and node plugin/version compatibility checks.
+- The acceptance criteria still omit FR-5, FR-6, NFR-2, and NFR-3, and all checkboxes remain unchecked under `status: done`.

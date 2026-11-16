@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -39,3 +39,12 @@ reviewed_at: 2026-10-19
 ### Risks and unknowns
 
 - **The claim that confirmation state is "tracked by engine tests" no longer holds.** The pending confirmation registry is an in-memory map (`packages/engine/src/overseer/planner-recovery-controller.ts:200`), so it does not survive an engine restart, and the only engine suite that exercised the confirmation lifecycle is skipped (`packages/engine/src/__tests__/planner-recovery-controller-confirmation.test.ts:39-43`).
+
+## Sync drift: 2026-11-16
+
+`specification.md` is unchanged (`status: done`), so the 2026-10-19 inventory still holds. Re-verified against current code on this date:
+
+- Architecture still lists `register-planning-chat` as a dashboard API registrar; it is an empty scaffold (`packages/dashboard/src/routes/register-planning-chat.ts:1-5`) and is not mounted anywhere in `routes.ts` or the mount sequence.
+- API contract still documents `GET /api/tasks/:id/overseer-state`; no such route exists (only the transient `plannerOverseerState` enrichment and the `/overseer/*` action routes).
+- The oversight sequence still names `task:oversight-withheld-human-control`; the code emits `overseer:oversight-withheld-human-control` (`packages/engine/src/project-engine.ts:2732`).
+- The data-model and unreachable-confirm-step discrepancies from the 2026-10-19 section above still hold.

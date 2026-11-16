@@ -1,7 +1,7 @@
-agents_ref: fdf8a2e80abd1cf213b575096ca452ae26fe9095
+agents_ref: 31f0fc756d0bbeddde013a51985880c24139f7a8
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-10-19
-code_ref: d09efcdb75a9d9b201f04c9a45fe11dc1a8f6edd
+last_synced: 2026-11-16
+code_ref: eb7eef49d5a0fe3e84e99be30e8ed9622a694e35
 code_index:
   "p1-task-board-lifecycle":
     - packages/core/src/task-store
@@ -39,7 +39,7 @@ code_index:
     - packages/core/src/research
     - packages/core/src/eval
     - packages/core/src/ideation
-    - packages/engine/src/mission-autopilot.ts
+    - packages/engine/src/missions/mission-autopilot.ts
     - packages/dashboard/src/routes/register-integrated-routers.ts
   "p7-command-center-monitoring":
     - packages/dashboard/app/components/command-center/CommandCenter.tsx
@@ -50,7 +50,7 @@ code_index:
   "p8-secrets-settings-configuration":
     - packages/core/src/secrets
     - packages/core/src/config
-    - packages/core/src/mcp-builtin-servers.ts
+    - packages/core/src/config/mcp-builtin-servers.ts
     - packages/dashboard/src/routes/register-secrets-routes.ts
   "p9-multi-node-shells":
     - packages/core/src/mesh

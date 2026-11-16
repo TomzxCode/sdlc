@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -27,3 +27,14 @@ reviewed_at: 2026-10-19
 - The memory backup command has no test case. `packages/cli/src/commands/__tests__/memory-backup.test.ts` and `packages/cli/src/commands/__tests__/memory-backup-lock-retry.test.ts` are absent from the plan.
 
 - The declared scope is narrower than the test tree. tests.md:11 puts "Dashboard rendering and whole-graph canvas behavior" out of scope, but `packages/dashboard/app/components/__tests__/KnowledgeGraphPanel.test.tsx` and `packages/dashboard/app/hooks/__tests__/useKnowledgeGraph.test.ts` exist and cover the graph tab.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain.
+
+- TC-12/TC-13/TC-14 still have no requirement anchor, and TC-12 still names an ambiguous `memory-backend-stash.test.ts` (two files exist in different directories).
+- TC-19 still has no end-to-end test: `knowledge-graph-command.test.ts` mocks `@fusion/core`; the nearest real build is the core `graph-builder-equivalence.test.ts`.
+- The two CLI graph test files (`knowledge-graph-command.test.ts`, `knowledge-graph-bundle-shape.test.ts`) are still absent from the plan.
+- No test case for the dashboard HTTP contract (`register-knowledge-graph-routes.test.ts`, `knowledge-graph-access.test.ts`).
+- No test case for the MCP memory server, the recall layer, the Memory Keeper engine pass, or the memory backup command.
+- The memory backend surface is still only partly covered; the declared scope still excludes dashboard tests that exist (`KnowledgeGraphPanel.test.tsx`, `useKnowledgeGraph.test.ts`).

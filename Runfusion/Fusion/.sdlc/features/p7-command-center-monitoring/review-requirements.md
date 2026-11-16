@@ -1,7 +1,7 @@
 ---
 artifact: requirements
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -31,3 +31,12 @@ Acceptance criteria gaps:
 
 - The acceptance criteria list has no entry for FR-4, FR-5, FR-6, NFR-2, or NFR-3, so five stated requirements are unverified.
 - Every acceptance criterion checkbox is unchecked while the document frontmatter reads `status: done` (`requirements.md:46` to `:61`).
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the artifacts still carry `status: done` with unchecked acceptance criteria and the same gaps. Concrete discrepancies still present:
+
+- FR-3 still understates the connector set. `packages/dashboard/src/routes/register-signal-routes.ts:47-52` registers six providers (`webhook`, `sentry`, `datadog`, `pagerduty`, `gitlab`, `github`), while the requirement names four and labels them all HMAC-signed. GitLab uses a secret-token header rather than HMAC.
+- FR-2 still conflates per-task cost with the usage indicator. `packages/dashboard/app/components/UsageIndicator.tsx` is a separate header component (not part of the Command Center) and shows provider quota windows, not per-task cost.
+- Implemented behavior still has no FR: OTLP collector export (`packages/dashboard/src/otel-exporter.ts`), the Prometheus `/metrics` surface (`packages/dashboard/src/metrics/index.ts`), the operator control surface (`packages/dashboard/app/components/command-center/areas/SystemControlsArea.tsx`), signal body-cap/rate-limit/replay protections (`register-signal-routes.ts:303-317`), the monitor regression fix loop (`packages/dashboard/src/monitor-trait.ts`), provider health monitoring (`packages/dashboard/src/provider-health-monitor.ts`), and org export/import (`packages/dashboard/app/components/command-center/OrgPortabilityControls.tsx`).
+- The acceptance criteria still omit FR-4, FR-5, FR-6, NFR-2, and NFR-3, and all checkboxes remain unchecked under `status: done`.

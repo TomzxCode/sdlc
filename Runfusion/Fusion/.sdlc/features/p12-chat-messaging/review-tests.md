@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -20,3 +20,14 @@ reviewed_at: 2026-10-19
 - Significant new test area not covered: room attachment content reading. `packages/dashboard/src/__tests__/chat-attachment-content.test.ts:127-240` covers basename resolution and text inlining for the `chat-room-attachments` root.
 - Significant new test area not covered: the room creation modal. `packages/dashboard/app/components/__tests__/CreateRoomModal.test.tsx` covers the dialog that no production component renders.
 - Significant new test area not covered: the mailbox archive routes. `packages/dashboard/src/routes/__tests__/messaging-archive-routes.test.ts` covers the `/api/messages/:id/archive` and `/unarchive` routes from `packages/dashboard/src/routes/register-messaging-scripts.ts:525-545`.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain.
+
+- TC-1 still does not match its file (`chat-memory-focus.test.ts` tests `chat_sessions.memory_focus` persistence, not room message selection).
+- TC-2 still has no test for the `Invalid attachment path` rejection in `resolveRoomAttachmentPath`.
+- TC-3 still tests the `chat_messages` table, not room message tie stability; room queries order by `created_at` with no id tiebreak.
+- TC-4 and TC-5 still have no tests; the four room test files named in `docs/architecture.md` do not exist and the dashboard no longer renders rooms. Room reply behavior is covered only in `chat-manager.test.ts`.
+- Coverage matrix: FR-6 has no case, NFR-2 is mapped to nonexistent TC-4, and there are no rows for mailbox messaging, the CLI commands or `fn_post_room_message`.
+- Uncovered test areas remain: room transcript compaction, `useChatRooms` hook, chat-rooms API client, room attachment content reading, `CreateRoomModal`, and mailbox archive routes.

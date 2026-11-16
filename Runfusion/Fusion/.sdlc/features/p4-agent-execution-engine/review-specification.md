@@ -1,7 +1,7 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -18,3 +18,11 @@ reviewed_at: 2026-10-19
 - Stale Technical Decision: the "Sandbox pluggable" row names "bubblewrap / spawn-based" as the backends. `packages/engine/src/sandbox/index.ts:35-60` resolves native, bubblewrap, container, sandbox-exec, or a test override, and `packages/engine/src/sandbox/container.ts` and `packages/engine/src/sandbox/sandbox-exec-backend.ts` implement the two backends the spec omits.
 - Missing Technical Decision: no row records that sandbox settings are inert unless the experimental flag is on. `packages/core/src/sandbox/sandbox-settings.ts:4-6` gates the feature, and `packages/engine/src/executor/configured-command.ts:29-31` resolves the configured-command backend through that path.
 - Stale Architecture: the diagram places "agent heartbeat (durable agents)" as a consumer of the task store, but the recovery budget is shared by two entry paths and is enforced in one helper. `packages/engine/src/agents/agent-heartbeat-error-recovery.ts:12-16` defines the single budget key and the shared limit, `packages/engine/src/agent-heartbeat.ts:2426` and `packages/engine/src/self-healing.ts:16197` are the two emitters of the same `agent:auto-recover-error-state` event, and `packages/engine/src/agents/agent-heartbeat-error-recovery.ts:40-61` reads the legacy and current attempt counters as one budget. The Technical Decisions table already states the shared budget, so the diagram and the table disagree.
+
+## Sync drift: 2026-11-16
+
+Reconciled against current code. All 2026-10-19 discrepancies remain. Verified in `packages/core/src/types/agents/agents.ts`, `agent-state.ts` and `packages/dashboard/src/routes/register-agent-core-routes.ts`.
+
+- Data Models: the field is `state: AgentState` with `AGENT_STATES = ["idle", "active", "running", "paused", "error"]`, not `status` with `idle/active/error/paused`. `permissionPolicy?` is optional and `pauseReason?: string` is free-form. The table still omits `roles`, `metadata`, `runtimeConfig`, `permissions`, `lastError`, token totals and `heartbeatProcedurePath`.
+- API Contracts: `POST /api/agents` accepts no `model` field and returns `201` with a bare agent object (`res.status(201).json(agent)`), not `200` with `{ agent }`. The wider agent route surface, including `PATCH /api/agents/:id/permissions`, is still undocumented.
+- Sequences / Technical Decisions: the sandbox backends are native, sandbox-exec, bubblewrap, firejail, docker, podman and custom, with no spawn backend; sandbox settings are inert unless the experimental flag is on. The durable-recovery sequence still omits the third `error-unrecoverable`-adjacent park reason admitted by the shared retry budget.

@@ -1,7 +1,7 @@
 ---
 artifact: tests
 verdict: changes-requested
-reviewed_at: 2026-10-19
+reviewed_at: 2026-11-16
 ---
 
 ## Sync drift: 2026-10-19
@@ -36,3 +36,11 @@ Significant test areas the plan does not cover:
 - The CSV export is absent: `packages/dashboard/src/__tests__/command-center-csv.test.ts` covers the serializer and the table builders.
 - The agent activity surface is absent: `packages/dashboard/src/__tests__/agent-activity-route.test.ts` and `packages/dashboard/src/__tests__/sse-agent-activity.test.ts` cover the route and the SSE frames.
 - The Command Center area and chart suites are absent from Key Test Files beyond the wildcard. `packages/dashboard/app/components/command-center/areas/__tests__/` holds nine files including `areas.test.tsx`, `system-controls-job-stream.test.tsx`, and `areas.github-signals.test.tsx`, and `packages/dashboard/app/components/command-center/charts/recharts/__tests__/` holds `LineChart.test.tsx` and `PieChart.test.tsx`.
+
+## Sync drift: 2026-11-16
+
+Re-verified against current code; the drift recorded on 2026-10-19 still holds:
+
+- Key Test Files still names paths that do not exist: `packages/dashboard/src/routes/__tests__/register-signal-routes*.test.ts` (the suite is at `packages/dashboard/src/__tests__/register-signal-routes.test.ts`) and `packages/dashboard/app/__tests__/usage-*.test` (coverage is in `app/hooks/__tests__/useUsageData.test.ts`, `app/components/__tests__/UsageIndicator.test.tsx`, and `src/__tests__/usage.test.ts`).
+- TC-1 still expects "202 for valid", but the route returns 201 for a created task and 200 for non-actionable/deduplicated deliveries (`register-signal-routes.ts:201-235`, `:283`) and adds 413/429 (`:303-317`).
+- The Coverage Matrix still has no rows for FR-5, FR-6, NFR-2, or NFR-3, and the plan still omits on-disk suites for the metrics endpoint (`packages/dashboard/src/metrics/__tests__/`), OTLP, CSV export, provider health, and agent activity.
