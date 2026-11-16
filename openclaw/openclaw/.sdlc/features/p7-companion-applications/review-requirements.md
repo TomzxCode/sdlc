@@ -59,3 +59,15 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact says: the constraints cover only iOS membership, macOS notarization, Android API level, and optionality (requirements.md:41-44).
 - Code: the Linux and Windows desktop client has its own signing, updater channels (`linux-stable`, `windows-stable`), Debian and AppImage packaging, and a release request workflow that runs separately from core finalization.
 - Advisory: a constraint list that omits a shipped release channel is incomplete, but it does not mislead about behavior.
+
+## Sync drift: 2026-11-16
+
+The 2026-10-19 drift remains present. The artifact is unchanged and the code still exposes the Linux and Windows Tauri client, the watch, widget, share-extension, wear, wake-word, and MLX speech surfaces, and no in-tree C# Windows Hub.
+
+### Browser-based device pairing and pairing notifications are unlisted (advisory)
+
+- Evidence: `src/state/openclaw-state-schema.sql:644-656` defines `device_pairing_browser_requests`, with active consumers `src/infra/device-pairing-browser-code.worker.ts` and `src/gateway/server.browser-pair.test.ts`. `extensions/device-pair/notify.ts` and `extensions/device-pair/index.ts:424-430` add a pairing notification service on a 10-second poll.
+- Artifact says: FR-7 (requirements.md:29) covers device pairing only as a generic secure gateway connection, and FR-2 (requirements.md:24) covers push notifications only for assistant messages.
+- Code: a browser approval flow lets a user approve a pairing request from a browser using a code, and the device-pair plugin can notify subscribers of pending pairing requests.
+- An implemented user-facing behavior is missing from the requirements.
+- Advisory.

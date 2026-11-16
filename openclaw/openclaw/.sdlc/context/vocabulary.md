@@ -8,6 +8,7 @@
 | Agent | The AI assistant instance that processes conversations and executes tools |
 | Agent Binding | A routing rule that names the agent that owns conversations matching channel facts such as account, peer, guild, team, or Discord role |
 | Audit Ledger | The durable, content-free record of Gateway activity stored in `audit_events` and read back with `openclaw audit` |
+| Automation | OpenClaw's built-in scheduler that persists jobs, wakes the agent at the right time, and can deliver output to a chat channel, a webhook, or nowhere; managed with `openclaw automations`, with `openclaw cron` as an alias |
 | Board (Workboard) | An optional Kanban-style board of agent-sized work cards in the Control UI, plus a Sessions board that groups sessions by rules over Gateway-owned facts |
 | Channel | A messaging platform integration (WhatsApp, Telegram, Discord, etc.) that the assistant communicates through |
 | ClawHub | The community plugin marketplace at https://clawhub.ai |
@@ -25,16 +26,20 @@
 | Manifest | Plugin metadata file describing capabilities, dependencies, and configuration |
 | Memory | The durable store of curated, episodic, and prospective knowledge, owned by the selected memory plugin |
 | Memory Index | The SQLite index of memory chunks and their embeddings that backs recall and search |
+| Node | A companion device (macOS, iOS, watchOS, Android, or headless) that connects to the Gateway with the `node` role and exposes commands such as camera, device, notifications, and system through `node.invoke` |
 | Onboard | The CLI setup wizard that guides first-time configuration |
+| Pairing | The trust-establishment flow that approves a new client, node, or channel sender before it can interact with the Gateway |
 | Plugin | Synonym for extension; a self-contained package installable via the plugin system |
 | Project | A registered or cloned repository that groups sessions and the worktrees made for them |
 | Session | A conversation between a user and an agent, persisted across messages |
 | Session Card | The per-session progress summary that a user or agent updates with Markdown and checklist steps |
 | Session Placement | The decision and durable record of where a session runs, from the local Gateway to a remote worker environment |
+| Skill | A directory containing a `SKILL.md` instruction file that teaches the agent how and when to use tools, loaded from bundled, workspace, project, personal, or workshop sources |
 | Standing Intent | An event-conditioned instruction that fires when a trigger appears, stored as prospective memory in the owning agent's database |
 | Subagent | A child agent spawned by the parent agent to handle a subtask |
 | Team Report | A daily, weekly, or monthly report of GitHub organization activity and optional Discord discussion |
 | Tool | A capability the agent can invoke (bash, file I/O, web search, code execution, etc.) |
+| WebChat | A native chat interface for the Gateway, available in the macOS and iOS apps and the Control UI chat tab, that uses the same sessions and routing rules as other channels over the Gateway WebSocket |
 | Worker Turn | One agent turn executed on a remote node worker, claimed by a single owner and recorded in `node_worker_turns` |
 | Worktree | An isolated git checkout used for a task, either managed by OpenClaw or created by hand |
 
@@ -47,6 +52,7 @@
 | Auth Profile | A named set of credentials for a provider (API keys, OAuth tokens) |
 | Canvas | Agent-driven visual workspace rendered in the Control UI for rich interactive content |
 | ClawSweeper | Automated issue/PR triage and maintenance bot for the OpenClaw repository |
+| Code Mode | A tool execution mode that lets an agent run JavaScript in a confined runtime to call tools and make HTTP requests directly, often used for scripting and orchestration |
 | Compactions | The number of times a session's context has been summarized, reported in `/status` |
 | DM Policy | Direct Message pairing policy controlling who can message the assistant |
 | Env Vars | Environment variables used for configuration (OPENAI_API_KEY, etc.) |
@@ -67,11 +73,14 @@
 | Solid | The reactive UI library used for the Control UI and its plugin views (Solid 2) |
 | Spawn Broker | The process layer that owns child process creation, cleanup, and diagnostics for command execution |
 | State Event Stream | The append-only log of durable session state changes in `session_state_events`, capped by a per-session head in `session_state_heads` |
+| Swarm | A tool that orchestrates many sub-agents from a Code Mode script with structured results, bounded concurrency, and progress reporting, intended for large parallel fan-out |
 | Talk | Voice conversation runtime supporting full-duplex audio sessions |
 | Team deployment | One shared Gateway configured for a whole team (shared sessions, roles, workspace chat); same product as personal setup, not a separate edition |
 | Telemetry check | Daily version-check request plus opt-in anonymous feature statistics, controlled by `telemetry.enabled` and `update.checkOnStart` |
 | Trajectory | Session recording capturing agent actions for replay and debugging |
 | Transcript | The persisted record of a conversation, including tool calls and results |
+| TypeBox | A TypeScript-first schema library used as the source of truth for the Gateway WebSocket protocol, driving runtime validation, JSON Schema export, and Swift codegen |
+| Webhook | An authenticated HTTP ingress route that lets an external service trigger a Gateway automation job or agent run |
 | Workboard Contract | The shared status, priority, and event vocabulary that the Workboard plugin and its database port agree on (`packages/workboard-contract`) |
 | Worker Launch Descriptor | The description of a worker process to launch, including its bundle, environment, and tool surface |
 | Worker Task Pool | The pool of database worker threads that run storage operations off the main process |
@@ -86,13 +95,16 @@
 | ADR | Architecture Decision Record |
 | CI | Continuous Integration |
 | CLI | Command-Line Interface |
+| DNS-SD | DNS Service Discovery |
 | E2E | End-to-End (testing) |
 | ESM | ECMAScript Modules |
 | FR | Functional Requirement |
 | HMAC | Hash-based Message Authentication Code |
 | JSON | JavaScript Object Notation |
 | LSP | Language Server Protocol |
+| LTS | Long-Term Support |
 | MCP | Model Context Protocol |
+| mDNS | multicast DNS |
 | NFR | Non-Functional Requirement |
 | OAuth | Open Authorization |
 | OTel | OpenTelemetry |

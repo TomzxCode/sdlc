@@ -71,3 +71,29 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact says: `MediaGenerationRequest` has `prompt`, `provider`, `options`, `stream`, and `TTSRequest` has `text`, `voice`, `provider` (specification.md:36-49).
 - Code: neither `MediaGenerationRequest` nor `TTSRequest` exists. The shipped types are `ImageGenerationRequest` in `src/image-generation/types.ts:57-75`, `SpeechSynthesisRequest` in `src/tts/provider-types.ts:44-50`, and `ResolvedTtsConfig` in `src/tts/tts-types.ts:12-29`. The shared generation runtime takes `cfg`, `agentDir`, `modelOverride`, and `autoProviderFallback` in `src/media-generation/runtime-shared.ts`.
 - Advisory: data model granularity, not a contradiction of the requirement text.
+
+## Sync drift: 2026-11-16
+
+The 2026-10-19 drift remains present. The artifact is unchanged and the code still contradicts the out-of-scope claim, the Windows stack row, the DevicePairing table, and the reversed pairing sequence.
+
+### The pairing data model gained three more tables since 2026-10-19 (blocking)
+
+- Evidence: `src/state/openclaw-state-schema.sql:627-635` (`device_pair_setup_completions`), `:637-642` (`device_pairing_join_codes`), `:644-656` (`device_pairing_browser_requests`). Active consumers include `src/infra/device-pairing-join-code.worker.ts`, `src/infra/device-pairing-browser-code.worker.ts`, and `src/infra/device-bootstrap.test.ts`.
+- Artifact says: the specification defines a single `DevicePairing` table with five columns (specification.md:33-41).
+- Code: pairing now spans at least nine tables, adding join codes, browser approval requests, setup completion receipts, device identities, per-role auth tokens, and gateway-scoped tokens.
+- The 2026-10-19 review already flagged the five-table split. The 2026-11-16 snapshot adds three more tables, so the gap has grown.
+- Blocking.
+
+### The pairing sequence omits browser approval and notification hops (advisory)
+
+- Evidence: `extensions/device-pair/notify.ts`, `extensions/device-pair/notify-state.ts`, `extensions/device-pair/api.ts`, `extensions/device-pair/doctor-contract-api.ts`, `extensions/device-pair/index.ts:424-430`.
+- Artifact says: the pairing sequence (specification.md:47-54) has five hops ending at an authenticated WebSocket connection.
+- Code: the device-pair plugin now exposes a notification service that polls every 10 seconds and a public SDK surface, and a browser approval path exists through `device_pairing_browser_requests`.
+- Advisory: the 2026-10-19 review already flagged the reversed first hop. The sequence is now missing two more steps.
+
+### The Tauri client gained new runtime responsibilities (advisory)
+
+- Evidence: `apps/linux/src-tauri/src/bundled_runtime.rs`, `deep_links.rs`, `remote_gateway.rs`, `pending_approvals.rs`, `gateway_control_auth.rs`, `desktop_bridge.rs`, `gateway_ws.rs`, `installer.rs`.
+- Artifact says: the architecture diagram (specification.md:14-20) shows one generic companion app speaking the Gateway Protocol.
+- Code: the Linux and Windows Tauri client now also manages a bundled Gateway runtime, deep links, remote gateways, pending approvals, gateway control auth, and a desktop bridge.
+- Advisory: the 2026-10-19 review already flagged the missing Tauri client. Its responsibilities have grown.

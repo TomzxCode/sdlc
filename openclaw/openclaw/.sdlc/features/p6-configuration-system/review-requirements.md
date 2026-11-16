@@ -40,3 +40,29 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Code: `src/config/source-file.ts:34` exposes `createConfigFileAdapter`, which watches the config file plus every included path, so the effective config is a file set, not one file.
 - Impact: the constraint is technically satisfied by the "by default" qualifier, but the include mechanism is the main way the file is extended and is not mentioned.
 - Classification: advisory.
+
+## Sync drift: 2026-11-16
+
+The 2026-10-19 drift remains unresolved as of this sync.
+The requirements still describe the pre-SecretRef system and keep the schema-generation question open.
+
+### Blocking: FR-7 still omits the SecretRef provider model and secrets runtime
+
+- Requirements.md FR-7 still names only env vars, config file, and credentials file as auth configuration methods.
+- Code: `src/secrets/ref-contract.ts:4` defines `SecretRefSource = "env" | "file" | "exec" | "store"` and the `{ source, provider, id }` shape.
+- Code: `src/config/zod-schema.core.ts:130-140` defines `SecretsConfigSchema` with `providers` and per-source `defaults`.
+- Code: the resolver, runtime, store, audit, configure, apply, and plan surfaces under `src/secrets/` remain first-class config concerns with no matching requirement.
+- Classification: blocking.
+
+### Blocking: the schema-generation open question is still stale
+
+- Requirements.md still asks whether a config schema generation tool should exist.
+- Code: `scripts/generate-base-config-schema.ts` and `scripts/generate-bundled-channel-config-metadata.ts` are wired as `pnpm check:base-config-schema`, `pnpm check:bundled-channel-config-metadata`, and `pnpm config:channels:check` at `package.json:1847-1848,1907`.
+- Code: `src/config/bundled-channel-config-metadata.generated.ts` is the generated artifact, and `openclaw config schema` and `openclaw config validate` are the operator surfaces.
+- Classification: blocking.
+
+### Advisory: the single-file constraint still omits includes and the state-directory override
+
+- Requirements.md:44 still says config is a single JSON file by default.
+- Code: `src/config/includes.ts` implements the `$include` chain with a cycle check and a 2 MiB per-file limit, and `src/config/paths.ts` resolves the file under the state directory.
+- Classification: advisory.

@@ -20,9 +20,9 @@ Update this file when the monitoring stack changes.
 
 | Library | Pillar | Configuration |
 |---|---|---|
-| tslog 5.2.0 (via src/logging/logger.ts) | Logging | Console plus JSONL file transport, level from logging.level with the OPENCLAW_LOG_LEVEL env override, secret redaction on console and diagnostic-export records |
+| tslog 5.4.0 (via src/logging/logger.ts) | Logging | Console plus JSONL file transport, level from logging.level with the OPENCLAW_LOG_LEVEL env override, secret redaction on console and diagnostic-export records |
 | In-process diagnostic event bus (src/infra/diagnostic-events.ts, openclaw/plugin-sdk/diagnostic-runtime) | Metrics, traces, logs | Gateway and bundled plugins emit structured diagnostic events, exporters subscribe only when diagnostics and the plugin are enabled |
-| OpenTelemetry SDK (@opentelemetry/sdk-node 0.223.0, @opentelemetry/api 1.9.1, @opentelemetry/api-logs 0.223.0, SDK packages 0.223.0, core, resources, and propagators 2.12.0, @opentelemetry/semantic-conventions 1.43.0) plus OTLP proto exporters (@openclaw/diagnostics-otel) | Tracing, metrics, logs | OTLP/HTTP protobuf push to diagnostics.otel.endpoint (example http://otel-collector:4318), per-signal endpoint overrides, protocol http/protobuf only, traces default on with metrics and opt-in logs |
+| OpenTelemetry SDK (@opentelemetry/sdk-node 0.223.0, @opentelemetry/api 1.9.1, @opentelemetry/api-logs 0.223.0, SDK packages 0.223.0, core, resources, and propagators 2.12.0, @opentelemetry/semantic-conventions 1.44.0) plus OTLP proto exporters (@openclaw/diagnostics-otel) | Tracing, metrics, logs | OTLP/HTTP protobuf push to diagnostics.otel.endpoint (example http://otel-collector:4318), per-signal endpoint overrides, protocol http/protobuf only, traces default on with metrics and opt-in logs |
 | diagnostics-prometheus in-process store (@openclaw/diagnostics-prometheus) | Metrics | Prometheus text exposition at GET /api/diagnostics/prometheus on the Gateway HTTP port, gateway auth with operator.read scope, 2048 series cap with openclaw_prometheus_series_dropped_total overflow counter |
 | sentry-sdk or equivalent error tracker | Errors | Not configured (no error-tracking dependency in package.json and no tracker integration in src) |
 

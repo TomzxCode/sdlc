@@ -1,44 +1,44 @@
 # Architecture
 
-## System Overview
+## System overview
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                           User Channels                                 │
-│  WhatsApp  Telegram  Discord  Slack  iMessage  IRC  Signal  WebChat ... │
-└───────────────────────────────────┬──────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│                  Gateway Server (node:http + WebSocket)                  │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────────────────────┐   │
-│  │   Auth   │ │ Sessions │ │ Channels │ │      Control UI (Solid)   │   │
-│  └──────────┘ └──────────┘ └──────────┘ └───────────────────────────┘   │
-│  ┌──────────┐ ┌──────────┐ ┌──────────────────┐ ┌─────────────────────┐   │
-│  │   CLI    │ │  Config  │ │ Plugin Registry  │ │ Worker Environments │   │
-│  └──────────┘ └──────────┘ └──────────────────┘ └─────────────────────┘   │
-└───────────────────────────────────┬──────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│                           Agent Runtime                                  │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌───────────┐    │
-│  │  Models  │ │  Tools   │ │  Context │ │  Memory   │ │ Placement │    │
-│  │ (Catalog)│ │ (+ MCP)  │ │  Engine  │ │ (+Recall)│ │  Workers  │    │
-│  └──────────┘ └──────────┘ └──────────┘ └───────────┘ └───────────┘    │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────┐                  │
-│  │  Prompts │ │Compaction│ │Trajectory│ │ Subagents │                  │
-│  └──────────┘ └──────────┘ └──────────┘ └───────────┘                  │
-└───────────────────────────────────┬──────────────────────────────────────┘
-                                    │
-                                    ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│   State Plane: SQLite (default) or Postgres (experimental)               │
-│   Remote Placement: Gateway host | Paired device node | Cloud worker     │
-└──────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    Channels["User channels: WhatsApp, Telegram, Discord, Slack, Teams, iMessage, IRC, Signal, WebChat"]
+
+    subgraph Gateway["Gateway server (node:http plus WebSocket)"]
+        direction LR
+        Auth["Auth"]
+        Sessions["Sessions"]
+        ChannelMgr["Channels"]
+        UI["Control UI (Solid)"]
+        CLI["CLI"]
+        Config["Config"]
+        Plugins["Plugin registry"]
+        Workers["Worker environments"]
+    end
+
+    subgraph AgentRuntime["Agent runtime"]
+        direction LR
+        Models["Models (catalog)"]
+        Tools["Tools (+ MCP)"]
+        Context["Context engine"]
+        Memory["Memory (+ recall)"]
+        Placement["Placement workers"]
+        Prompts["Prompts"]
+        Compaction["Compaction"]
+        Trajectory["Trajectory"]
+        Subagents["Subagents"]
+    end
+
+    StatePlane["State plane: SQLite by default, or experimental PostgreSQL<br/>Placement targets: Gateway host, paired device node, or cloud worker"]
+
+    Channels --> Gateway
+    Gateway --> AgentRuntime
+    AgentRuntime --> StatePlane
 ```
 
-## Entity Relationship Diagram
+## Entity relationship diagram
 
 The control-plane entities live in the shared state database (`src/state/openclaw-state-schema.sql`), and the per-agent entities live in each agent database (`src/state/openclaw-agent-schema.sql`).
 The full typed schema, constraints, and indexes live in `schema.dbml`.
@@ -332,7 +332,7 @@ erDiagram
     PROJECT ||--o{ WORKTREE : "repository checkout"
 ```
 
-## Key Components
+## Key components
 
 | Component | Responsibility | Technology |
 |---|---|---|
@@ -349,7 +349,7 @@ erDiagram
 | Cloud Workers | Gateway-side control plane for session placement, worker environment lifecycle, and launch authorization | TypeScript, `src/gateway/worker-environments/`, `packages/worker-runtime/` |
 | Worker Runtime | Worker-side runtime that executes turns and tool calls away from the Gateway host | TypeScript, `src/worker/` |
 | Node Host | Device capabilities, worker supervision, file transfer, and node-side execution | TypeScript, `src/node-host/` |
-| Rust Crates | Gateway client transport and policy, and node host runtime | Rust (`crates/openclaw-gateway-client`, `crates/openclaw-node-host`) |
+| Rust Crates | Gateway client transport and policy, node host runtime, and iroh ID tunnel bindings | Rust (`crates/openclaw-gateway-client`, `crates/openclaw-node-host`), plus separate iroh crates (`crates/openclaw-iroh-ffi`, `crates/openclaw-iroh-node`) |
 | Memory | Memory plugins, host SDK, file and index owners, dreaming, recall lanes, standing intents | TypeScript, `src/memory/`, `packages/memory-host-sdk/`, `extensions/memory-core/`, `extensions/active-memory/`, `extensions/memory-lancedb/`, `extensions/memory-wiki/` |
 | Boards and Projects | Session boards, workboard cards, project registry, session progress cards | TypeScript, `src/boards/`, `src/projects/`, `src/session-cards/`, `packages/workboard-contract/` |
 | Skills | Bundled skill definitions, skill library, workshop revisions, usage tracking | Markdown with frontmatter, `src/skills/`, `skills/`, `custodian-skills/` |
@@ -361,9 +361,24 @@ erDiagram
 | Storage and Snapshots | Named storage destinations with encryption at rest, database and git backups | TypeScript, `src/storage/`, `src/snapshot/` |
 | Daemon | Service install, launchd and systemd lifecycle, runtime pins | TypeScript, `src/daemon/` |
 | MCP | Model Context Protocol server, plugin tool bridge, and stdio server | TypeScript, `src/mcp/` |
-| Mobile and Desktop Apps | Companion applications for macOS, iOS, Android, Windows, and Linux | Swift (iOS, macOS), Kotlin (Android), C# (Windows), Tauri (Linux) |
+| Mobile and Desktop Apps | Companion applications for macOS, iOS, Android, and Linux, plus a shared Swift kit and voice helpers | Swift (iOS, macOS, shared kit), Kotlin (Android), Rust and Tauri (Linux) |
+| Media, Generation, and Web Tools | Image, music, and video generation, media and link understanding, realtime transcription, TTS, talk and meeting bots, web search, and web fetch | TypeScript, `src/image-generation/`, `src/music-generation/`, `src/video-generation/`, `src/media-generation/`, `src/media-understanding/`, `src/realtime-transcription/`, `src/tts/`, `src/talk/`, `src/meeting-bot/`, `src/web-search/`, `src/web-fetch/`, and provider plugins |
 
-## Data Flow
+## Data flow
+
+```mermaid
+flowchart LR
+    In["Channel message"] --> Ingress["Normalize and queue<br/>(channel_ingress_events)"]
+    Ingress --> Drain["Ingress drain resolves<br/>conversation and session"]
+    Drain --> Session["Session controller<br/>serializes turn"]
+    Session --> Context["Context engine assembles<br/>prompt with memory and intents"]
+    Context --> Model["Model provider generates<br/>response and invokes tools"]
+    Model --> Compact["Context compaction and<br/>memory flush"]
+    Compact --> Delivery["Outbound delivery queue<br/>(delivery_queue_entries)"]
+    Delivery --> Render["Channel plugin renders<br/>and delivers"]
+    Session -.-> Persist["Persist state, transcripts,<br/>audit events, and receipts"]
+    Session -.-> Placement["Placement: gateway host,<br/>device node, or cloud worker"]
+```
 
 1. A user sends a message on a channel (WhatsApp, Telegram, Discord, Slack, etc.).
 2. The channel plugin normalizes the message and writes it to the durable ingress queue (`channel_ingress_events`).
@@ -383,20 +398,20 @@ erDiagram
 | Runtime | Node.js `>=24.16.0 <25 \|\| >=26.1.0`, Bun compatible |
 | State storage | SQLite via Kysely query builder, with an experimental PostgreSQL engine under `src/infra/database-engine/` |
 | Schema sources | `src/state/openclaw-state-schema.sql` for the shared control plane, `src/state/openclaw-agent-schema.sql` for the per-agent data plane, and generated PostgreSQL DDL under `src/state/postgres-schema.generated/` |
-| Schema versions | State 28 and agent 31 (`src/state/openclaw-schema-versions.ts`) |
+| Schema versions | State 40 and agent 42 (`src/state/openclaw-schema-versions.ts`) |
 | Configuration | JSON files with zod schema validation |
 | CI/CD | GitHub Actions, Blacksmith Testbox |
-| Package manager | pnpm 12.12.1 (workspace monorepo) |
-| Language | TypeScript 7.1.0-dev.20261011.1 |
-| Build | tsdown 0.23.1 (TypeScript bundler) |
-| Linting | oxlint 1.87.0 |
-| Formatting | oxfmt 0.72.0 |
-| Testing | Vitest 5.0.3, Vite 8.3.4 |
-| Runtime libraries | Kysely 0.29.6, tslog 5.2.0, zod 4.6.6 |
+| Package manager | pnpm 12.15.0 (workspace monorepo) |
+| Language | TypeScript 7.1.0-dev.20261028.1 |
+| Build | tsdown 0.23.4 (TypeScript bundler) |
+| Linting | oxlint 1.89.0 |
+| Formatting | oxfmt 0.74.0 |
+| Testing | Vitest 5.0.5, Vite 8.3.5 |
+| Runtime libraries | Kysely 0.29.7, tslog 5.4.0, zod 4.6.7 |
 | Protocol | Gateway Protocol (custom WebSocket and HTTP RPC) |
 | Hosting | Self-hosted (user's machine, VPS, Docker, fly.io) |
 
-## Architecture Decisions
+## Architecture decisions
 
 Notable patterns include:
 - Single trust-domain architecture: a team deployment shares one control plane through configuration, not multi-tenant isolation

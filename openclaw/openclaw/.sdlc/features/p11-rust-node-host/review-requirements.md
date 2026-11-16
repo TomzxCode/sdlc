@@ -64,3 +64,15 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: "Where should Gateway-issued device tokens be durably persisted, since the host currently keeps them in process memory only?"
 - What the code actually does: unchanged. The token is still in-process only.
 - Needed change: none. This row records that the question was re-checked and still stands.
+
+## Sync drift: 2026-11-16
+
+### Previously recorded drift items remain unaddressed
+
+- The Gateway-side pairing boundary in requirements.md line 13 still points to FEAT-p1, while FEAT-p14 owns that surface.
+- The overview still presents the Rust crate as the node host and does not mention the second, shipped TypeScript host under `src/node-host/`.
+- The Rust version still reads 1.93 in both crate manifests while the conformance workflow gates on 1.99.0.
+- Open question 2 still describes Windows and PTY, MCP, skills, and host statistics as not implemented, although the TypeScript host covers part of that set.
+- The durable device-token storage question still stands because `issued_device_token` remains in process memory only.
+
+No new discrepancies were found in requirements.md during this reconciliation.

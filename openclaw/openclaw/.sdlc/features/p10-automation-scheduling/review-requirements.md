@@ -87,3 +87,36 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: nothing. The artifact's Overview lists cron, webhooks, flows, and auto-reply, and no requirement or acceptance criterion mentions internal event hooks.
 - What the code actually does: `src/hooks/` is a distinct, operator-visible subsystem with its own CLI, config, install records, and bundled hook packs. A reader of the artifact would not know it exists, and would conflate internal hooks with the HTTP webhook receivers that FR-3 covers.
 - Needed change: add a requirement and data model for internal event hooks, or explicitly scope them out and point at where they are documented. Note that this subsystem is a plausible candidate for its own feature directory, since nothing in FEAT-p1..FEAT-p12 covers it.
+
+## Sync drift: 2026-11-16
+
+### Previously recorded drifts still hold
+
+- Status: BLOCKING.
+- The retired webhook plugin, the move of multi-step flows to Lobster, the failure-repair stage in FR-7, the missing owner modules for FR-5, FR-8, and FR-10, the six schedule kinds behind FR-1, and the undocumented internal hook subsystem all remain accurate.
+- The code_index paths in `.sdlc/sync-meta.yml` are `src/cron/`, `src/flows/`, `src/gateway/hooks.ts`, and `extensions/lobster/`, which confirms the webhook and flow architecture described in the artifact is not the shipped one.
+
+### FR-8 no longer describes the shipped code
+
+- Status: BLOCKING.
+- Evidence:
+  - `src/cron/heartbeat-monitor.ts` no longer exists and no heartbeat-monitor file remains under `src/cron/`.
+  - `docs/automation/cron-jobs/schedules.md:40-45` documents a heartbeat task migration that converts heartbeat configuration and system-owned monitor jobs into ordinary editable `agentTurn` jobs with `openclaw doctor --fix`.
+  - `docs/automation/cron-jobs/schedules.md:63` states "no separate heartbeat runner is involved".
+  - `docs/automation/index.md:95-97` states existing heartbeat monitors migrate into ordinary editable jobs and setup provisions one proactive check.
+  - `src/cron/default-proactive-job.worker.ts` and `src/cron/proactive-job-receipt.kernel.ts` implement provisioning of the default proactive check.
+- Artifact currently says: "FR-8 | Should | The system shall support heartbeat-style recurring jobs in addition to cron".
+- What the code actually does: heartbeat monitoring has been folded into ordinary cron jobs and there is no separate heartbeat scheduler.
+- Needed change: retire FR-8 or restate it as a migration path into ordinary automation jobs, and record that no separate heartbeat runner remains.
+
+### Execution-window behavior is implemented but not required
+
+- Status: ADVISORY.
+- Evidence:
+  - `CronJobSchema` in `packages/gateway-protocol/src/schema/cron.ts` carries `activeHours` and `idleOnly` job-level fields.
+  - `src/cron/active-hours.ts` and `src/cron/active-jobs.ts` implement the quiet-hours gate and active-job management.
+  - `src/cron/active-hours.test.ts` covers the window logic.
+  - `docs/automation/index.md:48-52` tells readers to use `activeHours` and `idleOnly` when a check should respect quiet hours and foreground work.
+- Artifact currently says: no requirement mentions execution windows, quiet hours, or idle-only gating.
+- What the code actually does: jobs can be restricted to an active-hours window and gated on agent idleness.
+- Needed change: add a functional requirement for job-level execution windows and idle-only gating.

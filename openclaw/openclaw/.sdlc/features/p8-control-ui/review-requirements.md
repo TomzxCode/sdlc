@@ -57,3 +57,35 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact says: "2. What is the target mobile browser support for the Control UI?" (requirements.md:63)
 - Code: the Control UI has a Playwright browser test project and dedicated phone scenarios, including `ui/src/e2e/phone-stale-build-recovery.e2e.test.ts`, but there is no stated browser support matrix in the tree.
 - Advisory: the question is partially answered by the presence of phone-specific test lanes.
+
+## Sync drift: 2026-11-16
+
+Fresh analysis of the owned paths under `ui/src/` confirms the drift recorded on 2026-10-19 is still present. Solid packages now sit at `2.0.0-rc.18`, up from `2.0.0-rc.14`.
+
+### The Lit constraint is still contradicted by the code (blocking)
+
+- Evidence: `grep -rl "from ['\"]lit" ui/src` returns 0 files, `grep -rl "solid-js" ui/src --include="*.ts" --include="*.tsx"` returns 1716 files, `ui/package.json:37-38,55` lists Solid packages at `2.0.0-rc.18` with no `lit` dependency, and `ui/AGENTS.md:7` forbids Lit.
+- Artifact says: "Uses Lit web components (legacy decorators)" (requirements.md:45).
+- Code: the Control UI is a Solid 2 application.
+- Blocking: the constraint directs an implementer to a framework the repository forbids.
+
+### The scope still omits shipped subsystems (blocking)
+
+- Evidence: `ui/src/pages/terminal/terminal-page.tsx`, `ui/src/components/desktop/desktop-client.ts`, `ui/src/pages/chat/components/file-editor-view.ts`, `ui/src/plugins/control-ui-view.solid.tsx`, and `ui/src/plugins/control-ui-manager.solid.tsx`.
+- Artifact says: the Overview lists chat, sessions, configuration, status, and plugin management, and FR-9 only promises a "plugin management interface" (requirements.md:10, requirements.md:31).
+- Code: the Control UI also embeds a terminal, a noVNC desktop viewer, a CodeMirror file and diff editor, and Solid views that render plugin-supplied UI.
+- Blocking: a reader would not know these surfaces exist.
+
+### The configuration, theming, and session items remain understated (advisory)
+
+- Evidence: `ui/src/pages/config/config-page.tsx`, `ui/src/pages/config/curated-settings.tsx`, `ui/src/app/theme.test.ts`, `ui/src/app/bootstrap-theme.ts`, and `ui/src/app/app-host.tsx`.
+- Artifact says: FR-7 promises viewing and editing configuration, FR-10 promises dark mode, and Open Question 1 asks about simultaneous sessions (requirements.md:29, requirements.md:32, requirements.md:62).
+- Code: the UI has a curated settings editor with routed settings pages, custom theme import with a palette system, and multiple concurrent sessions through a session roster.
+- Advisory: the requirements still hold, but they understate the shipped behavior.
+
+### Open Question 2 is partly answered (advisory)
+
+- Evidence: `ui/src/e2e/` now holds 1004 e2e test files, including phone-specific scenarios, and `ui/vitest.config.ts` defines browser projects.
+- Artifact says: "What is the target mobile browser support for the Control UI?" (requirements.md:63).
+- Code: phone-specific test lanes exist, but no supported browser matrix is stated in the tree.
+- Advisory: the question is still open, but the test lanes narrow it.

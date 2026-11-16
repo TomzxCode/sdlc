@@ -76,3 +76,32 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: "| TC-15 | Flow engine doctor checks | src/flows/doctor-core-checks.test.ts | Doctor checks run and report |".
 - What the code actually does: the file still exists, so the row is not wrong, but it names one of a dozen doctor and setup suites. The label "Flow engine doctor checks" is also a misnomer now that `src/flows/` holds no flow engine.
 - Needed change: relabel the row and point it at the broader doctor and setup suite set.
+
+## Sync drift: 2026-11-16
+
+### Previously recorded drifts still hold
+
+- Status: BLOCKING.
+- The six missing test files, the stale TC-13 glob, the absent failure-repair row, the large uncovered cron areas, the missing FR-5, FR-8, and FR-10 matrix rows, and the understated `src/flows/` doctor row all remain accurate.
+- `extensions/webhooks/` is still absent from the code_index paths, so TC-8, TC-9, and TC-16 still point at files that do not exist.
+
+### TC-17 heartbeat coverage moved again and is now obsolete
+
+- Status: BLOCKING.
+- Evidence:
+  - The files suggested as replacements in the 2026-10-19 review, `src/cron/heartbeat-monitor.test.ts`, `src/cron/service.heartbeat-busy-poll.test.ts`, and `src/cron/service.startup-heartbeat.test.ts`, no longer exist.
+  - Current heartbeat-related suites are `src/cron/isolated-agent.heartbeat-migration.test.ts`, `src/cron/service.heartbeat-payload.test.ts`, and `src/cron/service.main-job-passes-heartbeat-target-last.test.ts`.
+  - `docs/automation/cron-jobs/schedules.md:63` states "no separate heartbeat runner is involved".
+- Artifact currently says: "| TC-17 | Heartbeat policy | src/cron/heartbeat-policy.test.ts | Heartbeat jobs fire correctly |".
+- What the code actually does: heartbeat policy is no longer a separate scheduler, migration into ordinary jobs is tested instead, and the cited heartbeat-policy file is gone.
+- Needed change: remove TC-17 or repoint it at the heartbeat migration suites and relabel it as migration coverage.
+
+### Execution-window and Lobster suites are absent from the plan
+
+- Status: ADVISORY.
+- Evidence:
+  - `src/cron/active-hours.test.ts` covers active-hours window logic and `src/cron/active-jobs.test.ts` covers active-job management.
+  - `extensions/lobster/` ships `src/lobster-runner.test.ts`, `src/lobster-runner.validation.test.ts`, `src/lobster-schema-compiler.test.ts`, and `src/lobster-tool.test.ts`, all in the owned code_index paths.
+- Artifact currently says: the plan lists no active-hours cases and no Lobster plugin cases, while treating the flow engine as covered by one doctor test.
+- What the code actually does: execution windows and the Lobster pipeline runtime both have dedicated tests.
+- Needed change: add rows for the active-hours suites and for the four Lobster suites, and update the scope text to name the Lobster plugin.

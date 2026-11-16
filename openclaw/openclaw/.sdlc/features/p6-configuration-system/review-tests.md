@@ -52,3 +52,31 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Code: `scripts/check-env-var-count.mts` and `config/env-var-count-budget.txt` implement the `pnpm check:env-var-count` ratchet over `OPENCLAW_*` names in `src`, `packages`, and `extensions`; no test file in the plan covers it.
 - Impact: the plan covers the original load, validate, patch, and substitute surface but not the snapshot, journal, secrets, Doctor, or schema-generation surfaces the system now owns.
 - Classification: advisory.
+
+## Sync drift: 2026-11-16
+
+The 2026-10-19 drift remains unresolved as of this sync.
+The plan still names two missing suites, misattributes the env-substitution coverage, and leaves the redaction row without a file.
+
+### Blocking: two listed test files still do not exist
+
+- Tests.md:17 still lists `src/config/validation.test.ts` and tests.md:20 still lists `src/config/io.parse.test.ts`.
+- Code: neither file exists, and validation now has suites such as `src/config/validation.policy.test.ts`, `validation.async.test.ts`, and `validation.workshop-contract.test.ts`, while parsing now has the `src/config/io.load.ts` suites and `src/config/io.read-helpers.test.ts`.
+- Classification: blocking.
+
+### Blocking: the FR-3 row still names the wrong suite
+
+- Tests.md:24 and tests.md:48 still point FR-3 at `src/config/config.env-vars.test.ts`.
+- Code: that suite covers runtime env publication and ownership, while `src/config/env-substitution.test.ts` covers the `${VAR}`, `${VAR:-fallback}`, and `$${LITERAL}` grammar.
+- Classification: blocking.
+
+### Blocking: the FR-9 redaction row still names no file
+
+- Tests.md:52 still says "Covered by general redaction tests".
+- Code: `src/config/redact-snapshot.test.ts`, `src/config/redact-snapshot.secret-ref.ts`, `src/config/redact-snapshot.raw.ts`, `src/config/redact-snapshot.plugin-secret-ref.test.ts`, and `src/secrets/store/secret-store.redaction.test.ts` cover redaction.
+- Classification: blocking.
+
+### Advisory: notable test areas are still unlisted
+
+- Code: suites for secrets resolution and audit, Doctor health checks and lint, schema generation, the write journal and snapshot layers, includes, deferred plugin migration, and the env-var count ratchet are absent from the plan.
+- Classification: advisory.

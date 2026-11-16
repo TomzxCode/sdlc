@@ -4,16 +4,16 @@
 
 - **Files and directories:** kebab-case for source, test, and config files, and for `src/` subdirectories, `packages/` names, `apps/` names, and `extensions/` plugin directories; UI components are kebab-case `*.tsx` files with `*.test.tsx` siblings, and no PascalCase source files remain anywhere.
 - **Identifiers:** camelCase for variables, functions, and methods; PascalCase for classes, types, and interfaces; UPPER_SNAKE_CASE for true constants and camelCase for module-level const values; a `Type` suffix marks string-union and discriminated-union types.
-- **Test files:** the file suffix selects the suite; shared test code uses `<module>.test-support.ts`, `<module>.test-helpers.ts`, `<module>.test-fixtures.ts`, `<module>.test-mocks.ts`, or `<module>.test-harness.ts`.
+- **Test files:** the file suffix selects the suite; shared test code uses `*.test-support.ts`, `*.test-helpers.ts`, `*.test-fixtures.ts`, `*.test-mocks.ts`, or `*.test-harness.ts`.
 
 | Suffix | Purpose |
 | --- | --- |
-| `<module>.test.ts` | Unit test |
-| `<module>.integration.test.ts` | Cross-module integration test |
-| `<module>.contract.test.ts` | Contract test for a provider, channel, or other published surface |
-| `<module>.e2e.test.ts` | End-to-end test |
-| `<module>.live.test.ts` | Live test against real providers or models |
-| `<module>.browser.test.ts` | Control UI Playwright browser test |
+| `*.test.ts` | Unit test |
+| `*.integration.test.ts` | Cross-module integration test |
+| `*.contract.test.ts` | Contract test for a provider, channel, or other published surface |
+| `*.e2e.test.ts` | End-to-end test |
+| `*.live.test.ts` | Live test against real providers or models |
+| `*.browser.test.ts` | Control UI Playwright browser test |
 
 ## Directory Structure
 
@@ -29,7 +29,7 @@
 ├── deploy/               # Deployment manifests
 ├── docs/                 # Documentation
 ├── examples/             # Runnable examples
-├── extensions/           # Plugin packages (175 directories, 171 packages)
+├── extensions/           # Plugin packages (188 directories, 184 packages)
 ├── git-hooks/            # Repository Git hooks
 ├── packages/             # Workspace packages (SDK, protocol, core libraries)
 ├── patches/              # pnpm package patches
@@ -56,7 +56,7 @@
 - Split code into gather -> normalize -> decide -> act, and prefer early returns over nested condition pyramids.
 - Import cycles stay green: `pnpm check:import-cycles` covers `src`, `extensions`, and `scripts`; `pnpm check:madge-import-cycles` covers `src`, `extensions`, and `ui`; `pnpm check:architecture` runs both.
 - File size cap: the oxlint `max-lines` rule allows 700 counted lines (blank lines and comments skipped) for TypeScript and JavaScript under `src`, `ui/src`, `packages`, and `extensions`, and 800 for `.mjs` and `.cjs`; `pnpm check:line-cap-ratchet` and `pnpm check:max-lines-ratchet` keep `config/max-lines-baseline.txt` shrinking.
-- Lint, format, and types: `pnpm lint` runs the full pipeline through `scripts/run-lint.mts` with oxlint 1.87.0 and oxlint-tsgolint, `pnpm lint:all` runs `scripts/run-oxlint.mjs` directly, `pnpm format` and `pnpm format:check` run `scripts/run-format.mts` with oxfmt 0.72.0, `pnpm lint:docs` runs markdownlint on the docs, `pnpm tsgo` type-checks the core project, and `pnpm tsgo:all` adds the UI, extensions, scripts, and tests.
+- Lint, format, and types: `pnpm lint` runs the full pipeline through `scripts/run-lint.mts` with oxlint 1.89.0 and oxlint-tsgolint, `pnpm lint:all` runs `scripts/run-oxlint.mjs` directly, `pnpm format` and `pnpm format:check` run `scripts/run-format.mts` with oxfmt 0.74.0, `pnpm lint:docs` runs markdownlint on the docs, `pnpm tsgo` type-checks the core project, and `pnpm tsgo:all` adds the UI, extensions, scripts, and tests.
 - Generated files are never hand-edited: `docs/plugins/reference/**` and `docs/plugins/plugin-inventory.md` come from `pnpm plugins:inventory:gen`, `docs/maturity/**` comes from `taxonomy.yaml` and `qa/maturity-scores.yaml` via `pnpm maturity:render`, and `CHANGELOG.md` plus `CHANGELOG/**` are release-owned.
 
 ## Commit Messages

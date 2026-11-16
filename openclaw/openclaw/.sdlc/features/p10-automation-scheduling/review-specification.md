@@ -131,3 +131,34 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: "Job persistence | SQLite via Kysely | Consistent with project-wide storage convention" and the diagram labels the box "SQLite Store (cron jobs, schedules)".
 - What the code actually does: jobs live in the shared state database, not a cron-owned store, and reads and writes are dispatched to workers, including a dedicated read-only worker path. The Kysely choice is unchanged.
 - Needed change: clarify that cron jobs are rows in the shared state database and that store I/O runs in workers, so a reader does not expect a cron-owned SQLite file.
+
+## Sync drift: 2026-11-16
+
+### Previously recorded drifts still hold
+
+- Status: BLOCKING.
+- The retired webhook extension and missing `WebhookConfig` type, the loss of a core flow engine in `src/flows/`, the stale `CronJob` table, the grown isolated-session config, the unmodeled failure-repair stage, the absent `src/hooks/` and `src/routing/` maps, and the shared-state SQLite storage all remain accurate.
+- The architecture block still points webhook handling at `extensions/webhooks/`, which does not exist in the current code_index paths.
+
+### Heartbeat is no longer a separate cron monitor in the architecture
+
+- Status: BLOCKING.
+- Evidence:
+  - `src/cron/heartbeat-monitor.ts` no longer exists.
+  - `docs/automation/cron-jobs/schedules.md:40-45` converts heartbeat monitors into ordinary editable `agentTurn` jobs through Doctor.
+  - `docs/automation/cron-jobs/schedules.md:63` states "no separate heartbeat runner is involved".
+  - `src/cron/default-proactive-job.worker.ts` and `src/cron/proactive-job-receipt.kernel.ts` provision the default proactive check as a normal cron job.
+- Artifact currently says: the architecture and diagram only show cron, webhooks, and flows, with no heartbeat migration path.
+- What the code actually does: heartbeat configuration migrates into ordinary cron jobs and the dedicated monitor was removed.
+- Needed change: add the Doctor-driven heartbeat migration and the default proactive job to the architecture, and drop any implicit separate heartbeat runner.
+
+### The CronJob data model is missing newly added fields
+
+- Status: ADVISORY.
+- Evidence:
+  - `CronJobSchema` in `packages/gateway-protocol/src/schema/cron.ts:501-540` now also carries `activeHours`, `idleOnly`, `payloadSource`, `streamExecutionHost`, `ownerProfileId`, `cyberAccessProgram`, and stream-specific fields beyond those listed in the 2026-10-19 review.
+  - `CronActiveHoursSchema` and the job-level `idleOnly` gate define the execution-window model.
+  - `src/cron/active-hours.ts` implements the execution-window logic.
+- Artifact currently says: the `CronJob` table lists only `id`, `schedule`, `model`, `tools`, `enabled`, and `last_run`.
+- What the code actually does: the persisted job carries execution windows, idle-only gating, owner and stream metadata, and report-only source identity fields.
+- Needed change: extend the replacement `CronJob` table in the pending drift with these fields and add an `activeHours` and `idleOnly` sub-model.

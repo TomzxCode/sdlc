@@ -58,3 +58,23 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact says: "1. What is the exact streaming contract for multi-minute video generation?" (requirements.md:54)
 - Code: the contract is a background generation job with persisted batches and a completion callback, and the shared runtime owns provider failover across candidates.
 - Advisory: the question should be closed with a pointer to the owning module.
+
+## Sync drift: 2026-11-16
+
+The requirements were not changed since the 2026-10-19 review, so most recorded drift still applies. This run analyzed the tree at HEAD 0eae4c0, which is ahead of the recorded code_ref 8b78b23.
+
+### FR-8 now has a verifiable home in this feature (prior finding resolved)
+
+- Evidence: `.sdlc/sync-meta.yml` p9 code_index lists `src/media/`, `src/media-understanding/`, `src/link-understanding/`, `packages/media-understanding-common/`, and `packages/media-core/`.
+- The 2026-10-19 review marked FR-8 blocking because media understanding sat outside feature scope. The code index now places those paths inside p9, so the boundary objection no longer holds.
+- The requirement text still gives no hint that media understanding is a large subsystem, which remains an advisory documentation gap.
+
+### FR-6 still understates the voice call surface, and the RPC set grew to nine methods
+
+- Evidence: `extensions/voice-call/src/cli-gateway-call.ts:21-29` defines `voicecall.initiate`, `voicecall.start`, `voicecall.continue.start`, `voicecall.continue.result`, `voicecall.steer`, `voicecall.speak`, `voicecall.dtmf`, `voicecall.end`, and `voicecall.status`. `extensions/voice-call/src/tool-schema.ts:33-67` still defines seven tool actions.
+- Artifact says: FR-6 covers only "voice call initiation and management through provider integrations" (requirements.md:29).
+- The 2026-10-19 review counted six RPC methods. There are nine now, so the public surface grew while the requirement text stayed the same.
+
+### FR-1, FR-5, FR-9, FR-10, FR-12, and open question 1 carry forward
+
+- No artifact text changed, so the advisory findings recorded on 2026-10-19 still hold without new evidence.

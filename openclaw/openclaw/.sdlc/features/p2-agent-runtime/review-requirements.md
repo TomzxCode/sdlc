@@ -72,3 +72,33 @@ Every finding below is classified as blocking or advisory.
 - Code says: `src/agents/failover/` also classifies context overflow separately, through `context-overflow.ts` and `context-overflow-tables.ts`.
 - Code says: `src/agents/failover/classify-core.ts` and `classification-rules.ts` own the classification that decides between retry, provider switch, and compaction.
 - Impact: the requirement is satisfied. It would be more precise if it named the failure classes the failover path now distinguishes.
+
+## Sync drift: 2026-11-16
+
+The requirements artifact was not changed since the 2026-10-19 review.
+The four blocking and two advisory items in the 2026-10-19 section still apply.
+
+### Blocking: the SQLite-only transcript constraint remains contradicted
+
+- Classification: blocking.
+- The artifact still says at line 48 that transcript storage is SQLite-only, and FR-7 still says transcripts go to SQLite.
+- Code says: `package.json:7-13` sets `openclaw.databaseEngines` to `["sqlite", "postgres"]` and lists `agent` under `openclaw.postgresFamilies`.
+- Code says: `src/infra/database-engine/registry.ts:26` marks the `agent` family as `postgres: true`, and `:47-51` resolves a per-family engine override.
+- Code says: `src/state/openclaw-agent-schema.sql:454` stores transcripts in `transcript_events` inside the agent family database, which may use PostgreSQL.
+- Impact: the constraint is still wrong, and the schema line has moved from 437 to 454 since the last review.
+
+### Blocking: context ownership and memory search drift persist
+
+- Classification: blocking.
+- The artifact still treats the runtime as the sole context owner in FR-2 and as the owner of memory search in FR-11.
+- Code says: `src/context-engine/registry.ts:1` states that the registry owns engine registration, resolution, compatibility, and quarantine.
+- Code says: `src/context-engine/types.ts:5-38` defines `AssembleResult` with `estimatedTokens`, `promptAuthority`, `systemPromptAddition`, and a `contextProjection` that supports `thread_bootstrap`.
+- Code says: `src/agents/memory-search.ts` only owns the agent-side source policy, while the memory subsystem lives in `src/memory-host-sdk/` and plugin extensions.
+- Impact: unchanged from 2026-10-19, still misleading.
+
+### Advisory: the provider enumeration is still stale
+
+- Classification: advisory.
+- FR-1 still names only OpenAI, Anthropic, Google, and open-source.
+- Code says: 11 provider extensions ship, and `src/llm/providers/` now holds only fast-mode and stream wrappers such as `minimax-fast-mode.ts` and `openai-fast-mode.ts`.
+- Impact: the parenthetical list remains out of date.

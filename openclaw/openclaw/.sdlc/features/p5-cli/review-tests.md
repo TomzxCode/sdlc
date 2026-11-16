@@ -59,3 +59,49 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Code: `src/cli/workboard-owner.test.ts` and `src/cli/plugins-authoring-command.test.ts` cover plugin-owned command registration.
 - Impact: the plan covers the original small command surface and misses the registration, completion, dispatch, and TUI areas that dominate the CLI today.
 - Classification: advisory.
+
+## Sync drift: 2026-11-16
+
+### Blocking: two listed unit test files no longer exist
+
+- Artifact says (tests.md:17): `src/cli/program/root-help.test.ts`.
+- Code: that path no longer exists.
+- Code: root help is now covered by `src/cli/program/openclaw-command.help.test.ts`, `src/cli/root-help-metadata.test.ts`, `src/cli/program/help.test.ts`, and `src/cli/program/parent-default-help.test.ts`.
+- Artifact says (tests.md:19): `src/cli/program/routes.test.ts`.
+- Code: that path no longer exists.
+- Code: routing is now covered by `src/cli/program/action-reparse.test.ts` and the descriptor tests under `src/cli/program/`.
+- Both files were present on 2026-10-19 and were cited in the earlier review, so their removal is new drift.
+
+### Blocking: the yargs test infrastructure claim remains wrong
+
+- Artifact says (tests.md:39): "- Mock yargs for command parsing tests".
+- Code: `package.json:2468` declares `commander` 15.0.0, and there is no yargs dependency.
+- Code: `src/cli/program/build-program.test.ts`, `src/cli/program/command-tree.test.ts`, and `src/cli/program/openclaw-command.help.test.ts` exercise the Commander program.
+
+### Blocking: the FR-5 and NFR-2 coverage rows remain wrong
+
+- Artifact says (tests.md:49): "FR-5 (Onboarding wizard) | `commands/agent.test.ts`".
+- Code: onboarding is covered by `src/cli/program/register.onboard.test.ts` and `src/commands/onboard-*.test.ts`, not by the agent command handler test.
+- Artifact says (tests.md:51): "NFR-2 (Startup performance) | `run-main.test.ts`".
+- Code: `src/cli/run-main.test.ts` contains no timing assertion.
+- Code: `src/cli/command-startup-timing.test.ts` asserts a span shape, not a duration, and there is no CLI startup budget baseline.
+
+### Advisory: the doctor and plugin coverage rows still name sources instead of suites
+
+- Artifact says (tests.md:47, 50): "`plugins-cli.ts` (co-located tests)" and "`commands/doctor.ts` (co-located tests)".
+- Code: plugin CLI tests are split across `src/cli/plugins-cli.install.test.ts`, `src/cli/plugins-cli.list.test.ts`, `src/cli/plugins-cli.inspect.test.ts`, `src/cli/plugins-cli.update.test.ts`, `src/cli/plugins-cli.uninstall.test.ts`, and others.
+- Code: `src/commands/doctor.test.ts` does exist, plus `src/commands/doctor/` and `src/flows/doctor-*.test.ts`.
+
+### Advisory: large undocumented test areas remain
+
+- Artifact lists 10 unit test files.
+- Code: `src/cli/` holds 1402 files and `src/cli/program/` holds 81 files, including descriptor, registration, help, completion, and dispatch suites.
+- Code: completion is covered by at least 12 files such as `src/cli/completion-cli.bash.test.ts`, `src/cli/completion-fish.test.ts`, and `src/cli/completion-runtime.windows.test.ts`.
+- Code: `src/system-agent/` holds 66 test files, none documented in the plan.
+- Code: `src/wizard/` holds 30 test files, none documented in the plan.
+- Code: `src/tui/` holds 184 files including `commands.test.ts`, `gateway-chat.test.ts`, and `embedded-backend.test.ts`.
+
+### Advisory: test paths cited in the earlier review were removed
+
+- The 2026-10-19 review cited `src/cli/program/route-args.test.ts` and `root-help.test.ts` as existing suites.
+- Neither path exists now.

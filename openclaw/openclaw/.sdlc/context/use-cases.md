@@ -29,6 +29,7 @@ deliberate non-goals under "Out of scope".
 | UC-10 | Know what the assistant did and keep credentials out of plaintext | Operator | The operator audits the installation for unsafe settings, reads a durable content-free activity ledger of what ran, and keeps credentials behind SecretRefs and a shared secret store. |
 | UC-11 | Track work across sessions and agents on a shared board | Operator, Team members | The operator sees a per-session dashboard of tabs and widgets, keeps a project registry of repositories and checkouts, and moves work through a shared board. |
 | UC-12 | Drive the assistant from an external agent client | Developer, Operator | The operator or a developer connects an IDE or another agent client to an OpenClaw session over the Agent Client Protocol and steers the turn. |
+| UC-13 | Automate recurring and event-driven work | Operator | The operator schedules recurring agent jobs, triggers workflows through webhooks, and sets auto-replies so the assistant acts on a timetable or on external events without a live message. |
 
 ## Wanted
 

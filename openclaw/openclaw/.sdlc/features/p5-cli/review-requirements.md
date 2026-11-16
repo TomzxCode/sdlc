@@ -57,3 +57,49 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Code: `config/` holds a `control-ui-startup-budget-baseline.json` but no CLI startup budget baseline.
 - Impact: the requirement has no automated guard, so the coverage claim is unsupported.
 - Classification: advisory.
+
+## Sync drift: 2026-11-16
+
+### Blocking: the Node constraint and the FR-1 acceptance criterion still contradict the code
+
+- Artifact says (requirements.md:46): "Must work with Node.js 22.19+ (Node 24 recommended)".
+- Code: `package.json:2578` declares `"node": ">=24.16.0 <25 || >=26.1.0"`.
+- Code: `openclaw.mjs:41-42` sets `RECOMMENDED_NODE_MAJOR = 26` and builds the supported range string.
+- Code: `docs/install/index.md:13` and `docs/install/installer.md:158` state that Node 24.16.0+ on 24.x and Node 26.1.0+ are supported, and that Node 22, 23, and 25 are unsupported.
+- The docs now also recommend 24.22.1+ and 26.12.1+ for security, which the artifact omits.
+- Artifact says (requirements.md:51): "when the user runs `openclaw gateway start`, then the gateway process starts".
+- Code: `src/cli/gateway-cli/register.ts:232` registers `gateway run`, not `gateway start`.
+- Code: `src/cli/daemon-cli/register-service-commands.ts:44-156` registers the lifecycle commands `daemon status`, `daemon install`, `daemon stop`, and `daemon restart`.
+- Both discrepancies were recorded on 2026-10-19 and remain unresolved.
+
+### Blocking: the owned source surface is larger than the artifact describes
+
+- Artifact says (requirements.md:10): "It provides commands for managing plugins, channels, models, sessions, configurations, credentials, and the gateway process itself."
+- Code: `src/cli/` holds 1402 files, `src/commands/` holds 1560 files, `src/tui/` holds 184 files, `src/wizard/` holds 75 files, and `src/system-agent/` holds 144 files.
+- The counts for `src/cli/` and `src/commands/` have grown since 2026-10-19, when the earlier review recorded 611 and 1002 files.
+- The inventory still omits most of the shipped command surface and every plugin-owned command.
+
+### Advisory: src/system-agent/ is owned by this feature but not mentioned
+
+- Code: `src/system-agent/` holds 144 files, including `assistant.ts`, `chat-engine.ts`, and `config-write-validation.test.ts`.
+- Code: `src/cli/program/register.onboard.ts` and `src/cli/program/register.setup.ts` reference it, so it backs the onboarding and setup flows.
+- No requirement describes the system agent behavior.
+
+### Advisory: FR-11 still understates the TUI
+
+- Artifact says (requirements.md:33): "FR-11 | May | The CLI shall provide a TUI for interactive sessions".
+- Code: `src/tui/` now holds 184 files, up from 158 on 2026-10-19.
+- Code: `tui`, `terminal`, `chat`, and `resume` are registered as top-level commands.
+
+### Advisory: NFR-2 still has no automated guard
+
+- No test enforces the 500ms budget.
+- `src/cli/run-main.test.ts` has no timing assertion.
+- `src/cli/command-startup-timing.test.ts` asserts a span shape, not a duration.
+- `config/control-ui-startup-budget-baseline.json` exists, but there is no CLI startup budget baseline.
+
+### Advisory: the acceptance criteria format does not match the current template
+
+- Artifact uses inline checkbox text with a bold requirement ID at requirements.md:51-55.
+- The template requires a checked item containing a fenced `gherkin` block tagged with the requirement ID.
+- None of the five criteria follow the template format.

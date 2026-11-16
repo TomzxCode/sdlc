@@ -24,7 +24,7 @@ Anonymous feature statistics are opt-in and off by default; `update.checkOnStart
 
 **In scope:**
 - Multi-channel messaging integration for roughly 30 platforms beyond the named channels, most of them official plugins
-- Shared team deployment as configuration of the same Gateway (one trust domain; see `docs/start/teams.md`)
+- Shared team deployment as configuration of the same Gateway (one trust domain; see `docs/start/multiplayer.md`)
 - AI agent execution with support for major model providers (OpenAI, Anthropic, Google, open-source, etc.)
 - Durable memory and session recall (curated memory files, episodic notes, standing intents, hybrid search)
 - Remote and cloud execution of session work (paired device node hosts, leased cloud workers, worker-local inference)
@@ -52,7 +52,7 @@ Anonymous feature statistics are opt-in and off by default; `update.checkOnStart
 - Single trust-domain architecture by design; team use shares one control plane, not multi-tenant isolation
 - Plugin isolation via explicit import boundaries and capability gating; plugins import core only through `openclaw/plugin-sdk/*`
 - Configuration is single-source-of-truth via `openclaw.json`; no silent config compat
-- SQLite-first for all runtime state; no JSON/JSONL sidecar files for state. PostgreSQL is supported as an experimental second engine (schema versions state 28, agent 31)
+- SQLite-first for all runtime state; no JSON/JSONL sidecar files for state. PostgreSQL is a supported alternative engine (schema versions state 40, agent 42)
 - Security-first: no secrets in logs, explicit trust model, rate limiting on auth
 - TypeScript ESM strict throughout; no `any` types, discriminated unions for routing
 - The Gateway process is the single owner of every OpenClaw database and its state; other processes route mutations through it
