@@ -18,11 +18,11 @@ deliberate non-goals under "Out of scope".
 | ID | Use case | Actor | Description |
 |---|---|---|---|
 | UC-1 | Chat with an AI coding agent | Developer | The developer opens a session and exchanges messages with streaming responses, with undo/redo, forking, and multi-session management (FEAT-0001, FEAT-0017). |
-| UC-2 | Manage Git work and GitHub PRs | Developer | The developer commits, branches, views diffs, and opens AI-described PRs without leaving the app (FEAT-0002, FEAT-0005, FEAT-0034). |
+| UC-2 | Manage Git work and change requests across hosts | Developer | The developer commits, branches, views diffs, and opens AI-described change requests across GitHub, GitLab, Gitea, Gerrit and Forgejo without leaving the app, through a source-control provider registry with neutral change-request DTOs and repo bindings (FEAT-0002, FEAT-0005, FEAT-0034, p15-multi-provider-source-control). |
 | UC-3 | Isolate work in worktrees | Developer | The developer runs sessions and multi-agent runs in isolated git worktrees (FEAT-0016, FEAT-0015). |
 | UC-4 | Use an integrated terminal | Developer | The developer runs shell commands in a PTY-backed terminal panel (FEAT-0003). |
 | UC-5 | Browse and edit files | Developer | The developer navigates the project tree and edits files with syntax highlighting (FEAT-0004). |
-| UC-6 | Review and approve agent actions | Developer | The developer approves permissions, answers agent questions, and controls edit mode (FEAT-0018, FEAT-0019). |
+| UC-6 | Review and approve agent actions | Developer | The developer approves permissions, answers agent questions, controls edit mode, and chooses a per-session permission policy of ask, safety or auto (FEAT-0018, FEAT-0019). |
 | UC-7 | Search conversation history | Developer | The developer full-text searches past conversations on the server (p11). |
 | UC-8 | Preview a running dev server | Developer | The developer previews a local dev server in an embedded browser with console overlay and inspect mode (FEAT-0047). |
 | UC-9 | Let the agent act in the browser | Developer | The developer lets the agent perform browser actions through the in-app browser view (p14). |
@@ -36,7 +36,7 @@ deliberate non-goals under "Out of scope".
 | UC-17 | Customize the workspace | Developer | The developer themes, fonts, locales, commands, skills, prompts, and response styles (FEAT-0006, FEAT-0046, FEAT-0045, FEAT-0012, FEAT-0013, FEAT-0039, FEAT-0048). |
 | UC-18 | Manage agent memory | Developer | The developer views and controls what the agent has learned and kept, per project and globally (p12). |
 | UC-19 | Pin project knowledge | Developer | The developer pins notes and plans that the server injects into session prompts (p13, FEAT-0038). |
-| UC-20 | Access remotely | Developer | The developer reaches a remote instance via tunnel, SSH host management, or the private E2EE relay (FEAT-0014, FEAT-0037). |
+| UC-20 | Access remotely | Developer | The developer reaches a remote instance via tunnel, SSH host management, the private E2EE relay, or Tailscale Serve and Funnel (FEAT-0014, FEAT-0037). |
 | UC-21 | Work from mobile or VS Code | Developer | The developer uses the Capacitor mobile app, the PWA, or the VS Code extension sidebar (FEAT-0024, FEAT-0021, FEAT-0010). |
 | UC-22 | Work on the desktop app | Developer | The developer runs the Electron desktop app with mini chat and native integrations (FEAT-0043, FEAT-0049). |
 | UC-23 | Deploy self-hosted | Operator | The operator runs OpenChamber via Docker, systemd, or npm with Caddy TLS (FEAT-0036). |
@@ -44,7 +44,14 @@ deliberate non-goals under "Out of scope".
 | UC-25 | Extend with MCP and plugins | Developer | The developer connects MCP servers and manages OpenCode plugins (FEAT-0033, p2). |
 | UC-26 | Edit diagrams | Developer | The developer edits DrawIO diagrams in the built-in editor (p7). |
 | UC-27 | Manage agent groups | Developer | The developer organizes agents into groups and launches multi-runs from them (p8). |
-| UC-28 | See live PR/MR status | Developer | The developer sees live GitHub, GitLab, and Linear item states on sidebar rows and worktree headers (tracked in code under `packages/web/server/lib/tracked-items/`, currently folded into FEAT-0002). |
+| UC-28 | See live status of tracked work items | Developer | The developer sees live states of linked issues, PRs, MRs and other tracked work items on sidebar rows and worktree headers through a tracker-provider abstraction that also accepts extension-provided trackers (p16-issue-trackers-and-tracked-items). |
+| UC-30 | Run reusable agent workflows | Developer | The developer runs reusable agent workflows and assigns a session lead that coordinates work, briefs, digests and handover (p18-agent-workflows-and-session-leads). |
+| UC-31 | See and update session work status | Developer | The developer sees and updates a session's Work Status tasks and in-work state, including agent todos (p19-session-work-and-todos). |
+| UC-32 | Save drafts and warm sessions | Developer | The developer saves unsent drafts and pre-warms sessions so work starts faster across devices (p20-session-drafts-and-warming). |
+| UC-33 | Share session results as pages | Developer | The developer publishes a session result as a shareable page through the relay and collects answers from recipients, with scoped grants for local Markdown images (p21-shared-pages-and-local-image-grants). |
+| UC-34 | Use guest panels and extensions | Developer | The developer installs and uses guest panels and extensions from the published SDK, including status sections, file editors, chat blocks and extension services, and lets an agent wait on extension service events such as the built-in timer (p17-guest-extensions-and-extension-host). |
+| UC-35 | Inspect the diagnostics timeline | Developer | The developer inspects an exportable diagnostics timeline with journal, logs and startup performance (p23-diagnostics-timeline). |
+| UC-36 | Apply enterprise admin policy | Operator | The operator applies enterprise admin policy and app-link security settings (p22-enterprise-policy-and-request-security). |
 
 ## Wanted
 

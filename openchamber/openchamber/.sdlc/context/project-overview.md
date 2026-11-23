@@ -2,9 +2,9 @@
 
 ## Purpose
 
-OpenChamber is a multi-runtime GUI client for [OpenCode](https://opencode.ai), an AI-powered coding assistant CLI.
-It provides desktop (Electron, macOS/Windows/Linux), web/PWA, VS Code extension, and native mobile (iOS/Android) interfaces so developers can interact with OpenCode sessions from any device.
-The project solves the problem of OpenCode being terminal-only by adding rich visual workflows: branchable chat timelines, diff viewers, Git integration, integrated terminals, voice mode, session goals, multi-agent runs, AI-guided changes walkthroughs, diagram editing, and remote access via Cloudflare tunnels, ngrok, SSH, or a private E2EE relay.
+OpenChamber is a multi-runtime GUI workspace for running and reviewing AI coding work, built around [OpenCode](https://opencode.ai).
+It provides desktop (Electron, macOS/Windows/Linux), web/PWA, VS Code extension, and mobile (iOS and Android via Capacitor) interfaces so developers can work with OpenCode sessions from any device.
+It solves the problem of OpenCode being terminal-only by adding visual workflows: branchable chat timelines, diff viewers, source control integration, integrated terminals, voice mode, session goals, multi-agent runs, AI-guided changes walkthroughs, diagram editing, and remote access via Cloudflare tunnels, ngrok, SSH, Tailscale Serve/Funnel, or a private E2EE relay.
 
 ## Key Stakeholders
 
@@ -22,8 +22,7 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 
 - Web/PWA frontend and Express server for hosting OpenCode sessions
 - Electron desktop app (macOS, Windows, and Linux)
-- Native mobile apps (iOS and Android) via Capacitor with push notifications and QR pairing
-- Capacitor mobile app (iOS and Android) with native push notifications and QR pairing
+- Capacitor mobile apps (iOS and Android) with native push notifications and QR pairing
 - VS Code extension with sidebar webview
 - Shared UI component library (`@openchamber/ui`)
 - CLI for starting, stopping, configuring, and tunneling the web server
@@ -47,21 +46,36 @@ The project solves the problem of OpenCode being terminal-only by adding rich vi
 - Startup service (systemd, launchd) integration
 - Localization/i18n (12 locales including German, French, Japanese, Korean, Polish, Chinese simplified and traditional)
 - Isolated spaces backend (Docker place and space manager, stage 1a, unwired: no routes, settings, or UI yet)
+- `@openchamber/sdk` guest contract and app-owned extensions (`packages/sdk`, `packages/extensions`)
+- Multi-provider source control for GitHub, GitLab, Gitea, Gerrit, and Forgejo with provider-neutral change requests and repository bindings
+- Provider-neutral issue trackers with live tracked items
+- Agent workflows and session leads
+- Session work, todos, drafts, and warming
+- Shared render pages with local image grants
+- Tailscale Serve and Funnel remote access
+- Permission auto-accept policy
+- Diagnostics timeline
+- Enterprise admin policy
+- Canary nightly release channel
+- Nix packages for the server and desktop
+- Signed Windows installers
+- Linux `.deb`, `.rpm`, and AppImage packages with an R2 release mirror
+- Behavior-net nightly verification
 
 **Out of scope:**
 
-- The OpenCode server itself (separate project at opencode.ai)
-- Built-in browser for running dev apps (on roadmap, preview browser exists for local dev servers)
+- The OpenCode server itself (separate project at opencode.ai); desktop and CLI/web bundle a matching build
+- A full built-in browser for running dev apps (on roadmap; a preview browser for local dev servers and a desktop built-in browser for arbitrary web pages exist)
+- A persistent database, analytics, or observability platform
 
 ## Key Constraints
 
-- OpenCode CLI must be installed as a prerequisite; OpenChamber is a UI layer, not an AI engine
+- Desktop and CLI/web bundle a matching OpenCode CLI/server build, so a separate OpenCode installation is not required; the VS Code extension still uses the user's installed OpenCode CLI
 - The Electron desktop boots the web server in-process; no sidecar subprocess
 - Private relay is the default remote-access method when available; no open ports or third-party tunnels required
 - Shared UI code (`packages/ui`) must work across web, desktop (Electron), and VS Code webview
-- Node.js >= 22 required; Bun 1.3 is the package manager and runtime for builds
+- Node.js >= 24.14 required (`.nvmrc` is `lts/krypton`); Bun 1.4.5 is the package manager; TypeScript ~7.0.2; Electron 45
 - TypeScript strict mode enforced; no `any` without justification
 - All UI colors must use theme tokens; no hardcoded color values or Tailwind color classes
 - Icons must use the shared SVG sprite system; no direct `@remixicon/react` imports
 - MIT licensed
-

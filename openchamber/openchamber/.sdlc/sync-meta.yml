@@ -1,10 +1,10 @@
 # SDLC Sync Metadata
 # Tracks which version of agents was used for the last sync.
 # Used by sync-sdlc to detect process/template changes and migrate existing files.
-agents_ref: f248f3390b3eb828f852ef42dbb4cad98ae5724e         # Git SHA of agents repo at last sync
+agents_ref: c21886950f9287841ac4c46dee793f3437f88cc3         # Git SHA of agents repo at last sync
 agents_remote: https://github.com/tomzx/agents      # Remote URL of agents repo (e.g. https://github.com/user/agents)
-last_synced: "2026-10-13"            # ISO 8601 date of last sync (e.g. 2026-06-12)
-code_ref: 0f57a76cd156481bad179be5b4c441bdeb72ee2a           # Project repo HEAD SHA at last sync; sync-sdlc scans only changes since this commit
+last_synced: "2026-11-23"            # ISO 8601 date of last sync (e.g. 2026-06-12)
+code_ref: 3a0dbeafb42c6ea6d7ebb65ea5686b0b96ac566d           # Project repo HEAD SHA at last sync; sync-sdlc scans only changes since this commit
 code_index:              # Per-feature code paths, so an incremental sync can map a changed file to its feature
   "FEAT-0001-chat-session-management":
     - packages/ui/src/components
@@ -19,7 +19,7 @@ code_index:              # Per-feature code paths, so an incremental sync can ma
     - packages/web/src/api
   "FEAT-0003-integrated-terminal":
     - packages/ui/src/components
-    - packages/web/server/TERMINAL_WS_PROTOCOL.md
+    - packages/web/server/lib/terminal/terminal-ws-protocol.ts
     - packages/web/server/lib
   "FEAT-0004-files-editor":
     - packages/ui/src/components
@@ -193,9 +193,67 @@ code_index:              # Per-feature code paths, so an incremental sync can ma
   "p14-browser-control":
     - packages/web/server/lib/browser-control
     - packages/ui/src/lib/browser
+  "p15-multi-provider-source-control":
+    - packages/web/server/lib/source-control
+    - packages/web/server/lib/github
+    - packages/web/server/lib/gitlab
+    - packages/web/server/lib/gitea
+    - packages/web/server/lib/gerrit
+    - packages/web/server/lib/forgejo
+    - packages/web/src/api
+    - packages/ui/src/lib/source-control
+    - packages/ui/src/components/sourceControl
+    - packages/ui/src/components/sourceBoard
+    - packages/sdk/src
+  "p16-issue-trackers-and-tracked-items":
+    - packages/web/server/lib/trackers
+    - packages/web/server/lib/linear
+    - packages/web/server/lib/tracked-items
+    - packages/web/src/api
+    - packages/ui/src/lib/trackers
+    - packages/ui/src/lib/trackedItems
+    - packages/ui/src/stores/useTrackerAuthStore.ts
+    - packages/ui/src/stores/useTrackedItemsStore.ts
+  "p17-guest-extensions-and-extension-host":
+    - packages/sdk
+    - packages/extensions
+    - packages/web/server/lib/guests
+    - packages/web/server/lib/extension-waits
+    - packages/ui/src/lib/guests
+    - packages/ui/src/components/layout/GuestSurfacePane.tsx
+  "p18-agent-workflows-and-session-leads":
+    - packages/web/server/lib/workflows
+    - packages/web/server/lib/session-lead
+    - packages/ui/src/lib/workflows
+    - packages/ui/src/components/chat/workflows
+  "p19-session-work-and-todos":
+    - packages/web/server/lib/session-work
+    - packages/web/server/lib/session-todos
+    - packages/ui/src/stores/useSessionTodosStore.ts
+    - packages/ui/src/components/chat/work-status
   "p2-plugins":
     - packages/ui/src/stores
     - packages/web/server/lib
+  "p20-session-drafts-and-warming":
+    - packages/web/server/lib/session-drafts
+    - packages/web/server/lib/session-warming
+    - packages/ui/src/stores/useSessionDraftsStore.ts
+    - packages/ui/src/stores/useSessionWarmingStore.ts
+  "p21-shared-pages-and-local-image-grants":
+    - packages/web/server/lib/share-pages
+    - packages/web/server/lib/markdown-image-grants
+    - packages/ui/src/share-document
+    - packages/ui/src/components/chat/sharePages
+    - packages/ui/src/lib/share-pages
+  "p22-enterprise-policy-and-request-security":
+    - packages/web/server/lib/enterprise-mode.ts
+    - packages/web/server/lib/security
+    - packages/ui/src/stores/useEnterprisePolicyStore.ts
+    - packages/ui/src/components/sections/openchamber/AppLinkSecuritySettings.tsx
+  "p23-diagnostics-timeline":
+    - packages/web/server/lib/diagnostics
+    - packages/ui/src/lib/diagnostics
+    - packages/ui/src/sync/performance-diagnostics.ts
   "p3-session-assist":
     - packages/web/server/lib/session-assist
   "p4-auto-review":

@@ -4,17 +4,30 @@
 
 ```mermaid
 flowchart TD
-    VSC[VS Code Ext<br/>webview + host] --> UI[@openchamber/ui<br/>shared React]
-    UI --> ELE[Electron App<br/>main.mjs boots server in-proc]
-    UI --> WEB[Web / PWA<br/>Vite SPA via Express]
-    UI --> VSE[VS Code Ext<br/>webview loads shared UI]
-    ELE --> SVR[Express Server<br/>packages/web/server/index.js]
+    UI[@openchamber/ui<br/>shared React host]
+    WEB[Web / PWA<br/>Vite SPA via Express] --> UI
+    ELE[Electron App<br/>boots server in-process] --> UI
+    VSE[VS Code Ext<br/>webview loads shared UI] --> UI
+
+    UI --> SVR[Express Server<br/>packages/web/server]
     WEB --> SVR
+    ELE --> SVR
     VSE --> SVR
-    SVR --> SDK[OpenCode SDK<br/>SSE + HTTP]
+
+    UI --> GUEST[SDK guests<br/>iframe panels]
+    GUEST --> SVR
+    SVR --> EXT[Built-in extensions<br/>app-owned allowlist registry]
+    EXT --> GUEST
+
+    SVR --> OCS[OpenCode SDK<br/>SSE + HTTP]
     SVR --> FSG[FS / Git]
     SVR --> TRM[Terminal<br/>WS + PTY]
-    SDK --> OCC[OpenCode CLI<br/>external]
+    OCS --> OCC[OpenCode CLI<br/>external]
+
+    SVR --> RELAY[Relay / Cloudflare / ngrok]
+    SVR --> TAIL[Tailscale funnel]
+    RELAY --> REMOTE[Remote clients]
+    TAIL --> REMOTE
 ```
 
 ## Entity Relationship Diagram
@@ -135,6 +148,8 @@ The `schema.dbml` companion is therefore not applicable.
 | `packages/ui` | Shared React components, hooks, stores, theme, and sync layer | React 19, TypeScript, Zustand, Tailwind v4, Base UI, CodeMirror |
 | `packages/web` | Express server, API routes, CLI, Vite frontend build | Express 5, Node.js >=22, Bun, Vite 7 |
 | `packages/web/server` | Backend runtime: OpenCode lifecycle, SSE event pipeline, Git, terminal, tunnels, relay, auth, TTS, dictation, notifications, quota, session goals, session assist, small model | Express, ws, simple-git, bun-pty/node-pty, Cloudflare tunnel, ngrok, sherpa-onnx |
+| `packages/sdk` | Guest contract: manifest parse, `connectHost`, host-only zod schemas, and drawing kit; host and guest import from the SDK rather than copying types into `packages/ui` | TypeScript, zod |
+| `packages/extensions` | App-owned built-in extension allowlist built into `packages/web/server/built-in-extensions/`, shipped on web, Electron and mobile, not VS Code | JSON registry, built panel and service bundles |
 | `packages/electron` | Forward desktop shell; boots web server in-process, native integrations | Electron 41, electron-builder |
 | `packages/mobile` | Capacitor mobile app wrapping the mobile web UI for iOS and Android | Capacitor, iOS (Swift), Android (Java/Kotlin) |
 | `packages/vscode` | VS Code extension with sidebar webview | VS Code Extension API, esbuild |
@@ -145,6 +160,17 @@ The `schema.dbml` companion is therefore not applicable.
 | `packages/web/server/lib/walkthrough/` | AI-guided changes walkthrough: groups diff hunks into ordered stops and chapters using the small model | Express, hunk hashing, small-model calls |
 | `packages/web/server/lib/openchamber-control/` + `agent-tool/` | Control plane: typed action allowlist (project, model, session, scheduled tasks) shared by the CLI and the managed `openchamber` agent tool | Express, native OpenCode tool plugin |
 | `packages/web/server/lib/spaces/` | Isolated spaces backend (stage 1a, unwired: no routes, settings, or UI yet): space manager, place registry, local Docker place, hardening checker, label scheme | Docker CLI via spawned processes, no shell |
+| `packages/web/server/lib/source-control/` | Source-control provider registry and server-side repository bindings for GitHub, GitLab, Gitea, Gerrit and Forgejo | Express, TypeScript, provider adapters |
+| `packages/web/server/lib/trackers/` + `tracked-items/` | Provider-neutral tracker registry and server-owned live state of linked pull requests, issues and work items | Express, zod, SSE mutations |
+| `packages/web/server/lib/guests/` + `extension-waits/` | Guest install and static serve, plus agent waits on signals from extension services | iframe guests, SDK waits contract, synthetic messages |
+| `packages/web/server/lib/workflows/` + `session-lead/` | Workflow script fan-out with per-run approval, and lead sessions that own and check delegated work | JavaScript runner, approval gate, session tool |
+| `packages/web/server/lib/session-work/` + `session-todos/` | "In work" sidebar block with Jev turn-end checks, and per-session todos from OpenCode's `todowrite` | OpenCode tool events, small model |
+| `packages/web/server/lib/session-drafts/` + `session-warming/` | Cross-client drafts of unsent sessions, and prompt-cache keep-alive for idle sessions | JSON store, timed OpenCode requests |
+| `packages/web/server/lib/share-pages/` + `markdown-image-grants/` | Relay-backed share pages with link and PIN answers, and scoped grants for local images in Markdown | Relay crypto, signed grants |
+| `packages/web/server/lib/diagnostics/` | Server half of the exportable diagnostic timeline with a fixed event vocabulary | TypeScript, fixed vocabulary |
+| `packages/web/server/lib/enterprise-mode.ts` + `security/` | Administrator policy from file or environment, and shared bind-address and browser-origin decisions | zod, policy file |
+| `packages/web/server/lib/tailscale-tunnel.ts` | Tailscale funnel remote access path with approval URL and public URL handling | Tailscale CLI, spawned process |
+| `packages/web/server/lib/realtime-proxy.ts` | WebSocket and SSE proxy for desktop-hosted runtimes | ws, HTTP upgrade |
 
 ## Data Flow
 
@@ -172,17 +198,33 @@ The `schema.dbml` companion is therefore not applicable.
 
 12. **Event pipeline (SSE)**: The server subscribes to OpenCode SSE events and rebroadcasts them to connected UI clients via its own SSE endpoint. The client-side event pipeline in `packages/ui/src/sync/event-pipeline.ts` handles reconnect with exponential backoff, coalescing, and state dispatch to Zustand stores.
 
+13. **Guest panel connect through SDK**: The UI host renders a guest iframe and the guest calls `connectHost` from `@openchamber/sdk` to negotiate its capabilities and grants. The server validates the manifest, install and approval state before it serves assets or answers guest requests.
+
+14. **Share-page publishing through relay**: An agent's `openchamber_render` call with `share` creates a group on disk, and the server sends the page through the relay with a link and PIN. Local images in the page use scoped markdown image grants. Answers return to the session that shared the page as messages.
+
+15. **Workflow script fan-out with per-run approval**: The agent proposes a workflow script and the user approves the plan in chat before the server runs it. The server executes the script, fans work out to many agents, and delivers the run's report into the session that proposed it.
+
+16. **Extension wait subscription**: The agent calls `wait.start` with an extension wait source and arguments, then ends its turn. The server subscribes to the extension service, checks the wait on its declared interval, and wakes the session with one synthetic message when it fires.
+
+17. **Tracked-item live status**: A client declares which pull requests, issues and work items it shows, and the server ties that interest to its event connection. Changes arrive only on connections showing the item and only when the state moves, with no client polling.
+
 ## Infrastructure
 
 Hosting and deployment topology:
 - **CI/CD**: GitHub Actions (`.github/workflows/`)
-  - `release.yml`: Builds Electron DMG/zip (macOS arm64), Tauri bundles, and VS Code VSIX on tag push or manual dispatch
+  - `release.yml`: Builds Electron DMG/zip (macOS arm64) and VS Code VSIX on tag push or manual dispatch
+  - `release-windows.yml`, `windows-signed-build.yml`, `release-desktop-smoke.yml`: Windows installers signed via SignPath, plus release build smoke tests
+  - `canary.yml`: Nightly Canary channel for desktop builds and the npm `canary` dist-tag
+  - `mirror-release.yml`: Mirrors release artifacts to a Cloudflare R2 mirror behind `downloads.openchamber.dev`
+  - `nix-eval.yml`: Nix packages for the server and desktop on Linux and macOS
+  - `behavior-net.yml`, `oc-review.yml`: Nightly behavior-net verification and PR review checks
   - `build-macos-arm64-dmg.yml`: macOS Electron build
   - `vscode-extension.yml`: VS Code extension build and publish
   - `docs-source.yml`: Documentation site build
-  - `oc-integration.yml`, `oc-review.yml`: Integration and review workflows
+  - `oc-integration.yml`: Integration checks
+- **Desktop artifacts**: macOS DMG/zip, signed Windows installers and Linux `.deb`, `.rpm` and AppImage packages
 - **Deployment**: Docker (Dockerfile + docker-compose.yml), systemd user service, npm package for CLI
-- **Hosting**: Self-hosted; users run locally or on their own servers. Cloudflare tunnels for remote access.
+- **Hosting**: Self-hosted; users run locally or on their own servers. Cloudflare tunnels, the private relay and Tailscale funnel provide remote access.
 - **Reverse proxy**: Caddy config provided (Caddyfile) for HTTPS termination
 
 The detailed technology stack, development tooling, CI/CD pipelines, environments, deployment procedures, and rollback live in `infrastructure.md`.
@@ -273,6 +315,8 @@ React components (re-render only when selected leaf values change)
 
 - **Electron as the desktop shell**: Electron boots the web server in-process, eliminating the sidecar subprocess complexity. The legacy Tauri shell has been removed.
 - **Shared UI across all runtimes**: `packages/ui` is consumed as a workspace dependency by web, desktop, and VS Code. Runtime-specific code uses the `__TAURI__` shim exposed by Electron preload so shared UI stays shell-agnostic.
+- **SDK guest boundary**: `@openchamber/sdk` is the published contract for guest manifests and the iframe `connectHost` bridge. Host and guest import from the SDK rather than copying its types into `packages/ui`.
+- **Provider-neutral source control and tracker abstractions**: One registry per domain serves built-in and extension providers through the same descriptor and implementation contract, so the UI never names a provider.
 - **Zustand for state management**: Multiple split stores by change frequency and subscriber set. High-frequency streaming state lives in narrow stores to avoid render cascades.
 - **Express + SSE over WebSocket for primary data**: SSE for session events; WebSocket reserved for terminal PTY, dictation, and binary use cases.
 - **Private relay for remote access**: Outbound-only E2EE WebSocket tunnel to OpenChamber-hosted relay infrastructure, eliminating dependency on third-party tunnel providers and open inbound ports.
