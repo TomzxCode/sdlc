@@ -1,78 +1,122 @@
-agents_ref: 993718a297d6b3a4eff7755ef3c8ff5584129202
+agents_ref: c21886950f9287841ac4c46dee793f3437f88cc3
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-10-13
-code_ref: d8129ca1e036a967add1e7078679fd9b3697a180
+last_synced: 2026-11-23
+code_ref: 2002026a120fc2da9e1b35ab3337a1273c263d70
 code_index:
   "FEAT-0001-session-runtime":
     - packages/core/src/session/
     - packages/core/src/database/
-    - packages/core/src/execution
+    - packages/core/src/event/
+    - specs/v2/session.md
+    - specs/v2/event-stream-architecture.md
+    - packages/core/test/
   "FEAT-0002-agent-tool-system":
     - packages/core/src/agent.ts
-    - packages/core/src/tool
-    - packages/core/src/permission
-    - packages/core/src/skill
+    - packages/core/src/tool/
+    - packages/core/src/permission/
+    - packages/core/src/skill/
     - packages/core/src/command.ts
+    - specs/v2/tools.md
+    - packages/core/test/
   "FEAT-0003-llm-provider-layer":
-    - packages/ai/
-    - packages/core/src/models-dev
+    - packages/ai/src/
+    - packages/core/src/models-dev.ts
+    - packages/core/src/models-dev/
     - packages/core/src/model-resolver.ts
-    - packages/http-recorder/
+    - packages/core/src/provider.ts
+    - packages/protocol/src/groups/provider.ts
+    - specs/v2/provider-policy.md
+    - specs/v2/claude-agent-provider.md
   "FEAT-0004-terminal-ui":
-    - packages/tui/
+    - packages/tui/src/
+    - packages/tui/test/
     - packages/cli/src/mini.ts
     - packages/cli/src/mini-host.ts
-    - packages/theme/
-    - packages/latex/
-    - packages/merman/
+    - packages/theme/src/
+    - packages/latex/src/
+    - packages/merman/src/
   "FEAT-0005-web-desktop-apps":
-    - packages/app/
-    - packages/desktop/
-    - packages/session-ui/
-    - packages/ui/
-    - packages/gui-extensions/
-    - services/update/
+    - packages/app/src/
+    - packages/app/e2e/
+    - packages/app/component-tests/
+    - packages/desktop/src/
+    - packages/session-ui/src/
+    - packages/ui/src/
+    - packages/gui-plugins/src/
+    - packages/stories/
   "FEAT-0006-http-api-server":
-    - packages/server/
-    - packages/protocol/
-    - packages/schema/
-    - packages/client/
+    - packages/protocol/src/
+    - packages/protocol/openapi.json
+    - packages/server/src/
+    - packages/schema/src/
+    - packages/client/src/
+    - packages/client/script/generate.ts
     - packages/httpapi-codegen/
   "FEAT-0007-plugin-system":
-    - packages/plugin/
-    - packages/plugin-browser/
-    - packages/core/src/plugin
+    - packages/plugin/src/
+    - packages/plugin-browser/src/
+    - packages/core/src/plugin.ts
+    - packages/core/src/plugin/
+    - packages/schema/src/plugin.ts
+    - packages/protocol/src/groups/plugin.ts
+    - packages/nav-menus/src/
   "FEAT-0008-sdk-editor-integrations":
-    - packages/sdk/
-    - sdks/vscode/
+    - packages/client/script/generate.ts
+    - packages/client/src/effect/generated/
+    - packages/client/src/promise/generated/
+    - packages/client/src/mcp.ts
+    - packages/sdk/src/
+    - sdks/vscode/src/
+    - packages/core/src/mcp/
+    - packages/cli/src/commands/handlers/mcp/
   "FEAT-0009-llm-core-package":
-    - packages/ai/
-  "FEAT-0010-enterprise-cloud-platform":
-    - packages/console/
-    - packages/enterprise/
-    - packages/stats/
-    - packages/identity/
-    - services/files/
-    - infra/
-    - sst.config.ts
+    - packages/ai/src/
+    - packages/ai/test/
+  "FEAT-0010-enterprise-cloud-platform": []
   "FEAT-0011-acp-protocol":
     - packages/cli/src/acp/
+    - packages/cli/test/acp/
+    - packages/cli/src/commands/handlers/acp.ts
+    - packages/cli-rs/crates/acp/
+    - packages/cli-rs/parity/acp/
   "FEAT-0012-slack-integration": []
-  "FEAT-0013-github-actions-integration":
-    - github/
+  "FEAT-0013-github-actions-integration": []
   "p1-codemode":
-    - packages/codemode/
-    - packages/core/src/codemode
+    - packages/codemode/src/
+    - packages/codemode/test/
+    - packages/core/src/codemode/
+    - packages/core/test/codemode.test.ts
   "p2-config-system":
-    - packages/core/src/config
     - packages/core/src/config.ts
-  "p3-session-sharing-sync":
-    - packages/function/
-  "p4-lsp-integration":
-    - packages/core/src/formatter
-    - packages/core/src/formatter.ts
+    - packages/core/src/config/
+    - packages/core/test/config/
+    - packages/schema/src/config.ts
+    - packages/schema/src/config/
+    - packages/schema/test/config.test.ts
+    - packages/cli/src/config/
+    - packages/cli/test/config.test.ts
+    - packages/server/test/config.test.ts
+  "p3-session-sharing-sync": []
+  "p4-lsp-integration": []
   "p5-docs-website":
-    - services/www/
-    - services/changelog/
-    - packages/posts/
-    - packages/web/
+    - services/site/src/docs/
+    - services/site/src/i18n/
+    - services/site/src/lib/changelog.ts
+    - services/site/test/
+    - .github/workflows/check-docs.yml
+    - .github/workflows/deploy-site.yml
+  "p6-process-daemon":
+    - packages/process-daemon/
+    - packages/core/src/persistent-pty/
+    - packages/schema/src/persistent-pty.ts
+    - packages/protocol/src/groups/persistent-pty.ts
+    - packages/server/src/handlers/persistent-pty.ts
+    - packages/client/src/solid/pty.ts
+    - packages/client/src/pty-handoff.ts
+    - packages/core/test/persistent-pty-daemon.test.ts
+    - packages/core/test/persistent-pty-session.test.ts
+    - packages/server/test/persistent-pty.test.ts
+    - .github/workflows/check-process-daemon.yml
+    - .github/workflows/release-process-daemon.yml
+  "p7-native-cli":
+    - packages/cli-rs/
