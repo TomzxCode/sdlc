@@ -1,7 +1,7 @@
 ---
 artifact: specification.md
 verdict: changes-requested
-reviewed_at: 2026-11-16
+reviewed_at: 2026-11-23
 ---
 
 ## Sync drift: 2026-11-16
@@ -10,3 +10,7 @@ reviewed_at: 2026-11-16
 - The Architecture tree (lines 22-25) lists optional MCP servers as `linear/`, `n8n/`, `unreal-engine/`. `optional-mcps/n8n/` does not exist. `optional-mcps/n8n-official/` is the replacement, with a manifest that records the retired n8n stdio bridge (lines 3-4) and an HTTP + OAuth transport (lines 8-13). The tree also omits the roughly 60 other optional MCP servers shipped in `optional-mcps/`.
 - The Data Model (line 38) says `transport` is "stdio or SSE" and Technical Decisions (line 53) says "Transport | stdio + SSE". The code supports a third transport, Streamable HTTP: `tools/mcp_tool.py:2-4`, `tools/mcp_tool_transport.py:575-684` (`_streamable_http_transport`, `_run_http` with latched SSE fallback), and `optional-mcps/n8n-official/manifest.yaml:8-10` (`type: http`).
 - The Data Model field `circuit_breaker.threshold` (line 43) and Technical Decisions row "Circuit breaker | Configurable threshold per server" (line 56) claim per-server configurability. The implementation uses fixed module constants `_CIRCUIT_BREAKER_THRESHOLD, _CIRCUIT_BREAKER_COOLDOWN_SEC = 3, 60.0` in `tools/mcp_tool.py:557`, read directly by `tools/mcp_tool_handlers.py:310-319`. No per-server circuit-breaker config field exists.
+
+## Sync drift: 2026-11-23
+
+- Technical Decisions row "Auth | OAuth via credential pool" (line 54) says OAuth uses the credential pool. MCP OAuth tokens are stored in the active profile's MCP token store at `~/.hermes/mcp-tokens/<server>.json`, or `~/.hermes/profiles/<name>/mcp-tokens/` for a named profile. Evidence: `tools/mcp_oauth.py:407-423` (`HermesTokenStorage` writes the token file), `website/docs/reference/mcp-config-reference.md:350`, and `website/docs/user-guide/features/mcp.md:376`. Credential pools are used for model-provider key rotation, not MCP tokens.

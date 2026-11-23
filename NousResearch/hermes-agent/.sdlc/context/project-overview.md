@@ -41,9 +41,9 @@ The agent autonomously creates and improves skills from its own experience, pers
 
 ## Key Constraints
 
-- **Python 3.11 through 3.14** (`requires-python = ">=3.11,<3.15"`; 3.14 is the newest version with verified wheels)
-- **Dependencies pinned with upper bounds** for supply-chain attack surface reduction (post-litellm compromise policy)
-- **Per-conversation prompt caching is sacred:** system prompt must be byte-stable for the life of a conversation; mid-conversation context mutation is forbidden
+- **Python 3.14 runtime** (`requires-python = ">=3.11,<3.15"` allows 3.11 through 3.13 only as an update bridge, and `uv.lock` resolves 3.14 only)
+- **Core dependencies are exact-pinned, with upper bounds on ranged dependencies**, backed by a three-day release-age rule to reduce supply-chain risk
+- **Per-conversation prompt caching is sacred:** the system prompt stays byte-stable for the life of a conversation and mid-conversation context mutation is forbidden except for context compression
 - **The core is a narrow waist:** every model tool is sent on every API call, so new core tools are the last resort — capability lives at the edges via CLI + skill, service-gated tools, plugins, and MCP servers
 - **All behavioral settings go in `config.yaml`;** `.env` is for secrets only (API keys, tokens, passwords)
 - **Supported platforms:** Linux, macOS, native Windows (via PowerShell + portable MinGit), Windows via WSL2, Android via Termux

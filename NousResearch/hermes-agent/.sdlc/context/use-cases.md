@@ -5,9 +5,9 @@
 
 | ID | Use case | Actor | Description |
 |---|---|---|---|
-| UC-1 | Converse with a persistent personal assistant from any surface | Individual user | The same agent core runs across CLI, TUI, Electron desktop, web dashboard, and a messaging gateway covering Telegram, Discord, Slack, Signal, WhatsApp, and about 20 more platforms, with cross-platform conversation continuity and voice memo transcription. |
+| UC-1 | Converse with a persistent personal assistant from any surface | Individual user | The same agent core runs across CLI, TUI, Electron desktop, web dashboard, ACP editors, and a messaging gateway with 25+ platform adapters including Telegram, Discord, Slack, Signal, and WhatsApp, with cross-platform conversation continuity and voice memo transcription. |
 | UC-2 | Recall past conversations and accumulated knowledge across sessions | Individual user | Full-text FTS5 session search with LLM summarization, agent-curated memory with periodic nudges, autonomous skill creation and self-improvement, and Honcho dialectic user modeling preserve context between sessions. |
-| UC-3 | Execute real terminal and browser actions through the agent | Power user | Seven terminal backends (local, Docker, SSH, Singularity, Modal, Daytona, Vercel Sandbox) plus browser automation let the agent run commands, manipulate files, and drive the web on the user's behalf. |
+| UC-3 | Execute real terminal and browser actions through the agent | Power user | Six built-in terminal backends (local, Docker, SSH, Modal, Daytona, and Vercel Sandbox) plus plugin backends such as Singularity/Apptainer and browser automation let the agent run commands, manipulate files, and drive the web on the user's behalf. |
 | UC-4 | Automate recurring work on a schedule | Individual user | The built-in cron scheduler accepts natural-language schedules and delivers results unattended to any messaging platform, covering daily reports, nightly backups, and weekly audits. |
 | UC-5 | Delegate parallel work to isolated subagents | Power user | The agent spawns isolated subagents for parallel workstreams and exposes RPC-callable Python scripts that collapse multi-step pipelines into zero-context-cost turns. |
 | UC-6 | Coordinate distributed work across agents and people | Team operator | Multi-agent kanban task boards provide shared work queues reachable from messaging platforms for assigning, tracking, and completing tasks. |
@@ -15,6 +15,9 @@
 | UC-8 | Self-host the agent and switch models without lock-in | Self-hoster | A single install runs on a VPS, GPU cluster, or hibernating serverless backends, works with any OpenAI-compatible provider via `hermes model`, isolates instances via multi-profile support, and keeps secrets in `.env` with behavior in `config.yaml`. |
 | UC-9 | Generate training trajectories for tool-calling models | Researcher | Batch trajectory generation with trajectory compression produces reusable traces for training the next generation of tool-calling models. |
 | UC-10 | Customize the interactive experience | Individual user | The data-driven skin and theme system, slash-command autocomplete, multiline editing, conversation history, interrupt-and-redirect, and streaming tool output adapt the CLI and TUI to user preference. |
+| UC-11 | Work in a preferred language | Non-English user | Locale files under `locales/` localize CLI and TUI output in many languages, translated READMEs cover Chinese, Spanish, and Urdu, and locale-based string loading lets non-English users work in their preferred language. |
+| UC-12 | Monitor agent and gateway health | Operator | Opt-in OTLP metrics export, NeMo Relay shared metrics, backend-neutral observer hooks with Langfuse tracing, and `hermes logs` let operators inspect gateway health and agent execution traces without changing runtime behavior. |
+| UC-13 | Bring settings, memories, and skills from another agent | Individual user | `hermes import-agent` with the agent-importers plugin migrates personas, memories, user-created skills, command allowlists, messaging settings, allowlisted secrets, TTS assets, and workspace instructions from OpenClaw, Claude Code, Codex, and Cursor. |
 
 ## Wanted
 

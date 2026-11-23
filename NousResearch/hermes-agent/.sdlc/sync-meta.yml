@@ -1,7 +1,7 @@
-agents_ref: 31f0fc756d0bbeddde013a51985880c24139f7a8
+agents_ref: c21886950f9287841ac4c46dee793f3437f88cc3
 agents_remote: https://github.com/tomzx/agents
-last_synced: "2026-11-16"
-code_ref: e2fb450adcf74421fe9514f048319dfcbb5af6c1
+last_synced: "2026-11-23"
+code_ref: bb89ad1a6bbbdb72ba7108fcbabe2cfeb55f0f28
 code_index:
   "p1-core-agent":
     - run_agent.py
@@ -18,7 +18,9 @@ code_index:
     - gateway/run.py
     - gateway/platforms/
     - gateway/session*.py
+    - plugins/platforms/
     - tests/gateway/
+    - tests/plugins/platforms/
   "p4-terminal-browser-automation":
     - tools/terminal_tool*.py
     - tools/environments/
@@ -28,6 +30,7 @@ code_index:
   "p5-plugin-system":
     - plugins/
     - hermes_cli/plugins*.py
+    - hermes_cli/plugin_*.py
     - plugin-catalog/
     - tests/plugins/
   "p6-skill-system":
@@ -39,7 +42,7 @@ code_index:
     - agent/memory_manager.py
     - agent/memory_provider.py
     - plugins/memory/
-    - hermes_state_fts.py
+    - persistence/sqlite/
   "p8-cron-delegation":
     - cron/
     - tools/async_delegation.py
@@ -67,7 +70,6 @@ code_index:
   "p13-trajectory-data":
     - batch_runner.py
     - trajectory_compressor.py
-    - mini_swe_runner.py
     - evals/
   "p14-internationalization":
     - locales/
@@ -78,5 +80,6 @@ code_index:
   "p16-observability":
     - agent/monitoring/
     - scripts/observability/
+    - hermes_cli/observability/
     - hermes_logging.py
     - tests/monitoring/

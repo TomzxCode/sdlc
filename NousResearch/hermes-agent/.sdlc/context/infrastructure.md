@@ -69,7 +69,8 @@ Workflow | Trigger | What it runs
 `js-tests.yml` | `workflow_call` from CI | One 32-core job running per-workspace `check` scripts (vitest, tsc, eslint) across root, TUI, desktop, web, and tests-js |
 `rust-tests.yml` | `workflow_call` from CI | Cargo tests for the Rust bootstrap installer |
 `catalog-tests.yml` | `workflow_call` from CI | Plugin catalog tests |
-`remote-backends.yml` | `workflow_call` from CI | E2E for SSH/Modal/Daytona terminal backends |
+`catalog-core-imports.yml` | `schedule`, `workflow_dispatch` | Daily refresh of the plugin catalog core-imports index for changed pins; opens a maintainer PR on `bot/catalog-core-imports`, consumed by the `catalog-core-imports` lane in `repo-guards.yml` |
+`remote-backends.yml` | `workflow_call` from CI | E2E for SSH and Docker terminal backends against a throwaway real sshd and the runner's Docker daemon |
 `bootstrap-installer.yml` | `workflow_call` from CI | Bootstrap installer build and tests |
 `e2e-desktop.yml`, `e2e-desktop-core.yml`, `e2e-desktop-update.yml` | `workflow_call` from CI | Desktop E2E, core flows, and update flows |
 `docs-site-checks.yml` | `workflow_call` from CI | Docusaurus site checks |
@@ -82,6 +83,7 @@ Workflow | Trigger | What it runs
 `windows-venv-e2e.yml` | Pushes to `wine2e/**`, `workflow_call` | Live Windows venv holder process-topology tests on a real runner |
 `live-providers.yml` | `push`, `workflow_dispatch` | Secrets-gated live provider canaries |
 `termux-verify.yml` | `push` to `main` (paths), `pull_request` (paths), `workflow_dispatch`, `workflow_call` | Termux contract and TUI verification |
+`canary-e2e.yml` | `workflow_dispatch` | Manual full-CI, install/update, and Windows venv E2E for any commit without cutting a canary tag; the same suites run inside `stable-release.yml` for daily canaries |
 `canary-release.yml` | `schedule`, `workflow_dispatch` | Canary tag/release creation and pruning |
 `stable-release.yml`, `stable-release-publication.yml` | `workflow_dispatch` (+ `workflow_run` for publication) | Stable release admission and receipt-bound publication |
 `desktop-bundled-release.yml`, `desktop-bundle-smoke.yml` | `workflow_call`, `workflow_dispatch` | Bundled desktop release builds and bundle smoke tests |
