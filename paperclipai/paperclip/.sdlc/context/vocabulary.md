@@ -42,7 +42,7 @@
 | PGlite | Embedded PostgreSQL used as the dev default when `DATABASE_URL` is unset. |
 | Drizzle | The TypeScript ORM used for schema, migrations, and DB clients. |
 | Adapter plugin | An external adapter loaded dynamically via `~/.paperclip/adapter-plugins.json` (no hardcoded core imports). |
-| Context mode | `thin` (send IDs/pointers; agent fetches via API) vs `fat` (include assignments, goal summary, budget snapshot, recent comments). |
+| Context mode | Obsolete: `contextMode` appears only in UI test fixtures and a stale doc line, with no source in `packages/shared/src` or `server/src`. |
 | Cheap model profile | Optional low-cost model lane (`modelProfiles.cheap`) usable only for status-only recovery coordination, never deliverable work. |
 | Request depth | Counter incremented as work is delegated down the org tree. |
 | Activity log | Immutable audit trail for every mutating action (actor_type, action, entity, details). |
@@ -51,7 +51,7 @@
 | Secret binding | An association between a secret key and a target (agent, project, or routine) with a config path for resolution. |
 | Inline secret reference | The `${{ secrets.key }}` syntax used in JSONB configs to reference a secret that is resolved at runtime. |
 | Board chat / Conference room | An experimental board-level chat assistant that spawns a Claude subprocess with the board skills prompt, streamed via SSE and persisted to a standing issue. |
-| Company membership | A user's role-scoped association with a company (`owner \| admin \| member`). |
+| Company membership | A user's role-scoped association with a company (`owner \| admin \| operator \| viewer \| member`); human roles are `owner \| admin \| operator \| viewer`. |
 | Principal permission grant | A fine-grained permission override granting a specific action on a specific resource to a principal (user or agent). |
 | Greptile | Automated code-review service used in CI; PRs must reach 5/5 with no open P2+ comments. |
 | Low-trust preset | A containment control for hostile automated work (not general project/issue privacy). |
@@ -72,7 +72,6 @@
 | Live event | A real-time event delivered over WebSocket for live UI updates (run progress, cost events, terminal output) |
 | MCP | Model Context Protocol (served by `packages/mcp-server`) |
 | OTEL | OpenTelemetry (opt-in tracing instrumentation) |
-| PGlite | Embedded PostgreSQL (see Technical Terms) |
 | Pipeline | A stage-based workflow definition with ordered stages and allowed transitions |
 | Pipeline case | A work item flowing through a pipeline with structured fields, workspace references, and lease ownership |
 | Pipeline stage | A named step in a pipeline (working, review, done, cancelled) with position and config |
@@ -92,4 +91,3 @@
 | Tool profile binding | An association between a tool profile and an agent or project for runtime resolution |
 | Tool runtime profile | A configured tool execution environment with capacity, timeout, and security parameters |
 | Tools ecosystem | The full lifecycle of discovering, installing, configuring, and using third-party tools |
-| Work product | A typed deliverable attached to an issue, backed by an artifact or referencing a workspace file |

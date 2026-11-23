@@ -1,0 +1,275 @@
+# OpenAPI 3 contract for Onboarding.
+# Normative API definition referenced by specification.md.
+openapi: 3.1.0
+info:
+  title: "Onboarding API"
+  version: 1.0.0
+  description: >
+    Endpoints for applying Cloud onboarding seeds and opening the first agent chat.
+    All paths are mounted under /api.
+    No published versioning policy exists in the code, so changes to existing fields or response shapes should be treated as breaking.
+servers:
+  - url: /api
+paths:
+  /companies/{companyId}/onboarding-seed:
+    post:
+      summary: Apply a Cloud collected onboarding seed
+      description: >
+        Authorization is resolved from the trusted Cloud identity envelope and company access is asserted before the service runs.
+        The JSON body is untrusted customer text.
+        A replay of an already applied revision succeeds with changed set to false.
+      operationId: applyOnboardingSeed
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyOnboardingSeedRequest"
+      responses:
+        "200":
+          description: Seed applied or acknowledged as already applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingSeedResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /companies/{companyId}/chats/{agentRef}/onboarding:
+    post:
+      summary: Ensure the owner-bound onboarding conversation exists
+      description: >
+        Requires a board actor with a user id, an existing agent reference, and the enableAgentChat experimental setting.
+        Opening the conversation does not start work or advance task numbering.
+      operationId: ensureOnboardingChat
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/AgentRef"
+      responses:
+        "200":
+          description: Existing or newly created onboarding conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueRef"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /companies/{companyId}/chats/{agentRef}/onboarding/greeting:
+    post:
+      summary: Start the agent welcome for an onboarding conversation
+      description: >
+        Requires the same actor and feature gates as the onboarding conversation endpoint.
+        The conversation must already exist.
+        The response reports false when no welcome is needed.
+      operationId: startOnboardingGreeting
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/AgentRef"
+      responses:
+        "200":
+          description: Greeting admitted or superseded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GreetingResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+components:
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      description: Company that owns the onboarding state.
+      schema:
+        type: string
+        format: uuid
+    AgentRef:
+      name: agentRef
+      in: path
+      required: true
+      description: Agent id or another reference accepted by the agent resolver.
+      schema:
+        type: string
+  schemas:
+    ApplyOnboardingSeedRequest:
+      type: object
+      additionalProperties: true
+      required:
+        - revision
+      properties:
+        revision:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Content hash computed by Cloud.
+        mission:
+          type: string
+          maxLength: 2000
+          description: Customer supplied mission text.
+        agent:
+          $ref: "#/components/schemas/SeedAgent"
+        firstTask:
+          $ref: "#/components/schemas/SeedFirstTask"
+    SeedAgent:
+      type: object
+      additionalProperties: true
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: Customer supplied first agent name.
+        role:
+          type: string
+          maxLength: 120
+          description: Customer supplied role text stored as the agent title.
+    SeedFirstTask:
+      type: object
+      additionalProperties: true
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Initial idea title retained as chat context.
+        details:
+          type: string
+          maxLength: 2000
+          description: Initial idea details retained as chat context.
+    OnboardingSeedResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - companyId
+        - revision
+        - applied
+        - changed
+        - goalId
+        - agentId
+        - issueId
+      properties:
+        companyId:
+          type: string
+          format: uuid
+        revision:
+          type: string
+        applied:
+          type: boolean
+          const: true
+        changed:
+          type: boolean
+          description: False when the stored revision already matched.
+        goalId:
+          type: string
+          format: uuid
+          nullable: true
+        agentId:
+          type: string
+          format: uuid
+          nullable: true
+        issueId:
+          type: string
+          format: uuid
+          nullable: true
+    IssueRef:
+      type: object
+      additionalProperties: true
+      required:
+        - id
+        - companyId
+        - originKind
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        originKind:
+          type: string
+          const: onboarding_chat
+        title:
+          type: string
+        status:
+          type: string
+        conversationAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        conversationUserId:
+          type: string
+          format: uuid
+          nullable: true
+        conversationState:
+          type: string
+    GreetingResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - started
+      properties:
+        started:
+          type: boolean
+          description: True when a wakeup was admitted or already exists, false when no welcome is needed.
+    ErrorResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - error
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+          description: Present only when the thrown error supplies a structured code.
+        reason:
+          type: string
+        details:
+          description: Zod issues or structured error details.
+          oneOf:
+            - type: array
+              items: {}
+            - type: object
+  responses:
+    ValidationError:
+      description: Request body failed validation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Caller lacks company access or is not a board user with a user id
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Agent Chat disabled, agent not found, agent ambiguous, or conversation not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: Unexpected service failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

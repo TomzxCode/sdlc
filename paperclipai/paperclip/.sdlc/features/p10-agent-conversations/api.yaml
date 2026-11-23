@@ -1,0 +1,277 @@
+# OpenAPI 3 contract for in-app agent conversations.
+# Normative API definition referenced by specification.md.
+openapi: 3.1.0
+info:
+  title: "Agent Conversations API"
+  version: 0.1.0
+  description: >
+    Company-scoped in-app conversations between a board user and an agent.
+    Conversations are issue rows and messages are issue comments.
+paths:
+  /api/companies/{companyId}/chats:
+    get:
+      operationId: listAgentConversations
+      summary: List the current board user's conversations
+      description: >
+        Returns accessible conversations ordered by recent activity with read state.
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Conversation list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConversationWithReadState"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /api/companies/{companyId}/chats/{agentRef}:
+    get:
+      operationId: getAgentConversation
+      summary: Resolve an existing conversation without creating one
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/AgentRef"
+      responses:
+        "200":
+          description: The conversation or null.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationWithReadState"
+              examples:
+                missing:
+                  value: null
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      operationId: ensureAgentConversation
+      summary: Resolve or create the single conversation for this agent and user
+      description: >
+        An explicit add or first send resolves the one conversation owned by the current board user.
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/AgentRef"
+      responses:
+        "200":
+          description: The resolved conversation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationWithReadState"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /api/companies/{companyId}/chats/{agentRef}/onboarding:
+    post:
+      operationId: openOnboardingChat
+      summary: Open the current board user's onboarding chat
+      description: >
+        Reuses an existing conversation or creates an unnumbered standing chat with signup context.
+        This operation creates no execution task and no project and starts no agent turn.
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/AgentRef"
+      responses:
+        "200":
+          description: The onboarding conversation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/companies/{companyId}/chats/{agentRef}/onboarding/greeting:
+    post:
+      operationId: startOnboardingGreeting
+      summary: Start the visible onboarding chat's live welcome
+      description: >
+        Returns started true when a welcome is queued or already pending.
+        Returns started false when the conversation no longer needs a welcome.
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/AgentRef"
+      responses:
+        "200":
+          description: Greeting start result.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [started]
+                properties:
+                  started:
+                    type: boolean
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /api/agents/me/chat/messages:
+    post:
+      operationId: sendAgentChatMessage
+      summary: Send a task message to the agent's own chat
+      description: >
+        Requires an active standard task run, standard credentials, and an active responsible human.
+        Resolves or creates that agent's conversation automatically.
+        Does not wake the chat agent or change the source task status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendChatMessageInput"
+      responses:
+        "201":
+          description: Message receipt.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessageReceipt"
+        "200":
+          description: Replayed message receipt.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessageReceipt"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+components:
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AgentRef:
+      name: agentRef
+      in: path
+      required: true
+      description: Agent id, url key, or unambiguous name.
+      schema:
+        type: string
+  schemas:
+    Conversation:
+      type: object
+      description: Issue projection with conversation identity fields.
+      required: [id, companyId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        conversationAgentId:
+          type: string
+          format: uuid
+        conversationUserId:
+          type: string
+        conversationState:
+          type: string
+          enum: [active, waiting]
+        conversationSessionGeneration:
+          type: integer
+        conversationBoundaryCommentId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+    ConversationWithReadState:
+      allOf:
+        - $ref: "#/components/schemas/Conversation"
+        - type: object
+          properties:
+            isUnreadForMe:
+              type: boolean
+            unreadMessageCount:
+              type: integer
+            lastExternalCommentAt:
+              type: string
+              format: date-time
+    SendChatMessageInput:
+      type: object
+      additionalProperties: false
+      required: [body, idempotencyKey]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        idempotencyKey:
+          type: string
+          minLength: 1
+          maxLength: 240
+    ChatMessageReceipt:
+      type: object
+      required: [commentId, conversationId, chatUrl, sourceTaskId, replayed]
+      properties:
+        commentId:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        chatUrl:
+          type: string
+        sourceTaskId:
+          type: string
+          format: uuid
+        replayed:
+          type: boolean
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        details:
+          type: object
+  responses:
+    BadRequest:
+      description: Invalid input.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Authentication required.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Access denied.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Conflicting request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooManyRequests:
+      description: Delivery or influence limit reached.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

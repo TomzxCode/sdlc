@@ -2,7 +2,7 @@
 
 ## Naming
 
-- **Files:** `kebab-case.ts` for TypeScript modules and route/service files; `PascalCase.tsx` for React components/pages (e.g. `AgentDetail.tsx`, `CompanySettings.tsx`); `kebab-case.md` for docs.
+- **Files:** `kebab-case.ts` for TypeScript modules and route/service files; `snake_case.ts` for Drizzle schema files under `packages/db/src/schema/`; `PascalCase.tsx` for React components/pages (e.g. `AgentDetail.tsx`, `CompanySettings.tsx`); `kebab-case.md` for docs.
 - **Variables:** `camelCase` for locals and function-scoped variables.
 - **Functions / Methods:** `camelCase` (e.g. `createAgent`, `checkOutIssue`).
 - **Classes:** `PascalCase`.
@@ -18,7 +18,12 @@ pnpm workspace monorepo. Each concern lives in its own package:
 
 - `server/` — Express API; routes under `server/src/routes/`, services under `server/src/services/`, adapters under `server/src/adapters/`, auth under `server/src/auth/`, middleware under `server/src/middleware/`, HTTP helpers under `server/src/http/`.
 - `ui/` — React app; pages under `ui/src/pages/`, components under `ui/src/components/`, API clients under `ui/src/api/`, hooks under `ui/src/hooks/`, context under `ui/src/context/`.
-- `packages/db/` — Drizzle schema files under `packages/db/src/schema/` (one file per table), migrations generated via `pnpm db:generate` (reads compiled `dist/schema/*.js`).
+- `packages/db/` — Drizzle schema files under `packages/db/src/schema/` use snake_case filenames.
+- One schema file can define several related tables, e.g. `auth.ts` (4), `muse_runner.ts` (9), `company_skill_sources.ts` (4), and `execution_admissions.ts` (3).
+- Migrations live in `packages/db/src/migrations/`.
+- `pnpm db:generate` reads compiled `./dist/schema/*.js` per `packages/db/drizzle.config.ts` and writes to that directory.
+- `pnpm --filter @paperclipai/db check:migrations` validates migration numbering and safety.
+- `rules/database-migration-snapshots.mdc` requires keeping only the five newest schema snapshots.
 - `packages/shared/` — shared types, constants, validators; `index.ts` re-exports.
 - `packages/adapters/<adapter>-local/` — one package per built-in adapter; gateway/cloud variants use matching non-`-local` names (e.g. `hermes`, `hermes-gateway`, `cursor-cloud`, `openclaw-gateway`).
 - `packages/plugins/` — SDK, scaffolder, sandbox providers, example plugins.
@@ -31,12 +36,19 @@ pnpm workspace monorepo. Each concern lives in its own package:
 - Company-scoping is mandatory: every domain entity is scoped to a company; enforce `company_id` boundaries in routes/services.
 - Preserve control-plane invariants: single-assignee tasks, atomic checkout semantics, approval gates, budget hard-stop auto-pause, and activity logging for all mutations.
 - Never expose or log secrets/keys; hash agent API keys at rest; redact secrets in logs and activity payloads.
-- Follow the AGENTS.md "Read This First" doc order before making non-trivial changes (`GOAL.md` → `PRODUCT.md` → `SPEC-implementation.md` → `DEVELOPING.md` → `DATABASE.md`).
+- Follow AGENTS.md section 2 "Read This First" before making non-trivial changes: `GOAL.md` and `PRODUCT.md` for product scope, `DEVELOPING.md` for setup and commands, `DATABASE.md` for schema and migrations, `doc/connections/CONNECTOR-PLAYBOOK.md` for Apps catalog connections, and `DESIGN.md` for `ui/` changes.
 - Anti-patterns: do not assume a library is available without checking `package.json`; do not replace strategic docs wholesale; do not rely on local filesystem paths as the only artifact access path (use Paperclip artifacts/work products).
+
+## Verification
+
+- `pnpm verify` is the default local verification command, selecting affected Vitest files against the merge base with `master` (AGENTS.md section 7).
+- Exit 2 means the change needs broader verification: run focused checks and let required CI supply coverage, or use `pnpm verify --full`.
 
 ## Commit Messages
 
-Conventional Commits style with scope. Observed patterns from `git log`:
+Conventional Commits style with scope.
+This is weakly verified because this checkout is a shallow clone with one commit.
+Recorded patterns:
 
 - `feat: ...`, `feat(scope): ...` (e.g. `feat(skills): ...`)
 - `fix: ...`, `fix(scope): ...` (e.g. `fix(server): ...`, `fix(issues): ...`, `fix(workspace-runtime): ...`)

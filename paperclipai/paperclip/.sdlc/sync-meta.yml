@@ -1,7 +1,7 @@
-agents_ref: f248f3390b3eb828f852ef42dbb4cad98ae5724e
+agents_ref: c21886950f9287841ac4c46dee793f3437f88cc3
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-10-13
-code_ref: d837b65be821d80c8083f150441b84913723f960
+last_synced: 2026-11-23
+code_ref: 8ce422e45d0c47ede1c8ea905575b93879c1854b
 code_index:
   "FEAT-0001-company-management":
     - server/src/routes/companies.ts
@@ -21,20 +21,31 @@ code_index:
   "FEAT-0003-task-system":
     - server/src/routes/issues.ts
     - server/src/routes/issues-checkout-wakeup.ts
+    - server/src/routes/board-chat.ts
     - server/src/services/issues.ts
     - server/src/services/issue-liveness.ts
     - server/src/services/issue-thread-interactions.ts
+    - server/src/services/issue-tree-control.ts
+    - server/src/services/issue-recovery-actions.ts
+    - server/src/services/work-products.ts
+    - server/src/services/task-watchdogs.ts
+    - ui/src/pages/BoardChat.tsx
     - packages/db/src/schema/issues.ts
     - packages/db/src/schema/issue_comments.ts
     - packages/db/src/schema/issue_documents.ts
     - packages/db/src/schema/issue_work_products.ts
     - packages/db/src/schema/issue_relations.ts
   "FEAT-0004-heartbeat-execution":
+    - server/src/routes/adapters.ts
     - server/src/services/heartbeat.ts
     - server/src/services/heartbeat/
     - server/src/services/heartbeat-policy.ts
     - server/src/services/run-cancellation.ts
     - server/src/services/execution-continuation.ts
+    - server/src/services/agent-instructions.ts
+    - server/src/services/run-log-store.ts
+    - server/src/services/runtime-skill-selections.ts
+    - server/src/adapters/plugin-loader.ts
     - packages/db/src/schema/heartbeat_runs.ts
     - packages/db/src/schema/heartbeat_run_events.ts
   "FEAT-0005-governance-approvals":
@@ -42,6 +53,10 @@ code_index:
     - server/src/services/approvals.ts
     - server/src/services/task-watchdogs.ts
     - server/src/services/issue-approvals.ts
+    - server/src/services/execution-policy-bootstrap.ts
+    - server/src/services/low-trust-runtime-containment.ts
+    - server/src/services/source-trust.ts
+    - server/src/services/authorization.ts
     - packages/db/src/schema/approvals.ts
     - packages/db/src/schema/approval_comments.ts
     - packages/db/src/schema/issue_watchdogs.ts
@@ -56,20 +71,33 @@ code_index:
   "FEAT-0007-routines-schedules":
     - server/src/routes/routines.ts
     - server/src/services/routines.ts
+    - server/src/services/scheduled-work.ts
     - packages/db/src/schema/routines.ts
   "FEAT-0008-workspaces-runtime":
     - server/src/routes/execution-workspaces.ts
     - server/src/routes/workspace-command-authz.ts
     - server/src/routes/workspace-runtime-service-authz.ts
+    - server/src/routes/file-resources.ts
     - server/src/services/execution-workspaces.ts
     - server/src/services/workspace-runtime.ts
+    - server/src/services/workspace-operations.ts
+    - server/src/services/workspace-file-resources.ts
+    - server/src/services/local-service-supervisor.ts
+    - server/src/services/sandbox-provider-runtime.ts
     - packages/db/src/schema/execution_workspaces.ts
     - packages/db/src/schema/workspace_runtime_services.ts
     - packages/db/src/schema/project_workspaces.ts
   "FEAT-0009-plugin-system":
     - server/src/routes/plugins.ts
     - server/src/services/plugin-loader.ts
+    - server/src/services/plugin-registry.ts
+    - server/src/services/plugin-lifecycle.ts
+    - server/src/services/plugin-job-scheduler.ts
+    - server/src/services/plugin-worker-manager.ts
+    - server/src/services/plugin-tool-registry.ts
+    - server/src/services/plugin-database.ts
     - server/src/services/adapter-plugin-store.ts
+    - server/src/adapters/plugin-loader.ts
     - packages/db/src/schema/plugins.ts
     - packages/db/src/schema/plugin_jobs.ts
     - packages/plugins/
@@ -137,32 +165,294 @@ code_index:
     - server/src/routes/teams-catalog.ts
     - packages/teams-catalog/
   "p1-pipelines":
-    - server/src/routes/pipelines.ts
-    - server/src/services/pipelines.ts
-    - ui/src/pages/Pipelines.tsx
-    - ui/src/pages/PipelineSettings.tsx
+    - server/src/routes/cases.ts
+    - server/src/routes/case-handoffs.ts
+    - packages/db/src/schema/pipelines.ts
+    - packages/db/src/schema/pipeline_cases.ts
+    - packages/db/src/schema/cases.ts
+    - ui/src/pages/Cases.tsx
+    - ui/src/pages/CaseDetail.tsx
   "p2-cloud-upstreams":
     - ui/src/pages/CompanyExport.tsx
   "p3-tools-connections-apps":
     - server/src/services/tool-access.ts
     - server/src/services/tool-gateway.ts
+    - server/src/routes/ai-connections.ts
+    - server/src/routes/connection-intents.ts
+    - server/src/routes/public-mcp.ts
     - ui/src/pages/tools/
+    - ui/src/pages/apps/
+    - packages/mcp-server/
   "p4-announcements":
     - server/src/routes/announcements.ts
     - server/src/services/announcements.ts
     - server/src/services/announcement-feed.ts
+    - server/src/services/announcement-animation.ts
     - packages/shared/src/announcements.ts
     - ui/src/hooks/useAnnouncement.ts
+    - ui/src/hooks/useAnnouncementAnimation.ts
     - ui/src/components/AnnouncementWell.tsx
+    - ui/src/components/AnnouncementCard.tsx
     - announcements/
   "p5-messaging-channels":
+    - server/src/routes/chat-channels.ts
+    - server/src/routes/board-chat.ts
+    - server/src/routes/email.ts
     - server/src/services/chat-channels.ts
     - server/src/services/chat-channels/
     - server/src/services/email-channels.ts
     - server/src/services/photon/
+    - server/src/services/chat-github-reviews.ts
+    - server/src/services/chat-github-response-comments.ts
+    - server/src/services/chat-channel-binding.ts
   "p6-search":
     - server/src/services/company-search.ts
     - server/src/services/company-search-extract.ts
+    - server/src/services/company-search-rate-limit.ts
     - server/src/services/task-search.ts
+    - server/src/routes/issues.ts
+    - server/src/routes/openapi.ts
+    - packages/shared/src/types/search.ts
     - ui/src/pages/Search.tsx
     - ui/src/api/search.ts
+  "p7-cases":
+    - packages/db/src/case-handoff-migration.test.ts
+    - packages/db/src/pipelines-schema.test.ts
+    - packages/paperclip-runner/src/protocol-actions/case-data.test.ts
+    - packages/shared/src/case-handoffs.test.ts
+    - server/src/__tests__/case-handoff-legacy.integration.test.ts
+    - server/src/__tests__/case-handoff-native.integration.test.ts
+    - server/src/__tests__/case-history-api-discovery.test.ts
+    - server/src/__tests__/case-mutation-fence.integration.test.ts
+    - server/src/__tests__/cases-routes.test.ts
+    - server/src/__tests__/heartbeat-case-handoff.test.ts
+    - server/src/__tests__/heartbeat-case-terminal-handoff.test.ts
+    - server/src/services/case-access.ts
+    - server/src/services/case-agent-read.test.ts
+    - server/src/services/case-agent-read.ts
+    - server/src/services/case-deletion.test.ts
+    - server/src/services/case-handoff-delivery.ts
+    - server/src/services/case-handoff-privacy.test.ts
+    - server/src/services/case-handoffs.test.ts
+    - server/src/services/case-handoffs.ts
+    - server/src/services/case-task-documents.test.ts
+    - server/src/services/native-runtime/case-context-projection.test.ts
+    - server/src/services/native-runtime/native-case-handoff.test.ts
+    - server/src/services/native-runtime/native-case-tools.integration.test.ts
+    - tests/runner-e2e/case-handoffs.test.ts
+    - tests/runner-e2e/case-receipt.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-case-close.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-case-create.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-case-facts.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-case-handoff.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-case-history.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-case-prerequisites.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-case-related.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-cases-locator.test.ts
+    - tests/runner-e2e/chat-catalog-domains/integrator-cases.test.ts
+    - tests/runner-e2e/copilot-protection-cases.test.ts
+    - tests/runner-e2e/cursor-native-cases.test.ts
+    - tests/runner-e2e/pi-native-cases.test.ts
+    - ui/src/api/cases.ts
+    - ui/src/lib/case-reference.test.ts
+  "p8-responsibilities-status-reports":
+    - packages/db/src/schema
+    - packages/shared/src/responsibility-automation.test.ts
+    - packages/shared/src/responsibility-dashboard.ts
+    - packages/shared/src/responsibility-metrics.test.ts
+    - packages/shared/src/responsibility-status-reports.test.ts
+    - packages/shared/src/responsible-user-denial.test.ts
+    - server/src/__tests__/activity-log-responsible-user.test.ts
+    - server/src/__tests__/heartbeat-responsible-user-invariant.test.ts
+    - server/src/__tests__/responsibilities-rollup.test.ts
+    - server/src/__tests__/responsibilities.test.ts
+    - server/src/__tests__/responsibility-automation-conversations.test.ts
+    - server/src/__tests__/responsibility-automation.test.ts
+    - server/src/__tests__/responsibility-bar-templates.test.ts
+    - server/src/__tests__/responsibility-bars.test.ts
+    - server/src/__tests__/responsibility-dashboard.test.ts
+    - server/src/__tests__/responsibility-metrics.test.ts
+    - server/src/__tests__/responsibility-runs.test.ts
+    - server/src/__tests__/responsibility-status-reports.test.ts
+    - server/src/__tests__/responsibility-summaries-routes.test.ts
+    - server/src/__tests__/responsibility-summaries.test.ts
+    - server/src/__tests__/responsibility-summary-generator.test.ts
+    - server/src/__tests__/responsibility-tools.test.ts
+    - server/src/routes/responsibilities.ts
+    - server/src/routes/responsibility-dashboard.ts
+    - server/src/routes/responsibility-status-reports.ts
+    - server/src/services
+    - server/src/services/native-runtime/runner-api-responsibilities.test.ts
+    - server/src/services/responsible-user-denial-run-outcomes.test.ts
+    - ui/src/api/responsibilities.test.ts
+    - ui/src/lib/responsibilities.test.ts
+    - ui/src/lib/responsibility-agent-status.test.ts
+    - ui/src/lib/responsibility-automation.test.ts
+    - ui/src/lib/responsibility-dashboard.test.ts
+    - ui/src/lib/responsibility-one-screen-v2.test.ts
+    - ui/src/lib/responsibility-outline-v2.test.ts
+    - ui/src/lib/responsibility-summary.test.ts
+    - ui/src/lib/responsibility-views.test.ts
+  "p9-decision-workflows":
+    - packages/db/src/decision-queue-migrations.test.ts
+    - packages/shared/src/decision.test.ts
+    - server/src
+    - server/src/__tests__/company-default-decision-owner-route.test.ts
+    - server/src/__tests__/decision-effect-recovery-work.test.ts
+    - server/src/__tests__/decision-expiry-work.test.ts
+    - server/src/__tests__/decision-history.test.ts
+    - server/src/__tests__/decision-model-provider.test.ts
+    - server/src/__tests__/decision-models.test.ts
+    - server/src/__tests__/decision-queues-routes.test.ts
+    - server/src/__tests__/decision-retention-materialization-security.test.ts
+    - server/src/__tests__/decision-retention-service.test.ts
+    - server/src/__tests__/decision-target-work.test.ts
+    - server/src/__tests__/decision-training.test.ts
+    - server/src/__tests__/decision-wakeup.test.ts
+    - server/src/__tests__/decisions-service.test.ts
+    - server/src/__tests__/fast-response-models.test.ts
+    - server/src/__tests__/fast-response-provider.test.ts
+    - server/src/__tests__/fast-responses.test.ts
+    - server/src/__tests__/issue-recovery-recorded-decision-idle.test.ts
+    - server/src/__tests__/issue-stalled-review-decision-routes.test.ts
+    - server/src/__tests__/project-decision-owner-route.test.ts
+    - server/src/services/decision-signing.test.ts
+    - tests/runner-e2e/everyday-decisions.test.ts
+    - ui/src/lib/decision-receipt-navigation.test.ts
+  "p10-agent-conversations":
+    - packages/db/src/agent-chat-messages-migration.test.ts
+    - packages/db/src/agent-chat-migration.test.ts
+    - packages/db/src/schema/issue_comments.ts
+    - packages/db/src/schema/issues.ts
+    - packages/shared/src/validators/issue.ts
+    - server/src/__tests__/agent-chat-messages.test.ts
+    - server/src/__tests__/agent-conversation-delivery.test.ts
+    - server/src/__tests__/agent-conversations.test.ts
+    - server/src/__tests__/chat-run-milestone-governed-work.test.ts
+    - server/src/__tests__/conversation-settlement-transfer.test.ts
+    - server/src/__tests__/issue-recovery-conversations.test.ts
+    - server/src/__tests__/onboarding-chat-route.test.ts
+    - server/src/routes/agent-chat-messages.ts
+    - server/src/routes/issues.ts
+    - server/src/routes/onboarding-chat.ts
+    - server/src/services/agent-chat-messages.ts
+    - server/src/services/agent-chat-read-state.ts
+    - server/src/services/agent-conversations.ts
+    - server/src/services/issues.ts
+    - server/src/services/native-runtime/agent-chat-response-recovery.test.ts
+    - tests/e2e/agent-chat-messages.spec.ts
+    - tests/e2e/agent-chat-projects.spec.ts
+    - tests/e2e/agent-chat-sessions.spec.ts
+    - ui/src/api/agentChats.ts
+    - ui/src/context/LiveUpdatesProvider.read-receipts.test.ts
+    - ui/src/hooks/useAgentChatNavigation.ts
+    - ui/src/lib/recent-agent-chats.test.ts
+    - ui/src/lib/recent-agent-chats.ts
+  "p11-status-cards":
+    - packages/db/src/schema/status_cards.ts
+    - packages/db/src/status-card-migrations.test.ts
+    - packages/db/src/status-card-reason-upgrade.test.ts
+    - packages/shared/src/validators/status-card.test.ts
+    - packages/shared/src/validators/status-card.ts
+    - server/src/__tests__/status-card-compile-prompt.test.ts
+    - server/src/__tests__/status-card-evaluation-work.test.ts
+    - server/src/__tests__/status-card-idle-schedule.test.ts
+    - server/src/__tests__/status-card-notifications.test.ts
+    - server/src/__tests__/status-card-update-engine.test.ts
+    - server/src/__tests__/status-cards.test.ts
+    - server/src/routes/status-cards.ts
+    - server/src/services/status-card-evaluation.ts
+    - server/src/services/status-card-update-engine.ts
+    - server/src/services/status-cards.ts
+    - ui/src/lib/status-card-state.test.ts
+    - ui/src/pages/StatusCards
+    - ui/src/pages/StatusCards/format.test.ts
+  "p12-skill-sources":
+    - packages/db/src/project-skill-sources-migration.test.ts
+    - packages/db/src/schema/company_skill_sources.ts
+    - packages/db/src/schema/company_skills.ts
+    - packages/shared/src/types/skill-source.ts
+    - packages/shared/src/validators/skill-source.ts
+    - server/src/__tests__/company-skills-routes.test.ts
+    - server/src/__tests__/github-skill-source.test.ts
+    - server/src/__tests__/project-skill-sources.test.ts
+    - server/src/__tests__/skill-source-branches.test.ts
+    - server/src/__tests__/skill-source-default-cadence-acceptance.test.ts
+    - server/src/__tests__/skill-source-git-snapshot.test.ts
+    - server/src/__tests__/skill-source-github-access.test.ts
+    - server/src/__tests__/skill-source-retry.test.ts
+    - server/src/__tests__/skill-source-scan-limit.test.ts
+    - server/src/__tests__/skill-sources.test.ts
+    - server/src/__tests__/skill-update-diff-routes.test.ts
+    - server/src/routes/company-skills.ts
+    - server/src/routes/openapi.ts
+    - server/src/services/github-skill-source.ts
+    - server/src/services/skill-source-idle-schedule.test.ts
+    - server/src/services/skill-source-problems.ts
+    - server/src/services/skill-source-sync-work.test.ts
+    - server/src/services/skill-source-sync.ts
+    - server/src/services/skill-sources.ts
+    - ui/src/api/skillSources.test.ts
+    - ui/src/lib/skill-source-connect-return.test.ts
+    - ui/src/pages/agent-skills/agent-skill-source.test.ts
+  "p13-instance-operations":
+    - packages/db/src/schema/instance_settings.ts
+    - packages/shared/src/setting-defaults.test.ts
+    - packages/shared/src/settings-visibility.test.ts
+    - packages/shared/src/validators/instance.test.ts
+    - packages/shared/src/validators/instance.ts
+    - server/src/__tests__/cloud-control-task-drain.test.ts
+    - server/src/__tests__/database-backup-owner.test.ts
+    - server/src/__tests__/database-backup-work.test.ts
+    - server/src/__tests__/heartbeat-task-drain-admission-release.test.ts
+    - server/src/__tests__/heartbeat-task-drain.test.ts
+    - server/src/__tests__/idle-database-backup-sync.test.ts
+    - server/src/__tests__/idle-database-backup.test.ts
+    - server/src/__tests__/instance-database-backups-routes.test.ts
+    - server/src/__tests__/instance-server-metrics-routes.test.ts
+    - server/src/__tests__/instance-settings-cache.test.ts
+    - server/src/__tests__/instance-settings-cloud-defaults.test.ts
+    - server/src/__tests__/instance-settings-managed-overlay.test.ts
+    - server/src/__tests__/instance-settings-operator-defaults.test.ts
+    - server/src/__tests__/instance-settings-routes.test.ts
+    - server/src/__tests__/instance-settings-service.test.ts
+    - server/src/__tests__/server-metrics.test.ts
+    - server/src/middleware/cloud-control.ts
+    - server/src/routes/instance-database-backups.ts
+    - server/src/routes/instance-server-metrics.ts
+    - server/src/routes/instance-settings.ts
+    - server/src/services/database-backup-work.ts
+    - server/src/services/heartbeat.ts
+    - server/src/services/instance-settings.ts
+    - server/src/services/server-metrics.ts
+    - server/src/services/task-admission.ts
+    - ui/src/api/instanceSettings.ts
+  "p14-onboarding":
+    - cli/src/__tests__/onboard.test.ts
+    - packages/db/src/migrations/0212_onboarding_first_task_unique.sql
+    - packages/db/src/migrations/0216_company_onboarding_seeds.sql
+    - packages/db/src/schema/company_onboarding_seeds.ts
+    - server/src/__tests__/dot-oauth-onboarding.test.ts
+    - server/src/__tests__/invite-onboarding-text.test.ts
+    - server/src/__tests__/issue-onboarding-first-task-routes.test.ts
+    - server/src/__tests__/onboarding-approval-history.test.ts
+    - server/src/__tests__/onboarding-chat-route.test.ts
+    - server/src/__tests__/onboarding-first-task-admission.test.ts
+    - server/src/__tests__/onboarding-seed-route.test.ts
+    - server/src/app.ts
+    - server/src/onboarding-assets/first-task
+    - server/src/routes/issues.ts
+    - server/src/routes/onboarding-chat.ts
+    - server/src/routes/onboarding-seed.ts
+    - server/src/services/onboarding-chat.ts
+    - server/src/services/onboarding-first-task-admission.ts
+    - server/src/services/onboarding-first-task-assets.test.ts
+    - server/src/services/onboarding-greeting.test.ts
+    - server/src/services/onboarding-seed.ts
+    - tests/canary-onboarding/canary-onboarding.spec.ts
+    - tests/e2e/onboarding.spec.ts
+    - tests/release-smoke/docker-auth-onboarding.spec.ts
+    - tests/runner-e2e/product-journeys/onboarding-first-task.test.ts
+    - ui/src/components/onboarding/Stepper.test.ts
+    - ui/src/lib/onboarding-route.test.ts
+    - ui/storybook/fixtures/onboardingDraft.test.ts

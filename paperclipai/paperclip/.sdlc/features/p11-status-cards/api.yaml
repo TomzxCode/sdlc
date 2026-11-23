@@ -1,0 +1,713 @@
+# OpenAPI 3 contract for Status Cards.
+# Normative API definition referenced by specification.md.
+openapi: 3.1.0
+info:
+  title: "Status Cards API"
+  version: 0.1.0
+  description: >
+    Company-scoped status cards backed by compiled company-search queries,
+    generated Markdown summaries, and an update ledger.
+    Authentication uses the standard Paperclip session or agent credentials.
+    All endpoints require enableStatusCards to be true in instance experimental settings.
+paths:
+  /api/companies/{companyId}/status-cards:
+    get:
+      summary: List status cards
+      operationId: listStatusCards
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: archived
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Hydrated status cards ordered by update time.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusCard"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Create a status card
+      operationId: createStatusCard
+      description: >
+        Creates the card in compiling state and queues a hidden setup issue.
+        The response includes a company-scoped href for the Status page.
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStatusCardRequest"
+      responses:
+        "201":
+          description: Created card.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusCard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/status-cards/{id}:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    get:
+      summary: Get a status card
+      operationId: getStatusCard
+      responses:
+        "200":
+          description: Hydrated status card.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusCard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update, archive, or restore a status card
+      operationId: patchStatusCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchStatusCardRequest"
+      responses:
+        "200":
+          description: Updated status card.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusCard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+    delete:
+      summary: Delete a status card
+      operationId: deleteStatusCard
+      responses:
+        "204":
+          description: Card deleted.
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/status-cards/{id}/updates:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    get:
+      summary: List status card updates
+      operationId: listStatusCardUpdates
+      responses:
+        "200":
+          description: Update ledger entries ordered by start time.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusCardUpdate"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/status-cards/{id}/summary-revisions:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    get:
+      summary: List status card summary revisions
+      operationId: listStatusCardSummaryRevisions
+      responses:
+        "200":
+          description: Document revisions for the card summary.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusCardSummaryRevision"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/status-cards/{id}/recompile:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    post:
+      summary: Recompile a status card query
+      operationId: recompileStatusCard
+      responses:
+        "200":
+          description: An existing compile task is still active.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerationResult"
+        "202":
+          description: Compile task queued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerationResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/status-cards/{id}/refresh:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    post:
+      summary: Queue a status card update
+      operationId: refreshStatusCard
+      description: >
+        Queues an update and does not return the new summary.
+        A 200 response with enqueued false means an existing task is running or the refresh policy deferred the work.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshStatusCardRequest"
+      responses:
+        "200":
+          description: Refresh deferred or already running.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshResult"
+        "202":
+          description: Refresh task queued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/status-cards/{id}/dry-run:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    get:
+      summary: Execute stored status card queries without a model
+      operationId: dryRunStatusCard
+      responses:
+        "200":
+          description: Current query matches and mentioned issues.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DryRunResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/status-cards/{id}/query:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    put:
+      summary: Write a compiled status card query
+      operationId: writeStatusCardQuery
+      description: Only the authorized summarizer run for the active generation issue may write.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WriteStatusCardQueryRequest"
+      responses:
+        "200":
+          description: Card with the new query version.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusCard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/status-cards/{id}/summary:
+    parameters:
+      - $ref: "#/components/parameters/CardId"
+    put:
+      summary: Write a generated status card summary
+      operationId: writeStatusCardSummary
+      description: Only the authorized summarizer run for the active generation issue may write.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WriteStatusCardSummaryRequest"
+      responses:
+        "200":
+          description: Summary document and updated card.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WriteStatusCardSummaryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+components:
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CardId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid request.
+    Unauthorized:
+      description: Authentication required.
+    Forbidden:
+      description: Actor is not allowed to perform the operation.
+    NotFound:
+      description: Feature disabled, card missing, or card outside the actor's company.
+    Conflict:
+      description: A newer generation task owns the card.
+    Unprocessable:
+      description: Request violates card, policy, or agent-authored limits.
+  schemas:
+    RefreshPolicy:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [manual, interval, reactive]
+          default: manual
+        intervalMinutes:
+          type: integer
+          minimum: 1
+        debounceSeconds:
+          type: integer
+          minimum: 1
+        maxUpdatesPerHour:
+          type: integer
+          minimum: 1
+        triggers:
+          type: object
+          properties:
+            statusTransitions:
+              type: boolean
+              default: true
+            membershipChanges:
+              type: boolean
+              default: true
+            humanComments:
+              type: boolean
+              default: true
+            assigneeChanges:
+              type: boolean
+              default: true
+            anyUpdate:
+              type: boolean
+              default: false
+        activeHours:
+          type: object
+          properties:
+            start:
+              type: string
+              pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            end:
+              type: string
+              pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            timezone:
+              type: string
+              minLength: 1
+        dailyTokenCap:
+          type: integer
+          minimum: 1
+      description: >
+        interval mode requires intervalMinutes.
+        reactive mode requires debounceSeconds.
+    CompanySearchQuery:
+      type: object
+      additionalProperties: true
+      description: Query accepted by the shared company-search validator.
+    StatusCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: [string, "null"]
+        createdByAgentId:
+          type: [string, "null"]
+          format: uuid
+        title:
+          type: [string, "null"]
+        titlePinned:
+          type: boolean
+        interestPrompt:
+          type: string
+        queries:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanySearchQuery"
+        queryVersion:
+          type: integer
+          minimum: 0
+        queryCompiledAt:
+          type: [string, "null"]
+          format: date-time
+        queryCompiledByAgentId:
+          type: [string, "null"]
+          format: uuid
+        agentId:
+          type: [string, "null"]
+          format: uuid
+        refreshPolicy:
+          $ref: "#/components/schemas/RefreshPolicy"
+        state:
+          type: string
+          enum: [compiling, active, error, paused_budget, paused_hours]
+        pendingChangeCount:
+          type: integer
+          minimum: 0
+        lastChangeAt:
+          type: [string, "null"]
+          format: date-time
+        fingerprint:
+          type: [object, "null"]
+          additionalProperties: true
+        fingerprintAt:
+          type: [string, "null"]
+          format: date-time
+        mentionedIssueIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        documentId:
+          type: [string, "null"]
+          format: uuid
+        lastUpdateRunKind:
+          type: [string, "null"]
+          enum: [full, incremental, null]
+        lastGeneratedAt:
+          type: [string, "null"]
+          format: date-time
+        lastModel:
+          type: [string, "null"]
+        generatingIssueId:
+          type: [string, "null"]
+          format: uuid
+        failureReason:
+          type: [string, "null"]
+        nextEvalAt:
+          type: [string, "null"]
+          format: date-time
+        archivedAt:
+          type: [string, "null"]
+          format: date-time
+        archivedByUserId:
+          type: [string, "null"]
+        archivedByAgentId:
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        summaryBody:
+          type: [string, "null"]
+        watchedIssueCount:
+          type: integer
+          minimum: 0
+        privacyRedacted:
+          type: boolean
+        todayTokens:
+          type: integer
+          minimum: 0
+        todayCostCents:
+          type: number
+          minimum: 0
+        href:
+          type: string
+    StatusCardUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        cardId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [compile, full, incremental]
+        trigger:
+          type: string
+          enum: [manual, interval, reactive, restore]
+        generationIssueId:
+          type: [string, "null"]
+          format: uuid
+        runId:
+          type: [string, "null"]
+          format: uuid
+        changes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        inputTokens:
+          type: integer
+          minimum: 0
+        outputTokens:
+          type: integer
+          minimum: 0
+        costCents:
+          type: number
+          minimum: 0
+        model:
+          type: [string, "null"]
+        queryVersion:
+          type: [integer, "null"]
+          minimum: 0
+        changeSummary:
+          type: [string, "null"]
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: [string, "null"]
+          format: date-time
+        status:
+          type: string
+          enum: [running, ok, failed]
+        error:
+          type: [string, "null"]
+    StatusCardSummaryRevision:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        revisionNumber:
+          type: integer
+          minimum: 1
+        title:
+          type: [string, "null"]
+        body:
+          type: string
+        changeSummary:
+          type: [string, "null"]
+        createdAt:
+          type: string
+          format: date-time
+    CreateStatusCardRequest:
+      type: object
+      required: [interestPrompt]
+      properties:
+        interestPrompt:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        title:
+          type: string
+          minLength: 1
+          maxLength: 300
+        titlePinned:
+          type: boolean
+          default: false
+        agentId:
+          type: [string, "null"]
+          format: uuid
+        refreshPolicy:
+          $ref: "#/components/schemas/RefreshPolicy"
+    PatchStatusCardRequest:
+      type: object
+      minProperties: 1
+      properties:
+        interestPrompt:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        title:
+          type: [string, "null"]
+          minLength: 1
+          maxLength: 300
+        titlePinned:
+          type: boolean
+        agentId:
+          type: [string, "null"]
+          format: uuid
+        refreshPolicy:
+          $ref: "#/components/schemas/RefreshPolicy"
+        archived:
+          type: boolean
+    RefreshStatusCardRequest:
+      type: object
+      properties:
+        full:
+          type: boolean
+          default: false
+    WriteStatusCardQueryRequest:
+      type: object
+      required: [queries, title, changeSummary, generationIssueId]
+      properties:
+        queries:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/CompanySearchQuery"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 300
+        changeSummary:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        generationIssueId:
+          type: string
+          format: uuid
+    WriteStatusCardSummaryRequest:
+      type: object
+      required: [markdown, changeSummary, generationIssueId]
+      properties:
+        markdown:
+          type: string
+          minLength: 1
+          maxLength: 200000
+        title:
+          type: string
+          minLength: 1
+          maxLength: 300
+        changeSummary:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        generationIssueId:
+          type: string
+          format: uuid
+        model:
+          type: [string, "null"]
+          minLength: 1
+          maxLength: 200
+    GenerationResult:
+      type: object
+      properties:
+        card:
+          $ref: "#/components/schemas/StatusCard"
+        generatingIssue:
+          type: object
+          additionalProperties: true
+        alreadyGenerating:
+          type: boolean
+        enqueued:
+          type: boolean
+        kind:
+          type: string
+          enum: [compile, full, incremental]
+        changes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    RefreshResult:
+      type: object
+      properties:
+        card:
+          $ref: "#/components/schemas/StatusCard"
+        generatingIssue:
+          type: [object, "null"]
+          additionalProperties: true
+        alreadyGenerating:
+          type: boolean
+        enqueued:
+          type: boolean
+        kind:
+          type: string
+          enum: [compile, full, incremental]
+        changes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    DryRunResponse:
+      type: object
+      properties:
+        cardId:
+          type: string
+          format: uuid
+        queryVersion:
+          type: integer
+          minimum: 0
+        queries:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        mentionedIssues:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    WriteStatusCardSummaryResponse:
+      type: object
+      properties:
+        card:
+          $ref: "#/components/schemas/StatusCard"
+        document:
+          type: object
+          additionalProperties: true

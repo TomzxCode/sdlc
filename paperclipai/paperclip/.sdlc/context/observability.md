@@ -4,9 +4,9 @@
 
 | Pillar | System | Status |
 |---|---|---|
-| Metrics | None in repo | Not configured |
+| Metrics | Opt-in process metrics snapshot behind `PAPERCLIP_SERVER_METRICS`, exposed to instance admins | In use (opt-in) |
 | Logging | pino plus pino-http to stdout, no external aggregator | In use |
-| Tracing | OpenTelemetry OTLP traces, endpoint-gated | In use (opt-in) |
+| Tracing | OpenTelemetry OTLP server traces plus Cloud-only browser traces, endpoint-gated | In use (opt-in) |
 | Profiling | None in repo | Not configured |
 | Error monitoring | Sentry for server and browser, DSN-gated | In use (opt-in) |
 
@@ -15,10 +15,12 @@
 | Library | Pillar | Configuration |
 |---|---|---|
 | pino, pino-http | Logging | JSON in production, pretty-print in development, level via `PAPERCLIP_LOG_LEVEL` (`server/src/middleware/logger.ts:22-42`) |
-| @opentelemetry/api | Tracing | Normal server dependency, no-op interface until an SDK registers (`server/package.json:64`) |
-| @opentelemetry/sdk-node, auto-instrumentations-node, resources, semantic-conventions, three OTLP exporter packages (one per protocol) | Tracing | Optional peer dependencies at exact pinned versions, dynamically imported only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`server/package.json:145-153`, `server/src/instrumentation.ts:304-306`) |
-| @sentry/node | Errors | Optional peer dependency pinned to `10.71.0`, loaded only when a backend DSN resolves (`server/package.json:153`, `doc/observability.md:289-310`) |
-| @sentry/browser | Errors | UI dev dependency pinned to `10.71.0`, lazy chunk fetched only after an authenticated session returns a DSN (`ui/package.json:78`, `doc/observability.md:356-378`) |
+| @opentelemetry/api | Tracing | Normal server dependency, no-op interface until an SDK registers (`server/package.json:71`) |
+| @opentelemetry/sdk-node, auto-instrumentations-node, resources, semantic-conventions, three OTLP exporter packages (one per protocol) | Tracing | Optional peer dependencies at exact pinned versions, dynamically imported only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (`server/package.json:161-169`, `server/src/instrumentation.ts:470-484`) |
+| @opentelemetry/resources | Tracing | Also a normal server dependency at `2.10.0`, alongside its optional peer entry (`server/package.json:73`) |
+| @opentelemetry/api, instrumentation-fetch, otlp-transformer, resources, sdk-trace-web, web-vitals | Tracing (browser) | UI dev dependencies, loaded as a separate lazy chunk only for sampled sessions on cloud-managed instances (`ui/package.json:88-92,108`, `ui/src/lib/browser-tracing/sdk.ts:1-21`) |
+| @sentry/node | Errors | Optional peer dependency pinned to `10.71.0`, loaded only when a backend DSN resolves (`server/package.json:169`, `doc/observability.md:187-194`) |
+| @sentry/browser | Errors | UI dev dependency pinned to `10.71.0`, lazy chunk fetched only after an authenticated session returns a DSN (`ui/package.json:94`, `doc/observability.md:211-216`) |
 
 ## Log Aggregation
 
@@ -28,9 +30,18 @@
 - Error responses carry a sanitized error context with secrets redacted and private webhook payloads fully omitted.
 - Aggregation status is Not configured beyond local stdout logs, with no external aggregator or central retention policy found in the repo.
 
+## Server metrics
+
+- Process metrics are opt-in behind `PAPERCLIP_SERVER_METRICS` and default to off (`server/src/services/server-metrics.ts:15-40`, `server/src/services/server-metrics.ts:226`).
+- The snapshot reports CPU use, event loop utilization and delay, database statement rate, run event lateness, agent pre-handler latency, missed lease renewals, and dedicated connection stats (`server/src/services/server-metrics.ts:22-40`).
+- `GET /api/instance/server-metrics` returns the snapshot to instance admins only (`server/src/routes/instance-server-metrics.ts:8`).
+
 ## Tracing
 
 - Tracing is strictly opt-in and exports traces only, never metrics or logs.
+- Server tracing activates through `OTEL_EXPORTER_OTLP_ENDPOINT`, and a separate browser tracing path is Cloud-only and configured through `PAPERCLIP_BROWSER_TRACES_ENDPOINT` (`server/src/browser-tracing-config.ts:49-56`, `doc/browser-performance-tracing.md`).
+- The browser config is delivered in the authenticated session and the SDK loads as a separate chunk only after the page settles (`doc/browser-performance-tracing.md`).
+- The browser SDK emits `page.load`, `web_vital.lcp`, `web_vital.inp`, `web_vital.cls`, and same-origin `/api/` fetch spans under an allowlist (`ui/src/lib/browser-tracing/sdk.ts:1-21`).
 - Setting `OTEL_EXPORTER_OTLP_ENDPOINT` activates the NodeSDK with auto-instrumentation for HTTP, Express, PG, and similar integrations.
 - Auto-instrumentations for `fs`, `dns`, and `net` stay disabled because they are too chatty for this workload.
 - The export protocol is selected with `OTEL_EXPORTER_OTLP_PROTOCOL` (`grpc` default, `http/protobuf`, `http/json`), each backed by its own exporter peer package.
@@ -40,7 +51,8 @@
 - Native Runner task runs emit one foldable trace (schema version 2) rooted at `task.run`, covering preparation, session startup, agent turns, and settlement.
 - Sandbox startup spans use the closed `paperclip.sandbox.startup.` attribute prefix with a fixed allowlist and `ok`, `skipped`, or `failed` outcomes (`packages/adapter-utils/src/acpx-engine/startup-timing.ts:48-124`).
 - Duplex transport spans (`sandbox.duplex.channel_open`, `sandbox.duplex.request`) bind through an injected recorder whose default is a no-op (`packages/adapter-utils/src/duplex-observability.ts:22-25` for the span names, `:251` for the no-op default, `server/src/services/duplex-observability-recorder.ts:1-23`).
-- Sampling note: no explicit sampler is configured in `server/src/instrumentation.ts`, so the effective sampling behavior was not determined from the repo.
+- Server sampling note: no explicit sampler is configured in `server/src/instrumentation.ts`, so the effective sampling behavior was not determined from the repo.
+- Browser sampling: the default `sampleRate` is `1` (`server/src/browser-tracing-config.ts:18`), and one session-level decision is made before the SDK loads so an unsampled session downloads nothing and a sampled session is complete (`ui/src/lib/browser-tracing/controller.ts:75,203`).
 - Propagation note: cross-process parenting uses explicit W3C `traceparent` strings, while in-process propagation relies on auto-instrumentation defaults not enumerated from the repo.
 
 ## Error monitoring
@@ -49,7 +61,8 @@
 - Server events carry no request data at all (no URL, method, headers, cookies, query, or body) under the shipped configuration.
 - Browser events carry no page URL, referrer, user agent, or breadcrumbs, and `sendDefaultPii` is false with `tracesSampleRate` at 0 on both runtimes.
 - Failed Sentry imports or init fall through to one diagnostic log line and keep the process running without error monitoring.
-- The full capture set is the canonical contract in `doc/observability.md:856-974`, not repeated here.
+- The cloud Docker target preinstalls the pinned `@sentry/node` package at build time, while self-hosted builds keep it an optional peer dependency that an operator installs only when enabling server error monitoring (`doc/observability.md:187-209`).
+- The full capture set is the canonical contract in `doc/observability.md:499-634`, not repeated here.
 
 ## Alerting
 
