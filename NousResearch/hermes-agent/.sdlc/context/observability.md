@@ -21,7 +21,7 @@ Update this file when the monitoring stack changes.
 
 | Library | Pillar | Configuration |
 |---|---|---|
-| `opentelemetry-sdk==1.45.1`, `opentelemetry-exporter-otlp-proto-http==1.45.1` | Metrics, logs, traces | Optional `hermes-agent[otlp]` extra, lazy-installed on first use via `pm.ensure_import('otlp')` (extra `otlp` in `pm/extras.py`, gated by `security.allow_lazy_installs`), config flag `monitoring.export.otlp.enabled`, endpoint `monitoring.export.otlp.endpoint`, signals `/v1/traces`, `/v1/metrics`, `/v1/logs` |
+| `opentelemetry-sdk==1.45.2`, `opentelemetry-exporter-otlp-proto-http==1.45.2` | Metrics, logs, traces | Optional `hermes-agent[otlp]` extra, lazy-installed on first use via `pm.ensure_import('otlp')` (extra `otlp` in `pm/extras.py`, gated by `security.allow_lazy_installs`), config flag `monitoring.export.otlp.enabled`, endpoint `monitoring.export.otlp.endpoint`, signals `/v1/traces`, `/v1/metrics`, `/v1/logs` |
 | stdlib `logging` | Logging | `RedactingFormatter` from `agent/redact.py`, async `QueueListener` queue, per-thread `session_tag`, noisy third-party loggers pinned to WARNING |
 | NeMo Relay (`nemo-relay>=0.11,<0.12`, `agent/relay_runtime.py`) | Metrics | Bounded shared-metrics Relay subscriber (`hermes.nemo_relay.shared_metrics`), opt-in send consent, local SQLite store |
 | `langfuse` SDK (lazy `pip install langfuse`, unpinned) | Tracing | Opt-in Langfuse plugin (catalog `plugin-catalog/langfuse.yaml`), requires `HERMES_LANGFUSE_PUBLIC_KEY` and `HERMES_LANGFUSE_SECRET_KEY` |

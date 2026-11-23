@@ -51,7 +51,7 @@ flowchart TB
 | Cron Scheduler (cron/scheduler.py) | Tick loop for scheduled jobs — duration, cron expressions, ISO timestamps | Python |
 | Curator (agent/curator.py) | Background skill lifecycle maintenance — tracks usage, auto-archives stale agent-created skills | Python |
 | Configuration System (hermes_cli/config.py) | config.yaml with deep-merge from DEFAULT_CONFIG, profile-aware paths, .env for secrets only | Python |
-| Session Store (hermes_state.py + hermes_state_*.py) | SQLite database with FTS5 full-text search for conversation history, structured as a SessionDB facade with 33 topical siblings | Python, SQLite |
+| Session Store (persistence/ + persistence_assembly.py) | SQLite per-profile state.db with FTS5 full-text search for conversation history, split into backend-neutral contracts in persistence/ and a sqlite/ backend opened through persistence_assembly.open_persistence(); hermes_state.py remains only as a deprecated compatibility shim | Python, SQLite |
 | Kanban Board (hermes_cli/kanban*.py, tools/kanban_tools.py) | Durable SQLite-backed multi-agent work queue — boards, tasks, assignees, claims, comments, attachments, dependency links, with the dispatcher running inside the gateway by default | Python |
 | Project Store (hermes_cli/projects_db.py, tools/project_tools.py, hermes_cli/projects_cmd.py) | Per-profile `projects.db` of first-class projects, folders and discovered repos; tasks link to a project via `project_id` to anchor worktrees | Python, SQLite |
 | Observer Hooks (agent/monitoring/ + Langfuse plugin) | Backend-neutral telemetry contract (trace/metric/audit/replay/export) consumed by the Langfuse plugin | Python |

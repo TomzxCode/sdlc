@@ -16,12 +16,13 @@ The project organizes code into purpose-driven directories at the repo root:
 - `agent/` — Agent internals: provider adapters, memory manager, context compressor, prompt builder, curator
 - `hermes_cli/` — CLI subsystem: commands, config, plugins, skins, setup, profile management, web server, curses UI
 - `tools/` — Tool implementations, auto-discovered via tools/registry.py. Subdirectories `environments/` for terminal backends and `connectors/` for provider connectors.
-- `gateway/` — Messaging gateway: run.py, session.py, plus platforms/ for the base adapter and support modules; canonical per-platform adapters migrated to plugins/platforms/ (21 adapters, back-compat re-exports retained)
-- `plugins/` — Plugin system: memory/ (byterover, retaindb providers), model-providers/ (42 backends), platforms/ (21 adapters), kanban/, image_gen/, context_engine/, observability/, plus individual plugins
+- `persistence/` — Storage interface and its SQLite backend (`sqlite/`)
+- `gateway/` — Messaging gateway: run.py, session.py, plus platforms/ for the base adapter and support modules; canonical per-platform adapters migrated to plugins/platforms/ (26 adapters, back-compat re-exports retained)
+- `plugins/` — Plugin system: memory/ (byterover, retaindb providers), model-providers/ (39 backends), platforms/ (26 adapters), kanban/, image_gen/, context_engine/, config_backends/, cron_providers/, browser/, computer_use/, plus other feature plugins
 - `plugin-catalog/` — YAML manifests for the plugin catalog
 - `cron/` — Scheduler: jobs.py, scheduler.py, lifecycle_guard.py
 - `skills/` — Built-in skills organized by category directory (13 categories)
-- `optional-skills/` — Heavier/niche skills shipped but inactive by default (23 categories)
+- `optional-skills/` — Heavier/niche skills shipped but inactive by default (22 categories)
 - `ui-tui/` — Ink (React) terminal UI frontend (TypeScript)
 - `tui_gateway/` — Python JSON-RPC backend for the TUI
 - `apps/desktop/` — Electron desktop app
@@ -34,7 +35,9 @@ The project organizes code into purpose-driven directories at the repo root:
 - `evals/` — Live-model A/B evaluation and probe harnesses
 - `scripts/` — Development and release scripts
 - `pm/` — Package management: pinned environments, extras, and dependency resolution
-- `providers/` — Legacy provider discovery (backward-compat)
+- `providers/` — `ProviderProfile` registry and ABC for inference providers; the profiles themselves live in `plugins/model-providers/`
+- `session_rules/` — Session rules and API payload contracts
+- `tests-js/` — Vitest suite for the TypeScript workspaces
 - `hermes_agent/` — Compatibility layer for relocated modules
 - `utils/` — Shared utility helpers
 - `optional-mcps/` — Optional MCP server catalogs
@@ -46,7 +49,7 @@ The project organizes code into purpose-driven directories at the repo root:
 - **Explicit encoding** on all file operations: use `encoding=` in open(), read_text(), write_text() calls (enforced by ruff rule PLW1514)
 - **No blocking calls in `async def`** (sync HTTP, subprocess, `time.sleep`): use `await asyncio.to_thread(...)`, `asyncio.create_subprocess_exec`, or `await asyncio.sleep` (enforced by ruff rules ASYNC210/220/221/251)
 - **Every model tool schema is sent on every API call** — new core tools are the last resort for new capability
-- **All tool handlers must return JSON strings**
+- **All tool handlers must return JSON strings** (the one exception is the documented multimodal image envelope for tools that hand pixels to the model)
 - **Prefer service-gated tools** (with `check_fn`) over always-available tools when the capability depends on external credentials
 - **Prefer small nanostores over component state** for shared/reused state in TypeScript UI code
 - **No `simple_term_menu`** — new interactive menus must use the curses UI module
@@ -54,7 +57,10 @@ The project organizes code into purpose-driven directories at the repo root:
 - **Do not write change-detector tests** — tests should assert invariants (how data must relate), not freeze current values (model lists, version numbers, enumeration counts)
 - **Run tests via `scripts/run_tests.sh`, never bare `pytest`** (it enforces CI parity: credential vars unset, `TZ=UTC`, temp `HERMES_HOME`, per-file subprocess isolation)
 - **Dependencies carry upper bounds** (`>=floor,<next_major`) with most core dependencies exact-pinned (`==X.Y.Z`); after editing `pyproject.toml` run `hermes pm lock` and commit `uv.lock`, and never mutate a Hermes environment with raw pip/uv
-- **Former god files are facades plus `<stem>_<topic>.py` siblings** (e.g. `hermes_state*.py`, `gateway/run_*.py`): new behavior goes in a topical sibling, never appended to a facade
+- **A topic that outgrows its file becomes a folder**: `<stem>/__init__.py` is a behavior-free facade and `<stem>/<topic>.py` holds the code.
+- Move code into a topic module in that folder, never into a new flat `<stem>_<topic>.py` sibling.
+- Existing flat siblings stay until touched, with documented exceptions for `tui_gateway` RPC methods and `tools/` backends.
+- A model tool in a folder registers from `tools/<stem>/tool.py`.
 - **Plugins must NOT modify core files** — expand the generic plugin surface (new hook, new ctx method) instead
 
 ## Commit Messages
@@ -66,7 +72,10 @@ Conventional Commits format: `type(scope): short description`
 
 ## Branching
 
-The canonical branch is `main`. Feature/bugfix branches follow the project's workflow conventions. Branch naming is not explicitly restricted but should reference the subsystem and issue when applicable.
+The canonical branch is `main`.
+Rebase onto `main` before merging, since a squash from a stale branch silently reverts newer fixes.
+`CONTRIBUTING.md` defines branch prefixes: `fix/description`, `feat/description`, `docs/description`, `test/description`, `refactor/description`.
+Include the subsystem and issue number in the description when applicable.
 
 ## SDLC Documentation Style
 
