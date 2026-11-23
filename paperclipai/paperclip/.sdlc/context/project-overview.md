@@ -35,8 +35,14 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 - Secrets management with pluggable provider vault (local encrypted, AWS, GCP, Vault) and agent/project binding
 - Auth and access control (local_trusted and authenticated modes, company memberships, invites, permission grants)
 - Company skills catalog and team templates
-- Pipelines with stage-based workflow management, cases, automation, and full event audit trail
-- Cloud upstreams for cross-instance company synchronization (experimental, gated behind feature flag)
+- Skill sources that import and refresh organization skills from authorized GitHub repositories
+- Cases and workflows for durable work products, handoffs, and automation with a full event audit trail (experimental, gated behind `enableCases`)
+- Areas of responsibility with delegated ownership, agent status reports, and a rolled-up health dashboard (experimental, gated behind `enableResponsibilities`)
+- Attention feed and decision queues that surface work waiting on a person, with decision history and experimental fast responses
+- Status cards published on a shared company board and updated by agents (experimental, gated behind `enableStatusCards`)
+- Agent Chat for conversations with an agent that can hand work off to assigned tasks (always enabled)
+- Guided onboarding for creating a company and its first agent from the UI
+- Instance administration with settings, adapters, plugins, access, environments, automatic database backups with retention controls, and an admin server metrics endpoint
 - Real-time events and live updates via WebSocket (live dashboards, terminal sessions)
 - Auditable activity log for all mutating actions
 - Tools, connections, and third-party app integration (OAuth connections, MCP/SSE tool gateways, tool access policies, runtime slots, app gallery, smoke lab for integration testing)
@@ -44,7 +50,7 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 - External messaging channels and board chat (Discord, Slack, Teams, Telegram, GitHub, Photon iMessage, task-bound email, board concierge relay)
 - Company/task search (cross-entity search, extract endpoint, rate limiting, Search UI)
 - Smoke lab for integration testing of configured connections
-- Board web UI (dashboard, org chart, tasks, agents, approvals, costs, activity, secrets, skills, inbox, pipelines)
+- Board web UI (dashboard, org chart, tasks, agents, approvals, costs, activity, secrets, skills, inbox, chat, cases, status, decisions, responsibilities, settings)
 
 **Out of scope (V1):**
 
@@ -55,7 +61,7 @@ The problem it solves: when the entire workforce is AI agents, a to-do list is n
 - Multi-board governance or role-based human permission granularity
 - Full automatic self-healing orchestration beyond bounded run recovery (auto-reassign/retry planners)
 - Project/issue-level privacy ACLs and scoped assignment-only object visibility (deferred to Pro/Enterprise)
-- Realtime transport optimization (SSE/WebSockets)
+- Further realtime transport optimization beyond the shipped WebSocket live events and existing SSE integrations
 
 ## Key Constraints
 

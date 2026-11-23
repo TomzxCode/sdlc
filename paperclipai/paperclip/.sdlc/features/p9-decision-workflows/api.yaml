@@ -1,0 +1,1759 @@
+# OpenAPI 3 contract for Decision Workflows.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Decision Workflows API"
+  version: 0.1.0
+  description: >
+    Company-scoped decisions, queues, triage, retention, decision models, fast responses, and training examples.
+    Additive-only within a major version.
+paths:
+  /api/companies/{companyId}/decision-archive-proposals:
+    post:
+      summary: Propose a signed bulk attention archive decision
+      operationId: createDecisionArchiveProposal
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateArchiveProposalRequest"
+      responses:
+        "201":
+          $ref: "#/components/responses/Decision"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/companies/{companyId}/decisions:
+    post:
+      summary: Create a decision from an active agent run
+      operationId: createDecision
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDecisionRequest"
+      responses:
+        "201":
+          $ref: "#/components/responses/Decision"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    get:
+      summary: List decisions with filters
+      operationId: listDecisions
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, decided, expired, cancelled]
+        - name: bundleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: targetIssueId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: originAgentId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            maximum: 100
+      responses:
+        "200":
+          $ref: "#/components/responses/DecisionList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-bundles:
+    post:
+      summary: Create a bundle of up to fifty decisions
+      operationId: createDecisionBundle
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDecisionBundleRequest"
+      responses:
+        "201":
+          description: Created bundle with its decisions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionBundleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/companies/{companyId}/decisions/stats:
+    get:
+      summary: Read decision statistics grouped by rule key
+      operationId: getDecisionStats
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: groupBy
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [ruleKey]
+        - name: originAgentId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: since
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Grouped decision counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionStatsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/decisions/{id}:
+    get:
+      summary: Read one decision outcome
+      operationId: getDecision
+      parameters:
+        - $ref: "#/components/parameters/DecisionId"
+      responses:
+        "200":
+          $ref: "#/components/responses/DecisionOutcome"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/decisions/{id}/decide:
+    post:
+      summary: Answer an open decision
+      operationId: decideDecision
+      parameters:
+        - $ref: "#/components/parameters/DecisionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecideRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/DecisionOutcome"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/decisions/{id}/dismiss:
+    post:
+      summary: Dismiss an open decision
+      operationId: dismissDecision
+      parameters:
+        - $ref: "#/components/parameters/DecisionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DismissRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/DecisionOutcome"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/decisions/{id}/cancel:
+    post:
+      summary: Cancel an open decision
+      operationId: cancelDecision
+      parameters:
+        - $ref: "#/components/parameters/DecisionId"
+      responses:
+        "200":
+          $ref: "#/components/responses/DecisionOutcome"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/decision-model:
+    get:
+      summary: Read decision model settings and choices
+      operationId: getDecisionModelSettings
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Settings response with management flag and choices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionModelSettingsResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      summary: Configure the company decision model
+      operationId: updateDecisionModelSettings
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDecisionModelRequest"
+      responses:
+        "200":
+          description: Saved decision model settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionModelSettings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-model/availability:
+    get:
+      summary: Read decision model availability for the current actor
+      operationId: getDecisionModelAvailability
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Availability result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionAvailability"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-model/test:
+    post:
+      summary: Run the fixed decision model sample
+      operationId: testDecisionModel
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Decision result for the fixed sample
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-model/history:
+    get:
+      summary: Read decision invocation history
+      operationId: getDecisionHistory
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/From"
+        - $ref: "#/components/parameters/To"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          $ref: "#/components/responses/InvocationHistory"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-queue-seed-rules:
+    get:
+      summary: List starter queue seed rules
+      operationId: listDecisionQueueSeedRules
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Starter queue definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DecisionQueueSeedDefinition"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-queues:
+    get:
+      summary: List company decision queues
+      operationId: listDecisionQueues
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          $ref: "#/components/responses/DecisionQueueList"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      summary: Create or reuse a decision queue
+      operationId: createDecisionQueue
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDecisionQueueRequest"
+      responses:
+        "200":
+          description: Existing queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionQueue"
+        "201":
+          description: Created queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionQueue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-queues/{key}:
+    patch:
+      summary: Update a decision queue
+      operationId: updateDecisionQueue
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/QueueKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDecisionQueueRequest"
+      responses:
+        "200":
+          description: Updated queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionQueue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/decision-queues/{key}/items:
+    get:
+      summary: List visible queue items
+      operationId: listDecisionQueueItems
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/QueueKey"
+      responses:
+        "200":
+          $ref: "#/components/responses/DecisionQueueItemList"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Add an attention source to a queue
+      operationId: addDecisionQueueItem
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/QueueKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddDecisionQueueItemRequest"
+      responses:
+        "200":
+          description: Existing queue item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionQueueItem"
+        "201":
+          description: Created queue item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionQueueItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-queues/{key}/items/{sourceKind}/{sourceId}:
+    delete:
+      summary: Remove an attention source from a queue
+      operationId: removeDecisionQueueItem
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/QueueKey"
+        - $ref: "#/components/parameters/SourceKind"
+        - $ref: "#/components/parameters/SourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveDecisionQueueItemRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-triage/{sourceKind}/{sourceId}:
+    get:
+      summary: Read triage for an attention source
+      operationId: getDecisionTriage
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/SourceKind"
+        - $ref: "#/components/parameters/SourceId"
+      responses:
+        "200":
+          description: Triage record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionTriage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      summary: Update decide-by and snooze values
+      operationId: updateDecisionTriage
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/SourceKind"
+        - $ref: "#/components/parameters/SourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDecisionTriageRequest"
+      responses:
+        "200":
+          description: Updated triage record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionTriage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-retention/{sourceKind}/{sourceId}:
+    patch:
+      summary: Set the keep flag on a retention record
+      operationId: setDecisionRetentionKeep
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/SourceKind"
+        - $ref: "#/components/parameters/SourceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDecisionRetentionRequest"
+      responses:
+        "200":
+          description: Updated retention record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionRetention"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-retention/{sourceKind}/{sourceId}/archive:
+    post:
+      summary: Archive a reviewed attention source
+      operationId: archiveDecisionRetentionSource
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/SourceKind"
+        - $ref: "#/components/parameters/SourceId"
+      responses:
+        "200":
+          description: Archived retention record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionRetention"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-retention/{sourceKind}/{sourceId}/revive:
+    post:
+      summary: Revive an archived attention source
+      operationId: reviveDecisionRetentionSource
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/SourceKind"
+        - $ref: "#/components/parameters/SourceId"
+      responses:
+        "200":
+          description: Revived retention record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionRetention"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-training:
+    post:
+      summary: Create a decision training example
+      operationId: createDecisionTrainingExample
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTrainingExampleRequest"
+      responses:
+        "201":
+          description: Created training example
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionTrainingExample"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    get:
+      summary: List decision training examples
+      operationId: listDecisionTrainingExamples
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: project
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: kind
+          in: query
+          schema:
+            $ref: "#/components/schemas/TrainingSourceKind"
+        - name: author
+          in: query
+          schema:
+            type: string
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 500
+      responses:
+        "200":
+          description: Training examples with issue metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DecisionTrainingExample"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/decision-training/preview:
+    post:
+      summary: Preview a cutoff-bounded training snapshot
+      operationId: previewDecisionTrainingExample
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreviewTrainingRequest"
+      responses:
+        "200":
+          description: Read-only training preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainingPreview"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/decision-training/export.jsonl:
+    get:
+      summary: Export training examples as newline-delimited JSON
+      operationId: exportDecisionTrainingExamples
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Training examples with state and label records
+          content:
+            application/x-ndjson:
+              schema:
+                type: string
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/decision-training/{id}:
+    get:
+      summary: Read one training example
+      operationId: getDecisionTrainingExample
+      parameters:
+        - $ref: "#/components/parameters/TrainingId"
+      responses:
+        "200":
+          description: Training example
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionTrainingExample"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update training notes
+      operationId: updateDecisionTrainingNotes
+      parameters:
+        - $ref: "#/components/parameters/TrainingId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTrainingNotesRequest"
+      responses:
+        "200":
+          description: Updated training example
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionTrainingExample"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete a training example
+      operationId: deleteDecisionTrainingExample
+      parameters:
+        - $ref: "#/components/parameters/TrainingId"
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/fast-response:
+    get:
+      summary: Read fast response settings and choices
+      operationId: getFastResponseSettings
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          $ref: "#/components/responses/FastResponseSettings"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    put:
+      summary: Configure fast responses
+      operationId: updateFastResponseSettings
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFastResponseRequest"
+      responses:
+        "200":
+          description: Saved fast response settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FastResponseSettings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/fast-response/models:
+    get:
+      summary: List models for a managed connection
+      operationId: listFastResponseModels
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/ConnectionId"
+      responses:
+        "200":
+          $ref: "#/components/responses/FastResponseModels"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/fast-response/availability:
+    get:
+      summary: Read fast response availability
+      operationId: getFastResponseAvailability
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Availability result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FastResponseAvailability"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/fast-response/test:
+    post:
+      summary: Run the fixed fast response sample
+      operationId: testFastResponse
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Fast response test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FastResponseTestResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/fast-response/history:
+    get:
+      summary: Read fast response history
+      operationId: getFastResponseHistory
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - $ref: "#/components/parameters/From"
+        - $ref: "#/components/parameters/To"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          $ref: "#/components/responses/InvocationHistory"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+components:
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DecisionId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    QueueKey:
+      name: key
+      in: path
+      required: true
+      schema:
+        type: string
+    SourceKind:
+      name: sourceKind
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/AttentionSourceKind"
+    SourceId:
+      name: sourceId
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 500
+    TrainingId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ConnectionId:
+      name: connectionId
+      in: query
+      required: true
+      schema:
+        type: string
+        format: uuid
+    From:
+      name: from
+      in: query
+      schema:
+        type: string
+        format: date-time
+    To:
+      name: to
+      in: query
+      schema:
+        type: string
+        format: date-time
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+  responses:
+    Ok:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+    Decision:
+      description: Decision record
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Decision"
+    DecisionList:
+      description: Decision records
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/Decision"
+    DecisionOutcome:
+      description: Decision with execution results
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DecisionOutcome"
+    DecisionQueueList:
+      description: Decision queues with items
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/DecisionQueue"
+    DecisionQueueItemList:
+      description: Visible queue items enriched with attention state
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/DecisionQueueItem"
+    InvocationHistory:
+      description: Content-free invocation history
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/InvocationEntry"
+    FastResponseSettings:
+      description: Fast response settings response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FastResponseSettingsResponse"
+    FastResponseModels:
+      description: Available models for a connection
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/ModelChoice"
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: Unprocessable state
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: Rate limited
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_INPUT
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+    AttentionSourceKind:
+      type: string
+      enum:
+        - approval
+        - decision
+        - issue_thread_interaction
+        - join_request
+        - recovery_action
+        - productivity_review
+        - blocker_attention
+        - review
+        - failed_run
+        - budget_alert
+        - agent_error_alert
+    DecisionEffectStaleness:
+      type: string
+      enum: [strict, lenient]
+    DecisionOptionStyle:
+      type: string
+      enum: [default, primary, destructive]
+    DecisionEffect:
+      type: object
+      additionalProperties: true
+      required: [type, targetIssueId, staleness]
+      properties:
+        type:
+          type: string
+          enum: [comment_on_issue, create_issue, update_issue_status, assign_issue, cancel_issue_tree, resolve_blocker]
+        targetIssueId:
+          type: string
+          format: uuid
+        staleness:
+          $ref: "#/components/schemas/DecisionEffectStaleness"
+    DecisionOption:
+      type: object
+      additionalProperties: true
+      required: [id, label, effects]
+      properties:
+        id:
+          type: string
+          maxLength: 120
+        label:
+          type: string
+          maxLength: 240
+        description:
+          type: string
+          maxLength: 2000
+        style:
+          $ref: "#/components/schemas/DecisionOptionStyle"
+        effects:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/DecisionEffect"
+    DecisionInput:
+      type: object
+      additionalProperties: true
+      required: [id, label]
+      properties:
+        id:
+          type: string
+          maxLength: 120
+        label:
+          type: string
+          maxLength: 240
+        placeholder:
+          type: string
+          maxLength: 500
+        required:
+          type: boolean
+        maxLength:
+          type: integer
+          maximum: 20000
+    CreateDecisionRequest:
+      type: object
+      additionalProperties: false
+      required: [title, body, options]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        body:
+          type: string
+          maxLength: 100000
+        ruleKey:
+          type: string
+          maxLength: 240
+        options:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            $ref: "#/components/schemas/DecisionOption"
+        inputs:
+          type: array
+          maxItems: 4
+          items:
+            $ref: "#/components/schemas/DecisionInput"
+        expiresAt:
+          type: string
+          format: date-time
+        idempotencyKey:
+          type: string
+          maxLength: 500
+        continuationPolicy:
+          type: string
+          enum: [none, wake_origin_agent]
+        metadata:
+          type: object
+          additionalProperties: true
+    CreateDecisionBundleRequest:
+      type: object
+      additionalProperties: false
+      required: [title, summary, decisions]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        summary:
+          type: string
+          maxLength: 100000
+        decisions:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/CreateDecisionRequest"
+    CreateArchiveProposalRequest:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required: [sourceKind, sourceId, reason]
+            properties:
+              sourceKind:
+                $ref: "#/components/schemas/AttentionSourceKind"
+              sourceId:
+                type: string
+                maxLength: 500
+              reason:
+                type: string
+                minLength: 1
+                maxLength: 2000
+        idempotencyKey:
+          type: string
+          maxLength: 500
+    DecideRequest:
+      type: object
+      additionalProperties: false
+      required: [optionId]
+      properties:
+        optionId:
+          type: string
+          maxLength: 120
+        inputValues:
+          type: object
+          additionalProperties:
+            type: string
+            maxLength: 20000
+        idempotencyKey:
+          type: string
+          maxLength: 500
+    DismissRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          maxLength: 20000
+    Decision:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        bundleId:
+          type: string
+          format: uuid
+        originAgentId:
+          type: string
+          format: uuid
+        originIssueId:
+          type: string
+          format: uuid
+        originRunId:
+          type: string
+          format: uuid
+        ruleKey:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/DecisionOption"
+        status:
+          type: string
+          enum: [open, decided, expired, cancelled]
+        executionStatus:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        chosenOptionId:
+          type: string
+        decidedByUserId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DecisionOutcome:
+      type: object
+      additionalProperties: true
+      allOf:
+        - $ref: "#/components/schemas/Decision"
+        - type: object
+          properties:
+            executions:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  effectIndex:
+                    type: integer
+                  effectType:
+                    type: string
+                  status:
+                    type: string
+                  result:
+                    type: object
+                    additionalProperties: true
+                  error:
+                    type: string
+    DecisionBundleResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        bundle:
+          type: object
+          additionalProperties: true
+        decisions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Decision"
+    DecisionStatsResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        groupBy:
+          type: string
+          enum: [ruleKey]
+        filters:
+          type: object
+          additionalProperties: true
+        totals:
+          type: object
+          additionalProperties: true
+        groups:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    UpdateDecisionModelRequest:
+      type: object
+      additionalProperties: false
+      required: [enabled, connectionId, grantId]
+      properties:
+        enabled:
+          type: boolean
+        connectionId:
+          type: string
+          format: uuid
+        grantId:
+          type: string
+          format: uuid
+        allowBackground:
+          type: boolean
+    DecisionModelSettings:
+      type: object
+      additionalProperties: true
+      properties:
+        companyId:
+          type: string
+          format: uuid
+        enabled:
+          type: boolean
+        allowBackground:
+          type: boolean
+        connectionId:
+          type: string
+          format: uuid
+        grantId:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum: [openai, openrouter]
+        model:
+          type: string
+    DecisionModelSettingsResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        canManage:
+          type: boolean
+        settings:
+          $ref: "#/components/schemas/DecisionModelSettings"
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConnectionChoice"
+    ConnectionChoice:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        name:
+          type: string
+        decisionModel:
+          type: string
+    DecisionAvailability:
+      type: object
+      additionalProperties: true
+      properties:
+        available:
+          type: boolean
+        reason:
+          type: string
+          enum: [not_configured, disabled, connection_unavailable, incompatible_connection, access_denied, responsible_user_missing, background_disabled, budget_blocked]
+    DecisionResult:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [succeeded, unavailable, failed]
+        invocationId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        errorCode:
+          type: string
+        answers:
+          type: object
+          additionalProperties: true
+        usage:
+          type: object
+          additionalProperties: true
+    InvocationEntry:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        feature:
+          type: string
+        status:
+          type: string
+        provider:
+          type: string
+        model:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+        costCents:
+          type: string
+        publicationStatus:
+          type: string
+        connectionName:
+          type: string
+    DecisionQueueSeedDefinition:
+      type: object
+      additionalProperties: true
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        rules:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    CreateDecisionQueueRequest:
+      type: object
+      additionalProperties: false
+      required: [key, title]
+      properties:
+        key:
+          type: string
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          maxLength: 80
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 2000
+        retentionDays:
+          type: integer
+          minimum: 1
+          maximum: 3650
+    UpdateDecisionQueueRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 2000
+        retentionDays:
+          type: integer
+          minimum: 1
+          maximum: 3650
+        seedRulesEnabled:
+          type: boolean
+    DecisionQueue:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        key:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        retentionDays:
+          type: integer
+        seedRules:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        seedRulesEnabled:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DecisionQueueItem"
+    AddDecisionQueueItemRequest:
+      type: object
+      additionalProperties: false
+      required: [sourceKind, sourceId]
+      properties:
+        sourceKind:
+          $ref: "#/components/schemas/AttentionSourceKind"
+        sourceId:
+          type: string
+          minLength: 1
+          maxLength: 500
+    RemoveDecisionQueueItemRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          maxLength: 2000
+    DecisionQueueItem:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        queueId:
+          type: string
+          format: uuid
+        sourceKind:
+          $ref: "#/components/schemas/AttentionSourceKind"
+        sourceId:
+          type: string
+        addedByType:
+          type: string
+          enum: [agent, user, system]
+        responsibleUserId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    DecisionTriage:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        sourceKind:
+          $ref: "#/components/schemas/AttentionSourceKind"
+        sourceId:
+          type: string
+        decideBy:
+          type: string
+        decideByDate:
+          type: string
+        snoozedUntil:
+          type: string
+          format: date-time
+        version:
+          type: integer
+    UpdateDecisionTriageRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        decideBy:
+          type: string
+        snoozedUntil:
+          type: string
+          format: date-time
+    DecisionRetention:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        sourceKind:
+          $ref: "#/components/schemas/AttentionSourceKind"
+        sourceId:
+          type: string
+        keep:
+          type: boolean
+        archivedAt:
+          type: string
+          format: date-time
+        archivedReason:
+          type: string
+        version:
+          type: integer
+        archiveVersion:
+          type: integer
+    UpdateDecisionRetentionRequest:
+      type: object
+      additionalProperties: false
+      required: [keep]
+      properties:
+        keep:
+          type: boolean
+    TrainingSourceKind:
+      type: string
+      enum: [interaction, approval, execution_decision]
+    CreateTrainingExampleRequest:
+      type: object
+      additionalProperties: false
+      required: [sourceKind, sourceId, issueId]
+      properties:
+        sourceKind:
+          $ref: "#/components/schemas/TrainingSourceKind"
+        sourceId:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+          maxLength: 100000
+    PreviewTrainingRequest:
+      type: object
+      additionalProperties: false
+      required: [sourceKind, sourceId, issueId]
+      properties:
+        sourceKind:
+          $ref: "#/components/schemas/TrainingSourceKind"
+        sourceId:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+    UpdateTrainingNotesRequest:
+      type: object
+      additionalProperties: false
+      required: [notes]
+      properties:
+        notes:
+          type: string
+          maxLength: 100000
+    DecisionTrainingExample:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        sourceKind:
+          $ref: "#/components/schemas/TrainingSourceKind"
+        sourceId:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        cutoffAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        notesHistory:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        decisionOutcome:
+          type: string
+        retentionPolicy:
+          type: string
+        snapshot:
+          type: object
+          additionalProperties: true
+        createdByUserId:
+          type: string
+    TrainingPreview:
+      type: object
+      additionalProperties: true
+      properties:
+        cutoffAt:
+          type: string
+          format: date-time
+        decisionOutcome:
+          type: string
+        snapshot:
+          type: object
+          additionalProperties: true
+    UpdateFastResponseRequest:
+      type: object
+      additionalProperties: false
+      required: [enabled, connectionId, grantId, model]
+      properties:
+        enabled:
+          type: boolean
+        connectionId:
+          type: string
+          format: uuid
+        grantId:
+          type: string
+          format: uuid
+        model:
+          type: string
+          minLength: 1
+          maxLength: 256
+        allowSponsored:
+          type: boolean
+    FastResponseSettingsResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        canManage:
+          type: boolean
+        settings:
+          $ref: "#/components/schemas/FastResponseSettings"
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConnectionChoice"
+    FastResponseSettings:
+      type: object
+      additionalProperties: true
+      properties:
+        companyId:
+          type: string
+          format: uuid
+        enabled:
+          type: boolean
+        connectionId:
+          type: string
+          format: uuid
+        grantId:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        model:
+          type: string
+        allowSponsored:
+          type: boolean
+    FastResponseAvailability:
+      type: object
+      additionalProperties: true
+      properties:
+        available:
+          type: boolean
+        reason:
+          type: string
+    FastResponseTestResult:
+      type: object
+      additionalProperties: true
+      properties:
+        status:
+          type: string
+          enum: [succeeded, unavailable, failed]
+        text:
+          type: string
+        durationMs:
+          type: integer
+        invocationId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        usage:
+          type: object
+          additionalProperties: true
+    ModelChoice:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        provider:
+          type: string

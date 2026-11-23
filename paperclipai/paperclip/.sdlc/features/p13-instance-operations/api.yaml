@@ -1,0 +1,1118 @@
+# OpenAPI 3 contract for Instance Operations and Settings.
+# Normative API definition referenced by specification.md.
+openapi: 3.1.0
+info:
+  title: "Instance Operations and Settings API"
+  version: 1.0.0
+  description: >
+    This API exposes instance settings, task drain control, Cloud lifecycle readback, manual database backups, and process metrics.
+    Request bodies are validated with strict or strip Zod schemas, and deprecated settings keys remain accepted for compatibility.
+paths:
+  /api/instance/settings:
+    get:
+      summary: Get combined instance settings
+      operationId: getInstanceSettings
+      description: Requires board organization access.
+      responses:
+        "200":
+          description: Combined instance settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceSettings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    patch:
+      summary: Update the instance default environment
+      operationId: patchInstanceSettings
+      description: Requires board access plus local implicit or instance-admin authority.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchInstanceSettings"
+      responses:
+        "200":
+          description: Updated instance settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceSettings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/instance/settings/general:
+    get:
+      summary: Get general instance settings
+      operationId: getInstanceGeneralSettings
+      description: Requires board organization access.
+      responses:
+        "200":
+          description: General settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceGeneralSettings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    patch:
+      summary: Update general instance settings
+      operationId: patchInstanceGeneralSettings
+      description: Requires board access plus local implicit or instance-admin authority.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchInstanceGeneralSettings"
+      responses:
+        "200":
+          description: Updated general settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceGeneralSettings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/instance/settings/experimental:
+    get:
+      summary: Get experimental instance settings
+      operationId: getInstanceExperimentalSettings
+      description: Requires board organization access. Agents cannot read this surface.
+      responses:
+        "200":
+          description: Experimental settings and optional managed keys
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceExperimentalSettingsWithManaged"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    patch:
+      summary: Update experimental instance settings
+      operationId: patchInstanceExperimentalSettings
+      description: >
+        Requires instance-admin authority or a Cloud tenant board actor with the experimental settings permission.
+        Operator-hidden and Cloud-managed restrictions still apply.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchInstanceExperimentalSettings"
+      responses:
+        "200":
+          description: Updated experimental settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceExperimentalSettingsWithManaged"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/instance/task-drain:
+    get:
+      summary: Get task drain status
+      operationId: getTaskDrainStatus
+      description: >
+        Board organization access returns process status.
+        upgradeReadiness and idleSleepSafety require instance-admin authority.
+        Scheduled wake modes require signed Cloud control authority.
+      parameters:
+        - $ref: "#/components/parameters/UpgradeReadiness"
+        - $ref: "#/components/parameters/IdleSleepSafety"
+        - $ref: "#/components/parameters/ScheduledWake"
+        - $ref: "#/components/parameters/OwnerId"
+        - $ref: "#/components/parameters/IdleSleepDiagnostics"
+      responses:
+        "200":
+          description: Task drain status with optional reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskDrainStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      summary: Start a task drain
+      operationId: startTaskDrain
+      description: Requires board access plus local implicit or instance-admin authority.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartTaskDrainRequest"
+      responses:
+        "200":
+          description: Applied drain state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskDrainState"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      summary: Stop a task drain
+      operationId: stopTaskDrain
+      description: Requires board access plus local implicit or instance-admin authority.
+      parameters:
+        - $ref: "#/components/parameters/OwnerId"
+      responses:
+        "200":
+          description: Stop result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [wasActive]
+                properties:
+                  wasActive:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/instance/task-drain/status:
+    post:
+      summary: Read task drain status with body-bound Cloud authority
+      operationId: postTaskDrainStatus
+      description: >
+        Requires a Cloud control assertion with action task-drain:read-body bound to the exact raw JSON digest.
+        This read does not start or stop a drain.
+      security:
+        - cloudControlAssertion: []
+      parameters:
+        - $ref: "#/components/parameters/UpgradeReadiness"
+        - $ref: "#/components/parameters/IdleSleepSafety"
+        - $ref: "#/components/parameters/ScheduledWake"
+        - $ref: "#/components/parameters/OwnerId"
+        - $ref: "#/components/parameters/IdleSleepDiagnostics"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                idleCapabilities:
+                  type: object
+                  description: Signed incoming-wake and deadline catalogs validated by Cloud control middleware.
+      responses:
+        "200":
+          description: Task drain status with optional reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskDrainStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/instance/lifecycle:
+    get:
+      summary: Read Cloud primary company lifecycle state
+      operationId: getInstanceLifecycle
+      description: Requires instance-admin authority. Returns 404 on self-hosted instances.
+      responses:
+        "200":
+          description: Primary company lifecycle summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceLifecycleStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Instance is not Cloud-managed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/instance/lifecycle/unarchive-primary:
+    post:
+      summary: Restore the Cloud primary company
+      operationId: unarchivePrimaryCompany
+      description: Requires instance-admin authority and an archived Cloud primary company.
+      responses:
+        "200":
+          description: Restore result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status, changed]
+                properties:
+                  status:
+                    type: string
+                  changed:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Instance is not Cloud-managed or the primary company is missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/instance/database-backups:
+    post:
+      summary: Trigger a manual database backup
+      operationId: createInstanceDatabaseBackup
+      description: Requires instance-admin authority and a self-hosted instance.
+      responses:
+        "201":
+          description: Backup result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceDatabaseBackupRunResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/instance/server-metrics:
+    get:
+      summary: Get this server process metrics snapshot
+      operationId: getInstanceServerMetrics
+      description: >
+        Requires instance-admin authority.
+        Returns 404 unless the operator enabled PAPERCLIP_SERVER_METRICS.
+      responses:
+        "200":
+          description: Process metrics snapshot
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerMetricsSnapshot"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Server metrics are disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  securitySchemes:
+    cloudControlAssertion:
+      type: apiKey
+      in: header
+      name: x-paperclip-cloud-control
+      description: Signed Cloud control JWS bound to one endpoint, method, and action.
+  parameters:
+    UpgradeReadiness:
+      name: upgradeReadiness
+      in: query
+      required: false
+      schema:
+        type: string
+        const: "1"
+      description: Requests an upgrade readiness report for instance operators.
+    IdleSleepSafety:
+      name: idleSleepSafety
+      in: query
+      required: false
+      schema:
+        type: string
+        const: "1"
+      description: Requests an instance-wide idle safety report.
+    ScheduledWake:
+      name: scheduledWake
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: ["1", "2", "domain-deadlines-v1"]
+      description: Selects the Cloud scheduled wake catalog.
+    OwnerId:
+      name: ownerId
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
+      description: Identifies the idle hold owner for inspection or release.
+    IdleSleepDiagnostics:
+      name: idleSleepDiagnostics
+      in: query
+      required: false
+      schema:
+        type: string
+        const: "1"
+      description: Adds fixed-key diagnostic checks to the idle safety report.
+  responses:
+    Unauthorized:
+      description: Authentication is required.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: The actor lacks authority for this operation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Another task drain or backup is active, or ownership changed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationError:
+      description: The request body failed schema validation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+    BackupRetentionPolicy:
+      type: object
+      additionalProperties: false
+      required: [dailyDays, weeklyWeeks, monthlyMonths]
+      properties:
+        dailyDays:
+          type: integer
+          enum: [3, 7, 14]
+        weeklyWeeks:
+          type: integer
+          enum: [1, 2, 4]
+        monthlyMonths:
+          type: integer
+          enum: [1, 3, 6]
+    InstanceGeneralSettings:
+      type: object
+      additionalProperties: false
+      required: [censorUsernameInLogs, feedbackDataSharingPreference, backupRetention]
+      properties:
+        censorUsernameInLogs:
+          type: boolean
+        feedbackDataSharingPreference:
+          type: string
+          enum: [allowed, not_allowed, prompt]
+        backupRetention:
+          $ref: "#/components/schemas/BackupRetentionPolicy"
+        executionMode:
+          type: string
+          enum: [any, kubernetes]
+    PatchInstanceSettings:
+      type: object
+      additionalProperties: false
+      properties:
+        defaultEnvironmentId:
+          type: [string, "null"]
+          format: uuid
+    PatchInstanceGeneralSettings:
+      type: object
+      additionalProperties: false
+      properties:
+        censorUsernameInLogs:
+          type: boolean
+        feedbackDataSharingPreference:
+          type: string
+          enum: [allowed, not_allowed, prompt]
+        backupRetention:
+          $ref: "#/components/schemas/BackupRetentionPolicy"
+        executionMode:
+          type: string
+          enum: [any, kubernetes]
+    ExperimentalBooleanFlags:
+      type: object
+      additionalProperties: false
+      properties:
+        enableEnvironments:
+          type: boolean
+        enableNativeRunner:
+          type: boolean
+        enableAiConnectionRouters:
+          type: boolean
+        enableManagedSandboxOnly:
+          type: boolean
+        enableIsolatedWorkspaces:
+          type: boolean
+        remoteWorkspaceStorageEnabled:
+          type: boolean
+        enableIsolatedWorkspacesByDefault:
+          type: boolean
+        enableStreamlinedLeftNavigation:
+          type: boolean
+        enableStreamlinedUi:
+          type: boolean
+        enableApps:
+          type: boolean
+        enablePublicMcp:
+          type: boolean
+        enableOpenAiDot:
+          type: boolean
+        enableGrokBot:
+          type: boolean
+        enableMuse:
+          type: boolean
+        enableChatConnectors:
+          type: boolean
+        enableGitHubReviewBots:
+          type: boolean
+        enableMcpAggregators:
+          type: boolean
+        enableMemoryConnectors:
+          type: boolean
+        enablePaperclipNotebook:
+          type: boolean
+        enableGoogleWorkspaceConnector:
+          type: boolean
+        enableAwsConnector:
+          type: boolean
+        enableCases:
+          type: boolean
+        enableAgentChat:
+          type: boolean
+        enableCombinedInboxTasks:
+          type: boolean
+        enableArtifactsV1:
+          type: boolean
+        enableConferenceRoomChat:
+          type: boolean
+        enableClassicTaskInterface:
+          type: boolean
+        enableLegacyComposerSubmit:
+          type: boolean
+        enableIssuePlanDecompositions:
+          type: boolean
+        enableExperimentalFileViewer:
+          type: boolean
+        enableExternalObjects:
+          type: boolean
+        enableSmokeLab:
+          type: boolean
+        enableBuiltInAgents:
+          type: boolean
+        enableBetaSkills:
+          type: boolean
+        enableSummaries:
+          type: boolean
+        enableStatusCards:
+          type: boolean
+        enableResponsibilities:
+          type: boolean
+        enableDecisions:
+          type: boolean
+        enableFastResponses:
+          type: boolean
+        enableGoalsSidebarLink:
+          type: boolean
+        enableServerInfoDebugView:
+          type: boolean
+        enablePaperclipDeveloperMode:
+          type: boolean
+        enableSimplifiedEnglishInteractions:
+          type: boolean
+        enableFirstTaskPlanProposal:
+          type: boolean
+        autoRestartDevServerWhenIdle:
+          type: boolean
+        enableWorkspaceBranchReconcileForward:
+          type: boolean
+        enableWorkspaceDirtyQuarantineRepair:
+          type: boolean
+        enableOwnerInstanceAdmin:
+          type: boolean
+        enableSandboxDuplexBridge:
+          type: boolean
+        enableMcpTasks:
+          type: boolean
+        enableRunnerPreviewIngress:
+          type: boolean
+        enableWorktreeRunExecution:
+          type: boolean
+    InstanceExperimentalSettings:
+      type: object
+      properties:
+        enableEnvironments:
+          type: boolean
+        enableNativeRunner:
+          type: boolean
+        enableAiConnectionRouters:
+          type: boolean
+        enableManagedSandboxOnly:
+          type: boolean
+        enableIsolatedWorkspaces:
+          type: boolean
+        remoteWorkspaceStorageEnabled:
+          type: boolean
+        enableIsolatedWorkspacesByDefault:
+          type: boolean
+        enableStreamlinedLeftNavigation:
+          type: boolean
+        enableStreamlinedUi:
+          type: boolean
+        enableApps:
+          type: boolean
+        enablePublicMcp:
+          type: boolean
+        enableOpenAiDot:
+          type: boolean
+        enableGrokBot:
+          type: boolean
+        enableMuse:
+          type: boolean
+        enableChatConnectors:
+          type: boolean
+        enableGitHubReviewBots:
+          type: boolean
+        enableMcpAggregators:
+          type: boolean
+        enableMemoryConnectors:
+          type: boolean
+        enablePaperclipNotebook:
+          type: boolean
+        enableGoogleWorkspaceConnector:
+          type: boolean
+        enableAwsConnector:
+          type: boolean
+        enableCases:
+          type: boolean
+        enableAgentChat:
+          type: boolean
+        enableCombinedInboxTasks:
+          type: boolean
+        enableArtifactsV1:
+          type: boolean
+        enableConferenceRoomChat:
+          type: boolean
+        enableClassicTaskInterface:
+          type: boolean
+        enableLegacyComposerSubmit:
+          type: boolean
+        enableIssuePlanDecompositions:
+          type: boolean
+        enableExperimentalFileViewer:
+          type: boolean
+        enableExternalObjects:
+          type: boolean
+        enableSmokeLab:
+          type: boolean
+        enableBuiltInAgents:
+          type: boolean
+        enableBetaSkills:
+          type: boolean
+        enableSummaries:
+          type: boolean
+        enableStatusCards:
+          type: boolean
+        enableResponsibilities:
+          type: boolean
+        enableDecisions:
+          type: boolean
+        enableFastResponses:
+          type: boolean
+        enableGoalsSidebarLink:
+          type: boolean
+        enableServerInfoDebugView:
+          type: boolean
+        enablePaperclipDeveloperMode:
+          type: boolean
+        enableSimplifiedEnglishInteractions:
+          type: boolean
+        enableFirstTaskPlanProposal:
+          type: boolean
+        autoRestartDevServerWhenIdle:
+          type: boolean
+        enableWorkspaceBranchReconcileForward:
+          type: boolean
+        enableWorkspaceDirtyQuarantineRepair:
+          type: boolean
+        enableOwnerInstanceAdmin:
+          type: boolean
+        enableSandboxDuplexBridge:
+          type: boolean
+        enableMcpTasks:
+          type: boolean
+        enableRunnerPreviewIngress:
+          type: boolean
+        enableWorktreeRunExecution:
+          type: boolean
+        worktreeRunExecutionActivatedAt:
+          type: [string, "null"]
+          format: date-time
+        worktreeRunExecutionActivationInstanceId:
+          type: [string, "null"]
+    ManagedSettingMetadata:
+      type: object
+      additionalProperties: false
+      required: [managed, managedBy]
+      properties:
+        managed:
+          type: boolean
+          const: true
+        managedBy:
+          type: string
+          const: paperclip-cloud
+    InstanceExperimentalSettingsWithManaged:
+      type: object
+      properties:
+        enableEnvironments:
+          type: boolean
+        enableNativeRunner:
+          type: boolean
+        enableAiConnectionRouters:
+          type: boolean
+        enableManagedSandboxOnly:
+          type: boolean
+        enableIsolatedWorkspaces:
+          type: boolean
+        remoteWorkspaceStorageEnabled:
+          type: boolean
+        enableIsolatedWorkspacesByDefault:
+          type: boolean
+        enableStreamlinedLeftNavigation:
+          type: boolean
+        enableStreamlinedUi:
+          type: boolean
+        enableApps:
+          type: boolean
+        enablePublicMcp:
+          type: boolean
+        enableOpenAiDot:
+          type: boolean
+        enableGrokBot:
+          type: boolean
+        enableMuse:
+          type: boolean
+        enableChatConnectors:
+          type: boolean
+        enableGitHubReviewBots:
+          type: boolean
+        enableMcpAggregators:
+          type: boolean
+        enableMemoryConnectors:
+          type: boolean
+        enablePaperclipNotebook:
+          type: boolean
+        enableGoogleWorkspaceConnector:
+          type: boolean
+        enableAwsConnector:
+          type: boolean
+        enableCases:
+          type: boolean
+        enableAgentChat:
+          type: boolean
+        enableCombinedInboxTasks:
+          type: boolean
+        enableArtifactsV1:
+          type: boolean
+        enableConferenceRoomChat:
+          type: boolean
+        enableClassicTaskInterface:
+          type: boolean
+        enableLegacyComposerSubmit:
+          type: boolean
+        enableIssuePlanDecompositions:
+          type: boolean
+        enableExperimentalFileViewer:
+          type: boolean
+        enableExternalObjects:
+          type: boolean
+        enableSmokeLab:
+          type: boolean
+        enableBuiltInAgents:
+          type: boolean
+        enableBetaSkills:
+          type: boolean
+        enableSummaries:
+          type: boolean
+        enableStatusCards:
+          type: boolean
+        enableResponsibilities:
+          type: boolean
+        enableDecisions:
+          type: boolean
+        enableFastResponses:
+          type: boolean
+        enableGoalsSidebarLink:
+          type: boolean
+        enableServerInfoDebugView:
+          type: boolean
+        enablePaperclipDeveloperMode:
+          type: boolean
+        enableSimplifiedEnglishInteractions:
+          type: boolean
+        enableFirstTaskPlanProposal:
+          type: boolean
+        autoRestartDevServerWhenIdle:
+          type: boolean
+        enableWorkspaceBranchReconcileForward:
+          type: boolean
+        enableWorkspaceDirtyQuarantineRepair:
+          type: boolean
+        enableOwnerInstanceAdmin:
+          type: boolean
+        enableSandboxDuplexBridge:
+          type: boolean
+        enableMcpTasks:
+          type: boolean
+        enableRunnerPreviewIngress:
+          type: boolean
+        enableWorktreeRunExecution:
+          type: boolean
+        worktreeRunExecutionActivatedAt:
+          type: [string, "null"]
+          format: date-time
+        worktreeRunExecutionActivationInstanceId:
+          type: [string, "null"]
+        managedKeys:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ManagedSettingMetadata"
+    PatchInstanceExperimentalSettings:
+      type: object
+      additionalProperties: false
+      properties:
+        enableEnvironments:
+          type: boolean
+        enableNativeRunner:
+          type: boolean
+        enableAiConnectionRouters:
+          type: boolean
+        enableManagedSandboxOnly:
+          type: boolean
+        enableIsolatedWorkspaces:
+          type: boolean
+        remoteWorkspaceStorageEnabled:
+          type: boolean
+        enableIsolatedWorkspacesByDefault:
+          type: boolean
+        enableStreamlinedLeftNavigation:
+          type: boolean
+        enableStreamlinedUi:
+          type: boolean
+        enableApps:
+          type: boolean
+        enablePublicMcp:
+          type: boolean
+        enableOpenAiDot:
+          type: boolean
+        enableGrokBot:
+          type: boolean
+        enableMuse:
+          type: boolean
+        enableChatConnectors:
+          type: boolean
+        enableGitHubReviewBots:
+          type: boolean
+        enableMcpAggregators:
+          type: boolean
+        enableMemoryConnectors:
+          type: boolean
+        enablePaperclipNotebook:
+          type: boolean
+        enableGoogleWorkspaceConnector:
+          type: boolean
+        enableAwsConnector:
+          type: boolean
+        enableCases:
+          type: boolean
+        enableAgentChat:
+          type: boolean
+        enableCombinedInboxTasks:
+          type: boolean
+        enableArtifactsV1:
+          type: boolean
+        enableConferenceRoomChat:
+          type: boolean
+        enableClassicTaskInterface:
+          type: boolean
+        enableLegacyComposerSubmit:
+          type: boolean
+        enableIssuePlanDecompositions:
+          type: boolean
+        enableExperimentalFileViewer:
+          type: boolean
+        enableExternalObjects:
+          type: boolean
+        enableSmokeLab:
+          type: boolean
+        enableBuiltInAgents:
+          type: boolean
+        enableBetaSkills:
+          type: boolean
+        enableSummaries:
+          type: boolean
+        enableStatusCards:
+          type: boolean
+        enableResponsibilities:
+          type: boolean
+        enableDecisions:
+          type: boolean
+        enableFastResponses:
+          type: boolean
+        enableGoalsSidebarLink:
+          type: boolean
+        enableServerInfoDebugView:
+          type: boolean
+        enablePaperclipDeveloperMode:
+          type: boolean
+        enableSimplifiedEnglishInteractions:
+          type: boolean
+        enableFirstTaskPlanProposal:
+          type: boolean
+        autoRestartDevServerWhenIdle:
+          type: boolean
+        enableWorkspaceBranchReconcileForward:
+          type: boolean
+        enableWorkspaceDirtyQuarantineRepair:
+          type: boolean
+        enableOwnerInstanceAdmin:
+          type: boolean
+        enableSandboxDuplexBridge:
+          type: boolean
+        enableMcpTasks:
+          type: boolean
+        enableRunnerPreviewIngress:
+          type: boolean
+        enableWorktreeRunExecution:
+          type: boolean
+    InstanceSettings:
+      type: object
+      additionalProperties: false
+      required: [id, defaultEnvironmentId, general, experimental, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        defaultEnvironmentId:
+          type: [string, "null"]
+          format: uuid
+        general:
+          $ref: "#/components/schemas/InstanceGeneralSettings"
+        experimental:
+          $ref: "#/components/schemas/InstanceExperimentalSettingsWithManaged"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    StartTaskDrainRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        purpose:
+          type: string
+          const: idle
+        ttlMs:
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 86400000
+    TaskDrainState:
+      type: object
+      additionalProperties: false
+      required: [startedAt, expiresAt]
+      properties:
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: [string, "null"]
+          format: date-time
+        ownerId:
+          type: string
+          format: uuid
+    TaskDrainStatus:
+      type: object
+      additionalProperties: false
+      required: [draining, startedAt, expiresAt, activeRuns, pendingWakes, quiescent]
+      properties:
+        draining:
+          type: boolean
+        startedAt:
+          type: [string, "null"]
+          format: date-time
+        expiresAt:
+          type: [string, "null"]
+          format: date-time
+        activeRuns:
+          type: integer
+        pendingWakes:
+          type: integer
+        quiescent:
+          type: boolean
+        ownerId:
+          type: string
+          format: uuid
+    TaskDrainStatusResponse:
+      type: object
+      required: [draining, startedAt, expiresAt, activeRuns, pendingWakes, quiescent]
+      properties:
+        draining:
+          type: boolean
+        startedAt:
+          type: [string, "null"]
+          format: date-time
+        expiresAt:
+          type: [string, "null"]
+          format: date-time
+        activeRuns:
+          type: integer
+        pendingWakes:
+          type: integer
+        quiescent:
+          type: boolean
+        ownerId:
+          type: string
+          format: uuid
+        upgradeReadiness:
+          type: object
+        idleSleepSafety:
+          type: object
+    InstanceLifecycleStatus:
+      type: object
+      additionalProperties: false
+      required: [primaryCompanyId, primaryCompanyStatus, otherUnarchivedCompanyCount]
+      properties:
+        primaryCompanyId:
+          type: string
+          format: uuid
+        primaryCompanyStatus:
+          type: string
+        otherUnarchivedCompanyCount:
+          type: integer
+    InstanceDatabaseBackupRunResult:
+      type: object
+      additionalProperties: false
+      required: [trigger, backupFile, sizeBytes, prunedCount, backupDir, retention, startedAt, finishedAt, durationMs]
+      properties:
+        trigger:
+          type: string
+          enum: [manual, scheduled, idle]
+        backupFile:
+          type: string
+        sizeBytes:
+          type: integer
+        prunedCount:
+          type: integer
+        backupDir:
+          type: string
+        retention:
+          $ref: "#/components/schemas/BackupRetentionPolicy"
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+    ServerMetricsSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - schema
+        - processId
+        - buildRevision
+        - uptimeSec
+        - sampledAt
+        - windowMs
+        - mainThreadCpu
+        - processCpu
+        - eventLoopUtilization
+        - eventLoopDelayP99Ms
+        - statementsPerSecond
+        - runEventLatenessP99Ms
+        - runEventLatenessSamples
+        - agentApiPreHandlerP99Ms
+        - agentApiPreHandlerSamples
+        - leaseRenewalsMissed
+        - dedicatedConnections
+      properties:
+        schema:
+          type: string
+          const: paperclip.server-metrics.v1
+        processId:
+          type: string
+        buildRevision:
+          type: [string, "null"]
+        uptimeSec:
+          type: number
+        sampledAt:
+          type: string
+          format: date-time
+        windowMs:
+          type: integer
+        mainThreadCpu:
+          type: [number, "null"]
+        processCpu:
+          type: number
+        eventLoopUtilization:
+          type: number
+        eventLoopDelayP99Ms:
+          type: number
+        statementsPerSecond:
+          type: number
+        runEventLatenessP99Ms:
+          type: [number, "null"]
+        runEventLatenessSamples:
+          type: integer
+        agentApiPreHandlerP99Ms:
+          type: [number, "null"]
+        agentApiPreHandlerSamples:
+          type: integer
+        leaseRenewalsMissed:
+          type: integer
+        dedicatedConnections:
+          type: [object, "null"]

@@ -1,0 +1,1531 @@
+# OpenAPI 3 contract for Responsibilities and Status Reports.
+# Normative API definition referenced by specification.md.
+# Validate: npx -y @stoplight/spectral-cli lint api.yaml
+openapi: 3.1.0
+info:
+  title: "Responsibilities and Status Reports API"
+  version: 0.1.0
+  description: >
+    Company-scoped, private dashboard API for areas, responsibilities, linked work,
+    agent-proposed dashboard changes, restorable versions, and agent status reports.
+    Additive-only within a major version.
+paths:
+  /api/companies/{companyId}/responsibilities:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    get:
+      summary: Read one owner's responsibility overview
+      operationId: getResponsibilitiesOverview
+      parameters:
+        - name: ownerUserId
+          in: query
+          schema:
+            type: string
+        - name: includeLetGo
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Areas, responsibilities, proposals, totals, signals, and loose work
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponsibilityOverview"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Create a responsibility or return the live one with the same title
+      operationId: createResponsibility
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateResponsibilityRequest"
+      responses:
+        "200":
+          description: The existing live responsibility with its rollup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponsibilityWithRollup"
+        "201":
+          description: The created responsibility with its rollup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponsibilityWithRollup"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/responsibilities/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResponsibilityId"
+    get:
+      summary: Read one responsibility with filed work, skills, and artifacts
+      operationId: getResponsibility
+      responses:
+        "200":
+          description: Responsibility detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponsibilityDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update a responsibility or post a metric reading
+      operationId: updateResponsibility
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateResponsibilityRequest"
+      responses:
+        "200":
+          description: Updated responsibility with its rollup
+          headers:
+            X-Paperclip-Dashboard-Version:
+              description: Saved dashboard version id when an agent made the change for its directing person
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponsibilityWithRollup"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete a responsibility
+      operationId: deleteResponsibility
+      parameters:
+        - name: confirmationId
+          in: query
+          description: Accepted confirmation card id, required for an agent
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The removed responsibility
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Responsibility"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/responsibilities/{id}/links:
+    parameters:
+      - $ref: "#/components/parameters/ResponsibilityId"
+    post:
+      summary: File one project, task, routine, or skill under the responsibility
+      operationId: linkResponsibilityTarget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkResponsibilityRequest"
+      responses:
+        "200":
+          description: The existing link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkResponse"
+        "201":
+          description: The created link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/responsibilities/{id}/links/{linkId}:
+    parameters:
+      - $ref: "#/components/parameters/ResponsibilityId"
+      - name: linkId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      summary: Unfile one link
+      operationId: unlinkResponsibilityTarget
+      responses:
+        "200":
+          description: The removed link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponsibilityLink"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/responsibilities/{id}/file:
+    parameters:
+      - $ref: "#/components/parameters/ResponsibilityId"
+    post:
+      summary: File several items and optionally move them
+      operationId: fileResponsibilityItems
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FileResponsibilityRequest"
+      responses:
+        "200":
+          description: Links created and removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/responsibilities/{id}/unfile:
+    parameters:
+      - $ref: "#/components/parameters/ResponsibilityId"
+    post:
+      summary: Unfile several items by kind and id
+      operationId: unfileResponsibilityItems
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnfileResponsibilityRequest"
+      responses:
+        "200":
+          description: Links removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/responsibilities/{id}/delegate:
+    parameters:
+      - $ref: "#/components/parameters/ResponsibilityId"
+    post:
+      summary: Create a task under the responsibility and wake its assignee
+      operationId: delegateResponsibilityWork
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DelegateResponsibilityRequest"
+      responses:
+        "201":
+          description: The created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DelegatedTask"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/responsibility-links/lookup:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    get:
+      summary: Find responsibilities that contain one item
+      operationId: lookupResponsibilityLinks
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: issueId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: routineId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: skillId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Responsibilities containing the item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkLookupResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/responsibility-areas:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    get:
+      summary: Read areas for one owner
+      operationId: getResponsibilityAreas
+      parameters:
+        - name: ownerUserId
+          in: query
+          schema:
+            type: string
+        - name: includeArchived
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Areas for the owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AreasResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Create or reuse an area
+      operationId: createResponsibilityArea
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAreaRequest"
+      responses:
+        "200":
+          description: The existing area
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AreaResponse"
+        "201":
+          description: The created area
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AreaResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/responsibility-areas/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      summary: Rename, describe, reorder, archive, or restore an area
+      operationId: updateResponsibilityArea
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAreaRequest"
+      responses:
+        "200":
+          description: Updated area
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AreaResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete an area and optionally move its responsibilities
+      operationId: deleteResponsibilityArea
+      parameters:
+        - name: moveToAreaId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Deleted area and any moved responsibilities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAreaResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/responsibility-dashboard:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    get:
+      summary: Read the dashboard conversation state
+      operationId: getResponsibilityDashboard
+      parameters:
+        - name: ownerUserId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dashboard conversation and proposal state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardState"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/responsibility-dashboard/versions:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    get:
+      summary: Read saved dashboard versions and checkpoint manual changes
+      operationId: getResponsibilityDashboardVersions
+      parameters:
+        - name: ownerUserId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Newest dashboard versions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardVersionsResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/responsibility-dashboard/conversation:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    post:
+      summary: Start or reopen a dashboard conversation
+      operationId: startDashboardConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartDashboardConversationRequest"
+      responses:
+        "200":
+          description: The conversation task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardConversationTask"
+        "201":
+          description: The created conversation task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardConversationTask"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/issues/{id}/dashboard-changes:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Propose an ordered dashboard change set
+      operationId: proposeDashboardChanges
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposeDashboardChangesRequest"
+      responses:
+        "201":
+          description: The proposed interaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardInteraction"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/issues/{id}/dashboard-changes/{interactionId}/accept:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: interactionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Apply all or selected dashboard changes
+      operationId: acceptDashboardChanges
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptDashboardChangesRequest"
+      responses:
+        "200":
+          description: Applied interaction and saved version
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardDecisionResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/issues/{id}/dashboard-changes/{interactionId}/decline:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: interactionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Decline a dashboard change set
+      operationId: declineDashboardChanges
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Declined interaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardInteraction"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/responsibility-dashboard-versions/{id}/restore:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Restore a saved dashboard version
+      operationId: restoreDashboardVersion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Restored areas and responsibilities with the new version
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardRestoreResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/responsibilities/status-reports:
+    parameters:
+      - $ref: "#/components/parameters/CompanyId"
+    get:
+      summary: Read current reports for active responsibilities
+      operationId: getResponsibilityStatusReportsOverview
+      parameters:
+        - name: ownerUserId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current reports, reporters, update requests, and freshness window
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusReportsOverview"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/responsibilities/{id}/status-report:
+    parameters:
+      - $ref: "#/components/parameters/ResponsibilityId"
+    get:
+      summary: Read one responsibility's current report, reporter, request state, and history
+      operationId: getResponsibilityStatusReport
+      responses:
+        "200":
+          description: Status report state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusReportState"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Write a status report
+      operationId: writeResponsibilityStatusReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WriteStatusReportRequest"
+      responses:
+        "201":
+          description: The new status report state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusReportState"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/responsibilities/{id}/status-report/request:
+    parameters:
+      - $ref: "#/components/parameters/ResponsibilityId"
+    post:
+      summary: Ask the reporter for an update
+      operationId: requestResponsibilityStatusUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Status report state with the request recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusReportState"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+components:
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ResponsibilityId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: The actor lacks company access or owner authority
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: The feature is off, the row is absent, or the row is outside the actor's owner scope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: The responsibility is not active or an update request is already open
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: The request cannot be applied to this dashboard
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      additionalProperties: true
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: INVALID_INPUT
+        message:
+          type: string
+        remediation:
+          type: string
+    ResponsibilityStatus:
+      type: string
+      enum: [proposed, active, let_go, dismissed]
+    AreaStatus:
+      type: string
+      enum: [proposed, active, archived]
+    HealthStatus:
+      type: string
+      enum: [behind, at_risk, on_track, not_measured]
+    MetricKind:
+      type: string
+      enum: [volume, percentage, yes_no, range]
+    MetricDirection:
+      type: string
+      enum: [at_least, at_most]
+    Responsibility:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, ownerUserId, title, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        ownerUserId:
+          type: string
+        areaId:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          maxLength: 200
+        standard:
+          type: string
+          nullable: true
+        metricKind:
+          allOf:
+            - $ref: "#/components/schemas/MetricKind"
+          nullable: true
+        metricName:
+          type: string
+          nullable: true
+        metricUnit:
+          type: string
+          nullable: true
+        metricTarget:
+          type: number
+          nullable: true
+        metricLow:
+          type: number
+          nullable: true
+        metricHigh:
+          type: number
+          nullable: true
+        metricCurrent:
+          type: number
+          nullable: true
+        metricDirection:
+          allOf:
+            - $ref: "#/components/schemas/MetricDirection"
+          nullable: true
+        metricUpdatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: "#/components/schemas/ResponsibilityStatus"
+        source:
+          type: string
+          enum: [manual, onboarding]
+        health:
+          allOf:
+            - $ref: "#/components/schemas/HealthStatus"
+          nullable: true
+        computedHealth:
+          $ref: "#/components/schemas/HealthStatus"
+        healthOverride:
+          type: string
+          enum: [behind, at_risk, on_track]
+          nullable: true
+        healthNote:
+          type: string
+          nullable: true
+        runByAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        sortOrder:
+          type: integer
+        proposedByAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ResponsibilityWithRollup:
+      allOf:
+        - $ref: "#/components/schemas/Responsibility"
+        - type: object
+          additionalProperties: true
+          properties:
+            signals:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            openTasks:
+              type: integer
+            agentTasks:
+              type: integer
+            blockedTasks:
+              type: integer
+            projects:
+              type: integer
+            lateProjects:
+              type: integer
+            agentsWorking:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+    ResponsibilityDetail:
+      allOf:
+        - $ref: "#/components/schemas/ResponsibilityWithRollup"
+        - type: object
+          additionalProperties: true
+          properties:
+            area:
+              $ref: "#/components/schemas/ResponsibilityArea"
+            links:
+              type: array
+              items:
+                $ref: "#/components/schemas/ResponsibilityLink"
+            skills:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            artifacts:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+    ResponsibilityOverview:
+      type: object
+      additionalProperties: true
+      required: [ownerUserId, areas, responsibilities, proposals, totals]
+      properties:
+        ownerUserId:
+          type: string
+        areas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsibilityArea"
+        responsibilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsibilityWithRollup"
+        proposals:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsibilityWithRollup"
+        totals:
+          type: object
+          additionalProperties: true
+        looseWork:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    ResponsibilityArea:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, title, status, source]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        ownerUserId:
+          type: string
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/AreaStatus"
+        source:
+          type: string
+          enum: [manual, onboarding]
+        proposedByAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        sortOrder:
+          type: integer
+    CreateResponsibilityRequest:
+      type: object
+      additionalProperties: true
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        ownerUserId:
+          type: string
+        areaId:
+          type: string
+          format: uuid
+        areaTitle:
+          type: string
+          maxLength: 200
+        standard:
+          type: string
+        metricKind:
+          $ref: "#/components/schemas/MetricKind"
+        metricName:
+          type: string
+        metricUnit:
+          type: string
+        metricTarget:
+          type: number
+        metricLow:
+          type: number
+        metricHigh:
+          type: number
+        metricCurrent:
+          type: number
+        metricDirection:
+          $ref: "#/components/schemas/MetricDirection"
+        evidence:
+          type: string
+    UpdateResponsibilityRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        standard:
+          type: string
+        areaId:
+          type: string
+          format: uuid
+        areaTitle:
+          type: string
+          maxLength: 200
+        status:
+          $ref: "#/components/schemas/ResponsibilityStatus"
+        healthOverride:
+          type: string
+          enum: [behind, at_risk, on_track]
+          nullable: true
+        healthNote:
+          type: string
+          nullable: true
+        runByAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        sortOrder:
+          type: integer
+        metricCurrent:
+          type: number
+    ResponsibilityLink:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, responsibilityId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        responsibilityId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+          nullable: true
+        issueId:
+          type: string
+          format: uuid
+          nullable: true
+        routineId:
+          type: string
+          format: uuid
+          nullable: true
+        skillId:
+          type: string
+          format: uuid
+          nullable: true
+    LinkResponse:
+      type: object
+      additionalProperties: true
+      required: [link]
+      properties:
+        link:
+          $ref: "#/components/schemas/ResponsibilityLink"
+    LinkResponsibilityRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        projectId:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        routineId:
+          type: string
+          format: uuid
+        skillId:
+          type: string
+          format: uuid
+        removeFrom:
+          type: array
+          items:
+            type: string
+            format: uuid
+    FileItem:
+      type: object
+      additionalProperties: true
+      required: [kind, id]
+      properties:
+        kind:
+          type: string
+          enum: [project, task, routine, skill]
+        id:
+          type: string
+          format: uuid
+    FileResponsibilityRequest:
+      type: object
+      additionalProperties: true
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileItem"
+        move:
+          type: boolean
+    UnfileResponsibilityRequest:
+      type: object
+      additionalProperties: true
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileItem"
+    FileResult:
+      type: object
+      additionalProperties: true
+      properties:
+        linked:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsibilityLink"
+        removed:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsibilityLink"
+    DelegateResponsibilityRequest:
+      type: object
+      additionalProperties: true
+      required: [title, assigneeAgentId]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        assigneeAgentId:
+          type: string
+          format: uuid
+        mode:
+          type: string
+          enum: [work_with_me, own_from_now_on]
+        instructions:
+          type: string
+    DelegatedTask:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, title]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          type: string
+        assigneeAgentId:
+          type: string
+          format: uuid
+    LinkLookupResponse:
+      type: object
+      additionalProperties: true
+      required: [responsibilities]
+      properties:
+        responsibilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Responsibility"
+    AreasResponse:
+      type: object
+      additionalProperties: true
+      required: [areas]
+      properties:
+        areas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsibilityArea"
+    AreaResponse:
+      type: object
+      additionalProperties: true
+      required: [area]
+      properties:
+        area:
+          $ref: "#/components/schemas/ResponsibilityArea"
+    CreateAreaRequest:
+      type: object
+      additionalProperties: true
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        ownerUserId:
+          type: string
+    UpdateAreaRequest:
+      type: object
+      additionalProperties: true
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+        status:
+          $ref: "#/components/schemas/AreaStatus"
+    DeleteAreaResult:
+      type: object
+      additionalProperties: true
+      properties:
+        area:
+          $ref: "#/components/schemas/ResponsibilityArea"
+        moved:
+          type: array
+          items:
+            $ref: "#/components/schemas/Responsibility"
+    DashboardState:
+      type: object
+      additionalProperties: true
+      properties:
+        empty:
+          type: boolean
+        mode:
+          type: string
+          enum: [create, edit]
+        conversation:
+          $ref: "#/components/schemas/DashboardConversationTask"
+        proposal:
+          $ref: "#/components/schemas/DashboardInteraction"
+    DashboardConversationTask:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        assigneeAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        originKind:
+          type: string
+        originId:
+          type: string
+          nullable: true
+        responsibleUserId:
+          type: string
+          nullable: true
+    StartDashboardConversationRequest:
+      type: object
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          enum: [create, edit]
+        ownerUserId:
+          type: string
+        agentId:
+          type: string
+          format: uuid
+    DashboardChange:
+      type: object
+      additionalProperties: true
+      required: [op]
+      properties:
+        op:
+          type: string
+          enum: [add_area, rename_area, remove_area, add_responsibility, reword_responsibility, move_responsibility, remove_responsibility]
+        ref:
+          type: string
+        name:
+          type: string
+        areaId:
+          type: string
+          format: uuid
+        areaRef:
+          type: string
+        responsibilityId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        standard:
+          type: string
+        reason:
+          type: string
+        dependsOn:
+          type: integer
+        index:
+          type: integer
+    ProposeDashboardChangesRequest:
+      type: object
+      additionalProperties: false
+      required: [changes]
+      properties:
+        message:
+          type: string
+          maxLength: 500
+        changes:
+          type: array
+          minItems: 1
+          maxItems: 60
+          items:
+            $ref: "#/components/schemas/DashboardChange"
+    AcceptDashboardChangesRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        keep:
+          type: array
+          minItems: 1
+          maxItems: 60
+          items:
+            type: integer
+            minimum: 0
+            maximum: 59
+    DashboardInteraction:
+      type: object
+      additionalProperties: true
+      required: [id, issueId, kind, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          example: propose_dashboard_changes
+        status:
+          type: string
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardChange"
+    DashboardDecisionResult:
+      type: object
+      additionalProperties: true
+      properties:
+        interaction:
+          $ref: "#/components/schemas/DashboardInteraction"
+        version:
+          $ref: "#/components/schemas/DashboardVersion"
+        dropped:
+          type: array
+          items:
+            type: integer
+    DashboardVersion:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, ownerUserId, cause, snapshot]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        ownerUserId:
+          type: string
+        cause:
+          type: string
+          enum: [change_set, person, restore]
+        summary:
+          type: string
+        snapshot:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    DashboardVersionsResponse:
+      type: object
+      additionalProperties: true
+      required: [versions]
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardVersion"
+    DashboardRestoreResult:
+      type: object
+      additionalProperties: true
+      properties:
+        version:
+          $ref: "#/components/schemas/DashboardVersion"
+        areas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsibilityArea"
+        responsibilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Responsibility"
+    StatusReportStatus:
+      type: string
+      enum: [behind, at_risk, on_track, unknown]
+    WriteStatusReportRequest:
+      type: object
+      additionalProperties: false
+      required: [status, message]
+      properties:
+        status:
+          $ref: "#/components/schemas/StatusReportStatus"
+        message:
+          type: string
+          minLength: 3
+          maxLength: 200
+          description: One plain line saying why
+        detail:
+          type: string
+          minLength: 1
+          maxLength: 800
+          description: Optional detail with at most four non-empty lines
+    StatusReportEntry:
+      type: object
+      additionalProperties: true
+      required: [status, message, agentId, userId, writtenAt]
+      properties:
+        status:
+          $ref: "#/components/schemas/StatusReportStatus"
+        message:
+          type: string
+        agentId:
+          type: string
+          format: uuid
+          nullable: true
+        userId:
+          type: string
+          nullable: true
+        writtenAt:
+          type: string
+          format: date-time
+    StatusReportCurrent:
+      allOf:
+        - $ref: "#/components/schemas/StatusReportEntry"
+        - type: object
+          additionalProperties: true
+          required: [detail, outOfDate]
+          properties:
+            detail:
+              type: string
+              nullable: true
+            outOfDate:
+              type: boolean
+    StatusReportState:
+      type: object
+      additionalProperties: true
+      required: [current, reporterAgentId, updateRequested, history]
+      properties:
+        current:
+          allOf:
+            - $ref: "#/components/schemas/StatusReportCurrent"
+          nullable: true
+        reporterAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        updateRequested:
+          type: boolean
+        history:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/StatusReportEntry"
+    StatusReportSummary:
+      type: object
+      additionalProperties: true
+      required: [responsibilityId, current, reporterAgentId, reporterBasis, updateRequested]
+      properties:
+        responsibilityId:
+          type: string
+          format: uuid
+        current:
+          allOf:
+            - $ref: "#/components/schemas/StatusReportCurrent"
+          nullable: true
+        reporterAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        reporterBasis:
+          type: string
+          enum: [works_under, top_agent, first_agent]
+          nullable: true
+        updateRequested:
+          type: boolean
+    StatusReportsOverview:
+      type: object
+      additionalProperties: true
+      required: [ownerUserId, freshDays, reports]
+      properties:
+        ownerUserId:
+          type: string
+        freshDays:
+          type: integer
+          example: 7
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusReportSummary"

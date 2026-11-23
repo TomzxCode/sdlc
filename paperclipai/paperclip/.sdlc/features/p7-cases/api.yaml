@@ -1,0 +1,1353 @@
+# OpenAPI 3 contract for Cases and Pipeline Cases.
+# Normative API definition referenced by specification.md.
+# Generated from code evidence during /sync-sdlc on 2026-11-23.
+openapi: 3.1.0
+info:
+  title: "Cases and Pipeline Cases API"
+  version: 0.1.0
+  description: >
+    Company-scoped REST surface for case records, case documents, case history,
+    and durable agent handoffs. Pipeline case tables are documented in the
+    specification but have no active route in this evidence.
+paths:
+  /api/companies/{companyId}/cases:
+    post:
+      operationId: createOrUpsertCase
+      summary: Create or idempotently update a case
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCaseRequest"
+      responses:
+        "200":
+          description: Existing case updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetail"
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    get:
+      operationId: listCases
+      summary: List authorized cases with filters and pagination
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+        - name: type
+          in: query
+          schema:
+            type: string
+            maxLength: 120
+        - name: types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: status
+          in: query
+          description: A status name or the value active for nonterminal cases
+          schema:
+            type: string
+            maxLength: 120
+        - name: statuses
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: project
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: projectId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: projectIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+        - name: includeNoProject
+          in: query
+          schema:
+            type: string
+            enum: ["true", "false", "1", "0"]
+        - name: label
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: labelId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: parent
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - name: includeAncestors
+          in: query
+          schema:
+            type: string
+            enum: ["true", "false", "1", "0"]
+        - name: sortField
+          in: query
+          schema:
+            type: string
+            enum: [updated, created, title, status, type]
+            default: updated
+        - name: sortDir
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: groupBy
+          in: query
+          schema:
+            type: string
+            enum: [none, status, type, project]
+            default: none
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100000
+            default: 0
+      responses:
+        "200":
+          description: Authorized case page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CasePage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/companies/{companyId}/cases/types:
+    get:
+      operationId: listCaseTypes
+      summary: Discover readable case types
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Sorted readable case types
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseTypes"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/cases/{id}:
+    get:
+      operationId: readCase
+      summary: Read case detail or a bounded native read page
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - name: includeDocumentBodies
+          in: query
+          schema:
+            type: string
+            enum: ["true", "false", "1", "0"]
+        - name: agentRead
+          in: query
+          schema:
+            type: string
+            enum: ["true", "1"]
+        - name: section
+          in: query
+          schema:
+            type: string
+            enum: [case, fields, document]
+        - name: documentKey
+          in: query
+          schema:
+            type: string
+            maxLength: 120
+        - name: documentIssueId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: offsetBytes
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limitBytes
+          in: query
+          schema:
+            type: integer
+            minimum: 4
+            maximum: 8192
+        - name: snapshot
+          in: query
+          schema:
+            type: string
+            pattern: "^[a-f0-9]{64}$"
+      responses:
+        "200":
+          description: Case detail or bounded read page
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CaseDetail"
+                  - $ref: "#/components/schemas/CaseReadPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    patch:
+      operationId: patchCase
+      summary: Patch case metadata, status, fields, parent, and labels
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchCaseRequest"
+      responses:
+        "200":
+          description: Updated case detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/cases/{id}/events:
+    get:
+      operationId: listCaseEvents
+      summary: Read case history events
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+      responses:
+        "200":
+          description: Case history events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseEventList"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/documents/{key}:
+    get:
+      operationId: readCaseDocument
+      summary: Read a case document body and metadata
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+      responses:
+        "200":
+          description: Case document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDocument"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: upsertCaseDocument
+      summary: Upsert a case document revision
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertCaseDocumentRequest"
+      responses:
+        "200":
+          description: Updated case document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDocument"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      operationId: deleteCaseDocument
+      summary: Delete a case document link and document
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+      responses:
+        "200":
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MutationResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/documents/{key}/revisions:
+    get:
+      operationId: listCaseDocumentRevisions
+      summary: List document revisions with actor and run attribution
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+      responses:
+        "200":
+          description: Document revisions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentRevision"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/documents/{key}/lock:
+    post:
+      operationId: lockCaseDocument
+      summary: Lock a document through shared document controls
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+      responses:
+        "200":
+          description: Lock result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MutationResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/documents/{key}/unlock:
+    post:
+      operationId: unlockCaseDocument
+      summary: Unlock a document through shared document controls
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+      responses:
+        "200":
+          description: Unlock result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MutationResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/documents/{key}/revisions/{revisionId}/restore:
+    post:
+      operationId: restoreCaseDocumentRevision
+      summary: Restore a document revision
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+        - $ref: "#/components/parameters/RevisionId"
+      responses:
+        "200":
+          description: Restored document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDocument"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/cases/{id}/documents/{key}/annotations:
+    get:
+      operationId: listCaseDocumentAnnotations
+      summary: List annotation threads for a case document
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, resolved, all]
+            default: open
+      responses:
+        "200":
+          description: Annotation threads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnnotationThread"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: createCaseDocumentAnnotation
+      summary: Create an annotation thread on a case document
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnotationThreadRequest"
+      responses:
+        "201":
+          description: Created annotation thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnnotationThread"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/documents/{key}/annotations/{threadId}:
+    get:
+      operationId: readCaseDocumentAnnotation
+      summary: Read one annotation thread
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+        - $ref: "#/components/parameters/ThreadId"
+      responses:
+        "200":
+          description: Annotation thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnnotationThread"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateCaseDocumentAnnotation
+      summary: Resolve or reopen an annotation thread
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+        - $ref: "#/components/parameters/ThreadId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnotationThreadRequest"
+      responses:
+        "200":
+          description: Updated annotation thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnnotationThread"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/documents/{key}/annotations/{threadId}/comments:
+    post:
+      operationId: commentOnCaseDocumentAnnotation
+      summary: Reply to an annotation thread
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/DocumentKey"
+        - $ref: "#/components/parameters/ThreadId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnotationCommentRequest"
+      responses:
+        "201":
+          description: Created annotation comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnnotationComment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/links:
+    post:
+      operationId: linkTaskToCase
+      summary: Link a task to a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueLinkRequest"
+      responses:
+        "200":
+          description: Link result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MutationResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{id}/attachments:
+    post:
+      operationId: attachAssetToCase
+      summary: Attach an uploaded asset to a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Attachment result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MutationResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/issues/{issueId}/cases:
+    get:
+      operationId: listCasesForIssue
+      summary: List cases linked to a task
+      parameters:
+        - $ref: "#/components/parameters/IssueId"
+      responses:
+        "200":
+          description: Linked cases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CasePage"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/companies/{companyId}/case-handoffs:
+    post:
+      operationId: createCaseHandoff
+      summary: Start, replay, or complete a handoff
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HandoffRequest"
+      responses:
+        "200":
+          description: Replayed or already settled handoff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseHandoffResult"
+        "202":
+          description: Handoff accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseHandoffResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+  /api/cases/{caseId}/handoffs:
+    get:
+      operationId: listCaseHandoffs
+      summary: List handoff history for a case
+      parameters:
+        - $ref: "#/components/parameters/CasePathId"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: before
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: cursor
+          in: query
+          schema:
+            type: string
+            maxLength: 400
+      responses:
+        "200":
+          description: Handoff history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CaseHandoff"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/cases/{caseId}/handoffs/{handoffId}/retry:
+    post:
+      operationId: retryCaseHandoff
+      summary: Retry pending delivery without creating new work
+      parameters:
+        - $ref: "#/components/parameters/CasePathId"
+        - $ref: "#/components/parameters/HandoffId"
+      responses:
+        "200":
+          description: Retry result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MutationResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/cases/{caseId}/handoffs/{handoffId}/cancel:
+    post:
+      operationId: cancelCaseHandoff
+      summary: Cancel pending delivery without reversing an applied assignment
+      parameters:
+        - $ref: "#/components/parameters/CasePathId"
+        - $ref: "#/components/parameters/HandoffId"
+      responses:
+        "200":
+          description: Cancellation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MutationResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+components:
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CaseId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CasePathId:
+      name: caseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DocumentKey:
+      name: key
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 120
+    RevisionId:
+      name: revisionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ThreadId:
+      name: threadId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IssueId:
+      name: issueId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    HandoffId:
+      name: handoffId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Company access, case authorization, or feature gate denied the request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource absent or hidden from the actor
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Snapshot, revision, or concurrent mutation conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: Handoff policy or workflow seed rejected
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      additionalProperties: true
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [INVALID_INPUT, FORBIDDEN, cases_disabled, NOT_FOUND, CONFLICT, UNPROCESSABLE]
+        message:
+          type: string
+        remediation:
+          type: string
+    CaseDetail:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, identifier, caseType, title, status, fields]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        caseType:
+          type: string
+        key:
+          type: string
+          nullable: true
+        title:
+          type: string
+        summary:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [draft, in_progress, in_review, approved, done, cancelled]
+        phase:
+          type: string
+          nullable: true
+        fields:
+          type: object
+          additionalProperties: true
+        handoffVersion:
+          type: integer
+        projectId:
+          type: string
+          format: uuid
+          nullable: true
+        workIssueId:
+          type: string
+          format: uuid
+          nullable: true
+        parentCaseId:
+          type: string
+          format: uuid
+          nullable: true
+    CasePage:
+      type: array
+      items:
+        $ref: "#/components/schemas/CaseDetail"
+    CaseTypes:
+      type: array
+      items:
+        type: string
+    CaseReadPage:
+      type: object
+      additionalProperties: true
+      required: [readPage]
+      properties:
+        readPage:
+          type: object
+          required: [text, snapshot, nextOffsetBytes]
+          properties:
+            text:
+              type: string
+            snapshot:
+              type: string
+            nextOffsetBytes:
+              type: integer
+              nullable: true
+    CaseEvent:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, caseId, kind, actorType, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        caseId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+        actorType:
+          type: string
+          enum: [user, agent, system]
+        payload:
+          type: object
+          additionalProperties: true
+        actorAgentName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    CaseEventList:
+      type: array
+      items:
+        $ref: "#/components/schemas/CaseEvent"
+    CaseDocument:
+      type: object
+      additionalProperties: true
+      required: [id, key, body]
+      properties:
+        id:
+          type: string
+          format: uuid
+        key:
+          type: string
+        title:
+          type: string
+          nullable: true
+        format:
+          type: string
+        body:
+          type: string
+        latestRevisionId:
+          type: string
+          format: uuid
+          nullable: true
+        latestRevisionNumber:
+          type: integer
+          nullable: true
+    DocumentRevision:
+      type: object
+      additionalProperties: true
+      required: [id, body]
+      properties:
+        id:
+          type: string
+          format: uuid
+        body:
+          type: string
+        revisionNumber:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        actorAgentName:
+          type: string
+          nullable: true
+    AnnotationThread:
+      type: object
+      additionalProperties: true
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        selectedText:
+          type: string
+        currentRevisionNumber:
+          type: integer
+    AnnotationThreadRequest:
+      type: object
+      additionalProperties: true
+      description: Shared document annotation thread schema from packages/shared source.
+    AnnotationComment:
+      type: object
+      additionalProperties: true
+      required: [id, threadId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        threadId:
+          type: string
+          format: uuid
+        body:
+          type: string
+    AnnotationCommentRequest:
+      type: object
+      additionalProperties: true
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+    MutationResult:
+      type: object
+      additionalProperties: true
+      description: Route specific mutation receipt with affected identifiers.
+    CreateCaseRequest:
+      type: object
+      additionalProperties: false
+      required: [caseType, title]
+      properties:
+        projectId:
+          type: string
+          format: uuid
+          nullable: true
+        caseType:
+          type: string
+          minLength: 1
+          maxLength: 120
+        key:
+          type: string
+          minLength: 1
+          maxLength: 512
+          nullable: true
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        summary:
+          type: string
+          maxLength: 8000
+          nullable: true
+        status:
+          type: string
+          enum: [draft, in_progress, in_review, approved, done, cancelled]
+        fields:
+          type: object
+          additionalProperties: true
+        parentCaseId:
+          type: string
+          format: uuid
+          nullable: true
+    PatchCaseRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        projectId:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        summary:
+          type: string
+          maxLength: 8000
+          nullable: true
+        status:
+          type: string
+          enum: [draft, in_progress, in_review, approved, done, cancelled]
+        fields:
+          type: object
+          additionalProperties: true
+        parentCaseId:
+          type: string
+          format: uuid
+          nullable: true
+        labels:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            format: uuid
+        labelIds:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            format: uuid
+    IssueLinkRequest:
+      type: object
+      additionalProperties: false
+      required: [issueId, role]
+      properties:
+        issueId:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [origin, work, reference]
+    UpsertCaseDocumentRequest:
+      type: object
+      additionalProperties: false
+      required: [body]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        format:
+          type: string
+          minLength: 1
+          maxLength: 80
+          default: markdown
+        body:
+          type: string
+          maxLength: 200000
+        changeSummary:
+          type: string
+          maxLength: 1000
+          nullable: true
+        baseRevisionId:
+          type: string
+          format: uuid
+          nullable: true
+    HandoffRequest:
+      oneOf:
+        - $ref: "#/components/schemas/AgentCaseHandoffRequest"
+        - $ref: "#/components/schemas/DoneCaseHandoffRequest"
+    AgentCaseHandoffRequest:
+      type: object
+      additionalProperties: false
+      required: [idempotencyKey, case, toAgentId, phase, instructions]
+      properties:
+        idempotencyKey:
+          type: string
+          minLength: 1
+          maxLength: 240
+        case:
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required: [id]
+              properties:
+                id:
+                  type: string
+                  format: uuid
+            - type: object
+              additionalProperties: false
+              required: [create]
+              properties:
+                create:
+                  type: object
+                  additionalProperties: false
+                  required: [caseType, title]
+                  properties:
+                    caseType:
+                      type: string
+                      maxLength: 120
+                    title:
+                      type: string
+                      maxLength: 500
+                    summary:
+                      type: string
+                      maxLength: 8000
+                    fields:
+                      type: object
+                      additionalProperties: true
+                    projectId:
+                      type: string
+                      format: uuid
+                      nullable: true
+        toAgentId:
+          type: string
+          format: uuid
+        phase:
+          type: string
+          minLength: 1
+          maxLength: 120
+        instructions:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        expectedHandoffVersion:
+          type: integer
+          minimum: 0
+        expectedIssueStatusVersion:
+          type: integer
+          minimum: 0
+        bindIssueId:
+          type: string
+          format: uuid
+        initialDocuments:
+          type: array
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/CaseInitialDocument"
+        workflow_document_text:
+          type: string
+          minLength: 1
+          maxLength: 200000
+        workflowId:
+          type: string
+          format: uuid
+          nullable: true
+    DoneCaseHandoffRequest:
+      type: object
+      additionalProperties: false
+      required: [to, idempotencyKey, case, phase, instructions, expectedHandoffVersion, expectedIssueStatusVersion]
+      properties:
+        to:
+          type: string
+          enum: [done]
+        idempotencyKey:
+          type: string
+          minLength: 1
+          maxLength: 240
+        case:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+        phase:
+          type: string
+          enum: [done]
+        instructions:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        expectedHandoffVersion:
+          type: integer
+          minimum: 0
+        expectedIssueStatusVersion:
+          type: integer
+          minimum: 0
+    CaseInitialDocument:
+      type: object
+      additionalProperties: false
+      required: [key, title, body]
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 120
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        body:
+          type: string
+    CaseHandoffResult:
+      type: object
+      additionalProperties: true
+      required: [handoffId, caseId, taskId, handoffVersion, state, replayed]
+      properties:
+        handoffId:
+          type: string
+          format: uuid
+        caseId:
+          type: string
+          format: uuid
+        taskId:
+          type: string
+          format: uuid
+        taskIdentifier:
+          type: string
+        handoffVersion:
+          type: integer
+        destinationKind:
+          type: string
+          enum: [agent, done]
+        state:
+          type: string
+          enum: [awaiting_release, pending_dispatch, delivered, awaiting_completion, completed, cancelled]
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        callerMustYield:
+          type: boolean
+        replayed:
+          type: boolean
+    CaseHandoff:
+      type: object
+      additionalProperties: true
+      required: [id, companyId, caseId, issueId, version, state]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        caseId:
+          type: string
+          format: uuid
+        issueId:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        fromAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        destinationKind:
+          type: string
+          enum: [agent, done]
+        toAgentId:
+          type: string
+          format: uuid
+          nullable: true
+        phase:
+          type: string
+        instructions:
+          type: string
+        actorType:
+          type: string
+          enum: [agent, user, system]
+        actorId:
+          type: string
+        state:
+          type: string
+          enum: [awaiting_release, pending_dispatch, delivered, awaiting_completion, completed, cancelled]
+        attemptCount:
+          type: integer
+        nextAttemptAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
