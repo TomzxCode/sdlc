@@ -1,6 +1,6 @@
-agents_ref: 31f0fc756d0bbeddde013a51985880c24139f7a8
+agents_ref: c21886950f9287841ac4c46dee793f3437f88cc3
 agents_remote: https://github.com/tomzx/agents
-last_synced: 2026-11-16
+last_synced: 2026-11-23
 code_ref: df8754820e16a8f233e4e91bae0aa844a1288886
 code_index:
   "p1-scheduled-loop-engine":
