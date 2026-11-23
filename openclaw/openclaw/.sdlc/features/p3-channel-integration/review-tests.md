@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Test plan review: Channel Integration
@@ -138,3 +138,55 @@ The artifacts were not edited during this sync, so every finding from 2026-10-19
 - Code says: `src/channels/` holds well over 1,000 test files, and `extensions/` adds more per channel.
 - Code says: unlisted areas include `src/channels/message-access/message-access.test.ts`, `identifier-authentication.test.ts`, `src/channels/plugins/pairing-adapters.test.ts`, and the `plugin.registry-backed-shard-*.contract.test.ts` files.
 - Impact: the plan still under-represents the channel system by a wide margin.
+
+## Sync drift: 2026-11-23
+
+A fresh analysis against current code confirms the deleted paths and coverage gaps recorded earlier.
+The test plan was not edited during this sync, so those findings remain open.
+
+### Blocking: the FR-1 row still points at a deleted test file
+
+- Classification: blocking.
+- Artifact says (lines 20 and 52): `src/channels/plugins/outbound/direct-text-media.test.ts` is listed as unit coverage and as the FR-1 coverage row.
+- Code says: that test file does not exist, while `src/channels/plugins/outbound/direct-text-media.ts` does.
+- Code says: outbound contract coverage now lives in `src/channels/plugins/contracts/outbound-payload.contract.test.ts:1`, and delivery coverage in `src/channels/plugins/outbound/presentation-delivery.test.ts:1` and `src/channels/turn/run-channel-turn.delivery.test.ts:1`.
+- Impact: the reader still follows a path that returns nothing.
+
+### Blocking: the Telegram and Slack message adapter tests are still missing
+
+- Classification: blocking.
+- Artifact says (lines 28-29): `channel.message-adapter.test.ts` is listed for Telegram and Slack.
+- Code says: neither file exists.
+- Code says: Telegram coverage is split across `extensions/telegram/src/bot-message-context.*.test.ts` and `extensions/telegram/src/bot-handlers.inbound-pipeline.test.ts:1`, and Slack coverage across `extensions/slack/src/outbound-adapter.test.ts:1`, `extensions/slack/src/outbound-payload.test.ts:1`, `extensions/slack/src/message-action-dispatch.test.ts:1`, and `extensions/slack/src/channel.presentation.test.ts:1`.
+- Impact: two listed integration files still resolve to nothing.
+
+### Advisory (new): a replacement pointer from the 2026-10-19 review is now stale
+
+- Classification: advisory.
+- Prior review says (lines 40 and 100): Slack payload coverage lives in `extensions/slack/src/client-delivery.payload.test.ts`.
+- Code says: that file does not exist, while `extensions/slack/src/outbound-payload.test.ts:1` and `extensions/slack/src/client-delivery.upload.test.ts:17` do.
+- Impact: the drift record itself now needs correction before the next review.
+
+### Advisory: the four pointers flagged on 2026-11-16 remain missing
+
+- Classification: advisory.
+- Prior review says (lines 106-107): `src/channels/channel-health-monitor.test.ts`, `src/channels/channel-health-policy.test.ts`, `src/channels/plugins/message-action-dispatch.write-authority.test.ts`, and `src/pairing/pairing-store.test.ts` held coverage.
+- Code says: none of those four files exists.
+- Code says: health and retry coverage now lives in `src/channels/message/ingress-queue-health.test.ts:1` and `src/channels/message/ingress-retry-policy.test.ts:1`, and pairing coverage in `src/pairing/pairing-store-keys.test.ts:1`, `src/pairing/pairing-store.worker.test.ts:1`, and `src/pairing/pairing-allowlist.lifecycle.test.ts:1`.
+- Impact: four drift-record pointers are still stale.
+
+### Advisory: the coverage matrix and infrastructure description remain incomplete
+
+- Classification: advisory.
+- Artifact says (lines 50-58): the matrix covers FR-1 through FR-7 only, and lines 43-46 list generic infrastructure.
+- Code says: `src/channels/plugins/message-action-dispatch.registry.test.ts:1`, `src/channels/plugins/outbound/interactive.test.ts:1`, and the ingress suites cover FR-8 through FR-10 and NFR-1.
+- Code says: `src/channels/plugins/contracts/inbound-testkit.ts:1`, `src/channels/plugins/contracts/outbound-payload-testkit.ts:1`, `src/channels/message/ingress-drain.test-helpers.ts:1`, and `src/channels/message/ingress-monitor.test-harness.ts:1` are the harnesses a new channel test would use.
+- Code says: `src/channels/` now holds 224 `*.test.ts` files, including `src/channels/message-access/message-access.test.ts:1`, `src/channels/plugins/pairing-adapters.test.ts:1`, and eight `plugin.registry-backed-shard-*.contract.test.ts` files under `src/channels/plugins/contracts/`.
+- Impact: the plan still under-represents the channel system by a wide margin.
+
+### Advisory: the FR-3 row still points at a Control UI test
+
+- Classification: advisory.
+- Artifact says (line 54): FR-3 is covered in `markdown.test.ts` from the Control UI.
+- Code says: `ui/src/components/markdown.test.ts:1` covers the Control UI renderer, while channel markdown coverage lives in `extensions/discord/src/markdown.test.ts:1` and `extensions/feishu/src/markdown.test.ts:1`.
+- Impact: the parenthetical still names a file that does not cover the channel side.

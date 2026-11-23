@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -162,3 +162,47 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: the `CronJob` table lists only `id`, `schedule`, `model`, `tools`, `enabled`, and `last_run`.
 - What the code actually does: the persisted job carries execution windows, idle-only gating, owner and stream metadata, and report-only source identity fields.
 - Needed change: extend the replacement `CronJob` table in the pending drift with these fields and add an `activeHours` and `idleOnly` sub-model.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis of the code paths confirms the recorded drift still stands. No new discrepancy was found beyond the items below.
+
+### The webhook architecture block and WebhookConfig table are still stale
+
+- Status: BLOCKING
+- Evidence:
+  - `src/plugins/config-state.ts:31-34` retires the `webhooks` plugin id; `extensions/webhooks/` is absent.
+  - `src/gateway/hooks.ts:41` and lines 93-168 resolve the core `hooks` config into `/hooks` with a bearer token, body limits, mappings, and agent/session policy.
+  - `src/config/types.hooks.ts:26-28` defines `HooksConfig`; no `WebhookConfig` type exists in the repository.
+- Artifact still says: the diagram block "Webhook Receiver ... (extensions/webhooks/)", the `WebhookConfig` table with `id`, `path`, `agent_id`, and the Technical Decisions row "Webhook plugin | Extension (extensions/webhooks/) | Follows plugin architecture for optional functionality".
+- Needed change: replace the block and table with the core `hooks` config and `HooksConfig` shape, and rewrite the decision row to record that webhook ingress is core-owned.
+
+### The CronJob table still omits the current protocol fields
+
+- Status: BLOCKING
+- Evidence:
+  - `packages/gateway-protocol/src/schema/cron.ts:503-545` defines `CronJobSchema` with `declarationKey`, `owner`, `scheduledToolPolicy`, `trigger`, `sessionTarget`, `wakeMode`, `payload`, `delivery`, and failure-alert fields.
+  - `packages/gateway-protocol/src/schema/cron.ts:52-58` defines `CronScheduleSchema` as a union of six kinds, not a cron string.
+  - `activeHours` and `idleOnly` appear at lines 538-539; model and tool settings live on payload variants, not the job root.
+  - `src/cron/store/schema.ts` persists `job_json` and `state_json` in the shared state database.
+- Artifact still says: the `CronJob` table lists only `id`, `schedule` (cron expression string), `model`, `tools`, `enabled`, and `last_run`.
+- Needed change: replace the table with the current protocol shape and add payload, state, and execution-window sub-models.
+
+### `src/flows/` is still described as a multi-step flow engine
+
+- Status: BLOCKING
+- Evidence:
+  - `src/flows/` holds 144 doctor and setup files with no engine; `extensions/lobster/src/lobster-runner.ts` owns multi-step pipelines.
+  - `docs/automation/index.md:75` records the TaskFlow removal.
+- Artifact still says: "Flows (`src/flows/`) implement multi-step automation scripts typically used for doctor checks and setup."
+- Needed change: narrow the claim to doctor and setup flows, and attribute multi-step pipelines to the optional Lobster plugin.
+
+### Heartbeat migration, failure repair, and worker-backed storage are still missing from the architecture
+
+- Status: ADVISORY
+- Evidence:
+  - `src/cron/service/failure-repair-brief.ts:1` and `src/cron/service/notification-dispatch.ts:79-87` implement the repair-before-alert path.
+  - `docs/automation/cron-jobs/schedules.md:63` states no separate heartbeat runner is involved; `src/cron/default-proactive-job.worker.ts` provisions the default proactive check.
+  - `src/cron/store/load.worker.ts`, `src/cron/store/save.worker.ts`, and `src/cron/store/read-only.worker.ts` run store I/O in workers.
+- Artifact still says: the diagram ends at "Cron Service ... SQLite Store ... Isolated Agent Sessions", the persistence decision names "SQLite via Kysely" without shared-state and worker detail, and there is no repair or heartbeat-migration path.
+- Needed change: add the repair stage, the Doctor-driven heartbeat migration, and worker-backed shared-state persistence to the architecture.

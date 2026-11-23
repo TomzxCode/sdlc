@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Configuration System specification
@@ -112,4 +112,41 @@ The specification still understates the config shape, the schema delivery, the r
 
 - Specification.md:60 still presents one custom merge-patch stage.
 - Code: `src/config/merge-patch.ts`, the deep merge in `src/config/includes.ts`, and `src/config/runtime-write-application.ts` plus `src/config/config-journal-snapshot.ts` form several merge and write layers.
+- Classification: advisory.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against the current checkout confirms the 2026-10-19 drift is still open. Specification.md was left unchanged.
+
+### Blocking: the top-level data model still lists 8 keys and names two of them wrong
+
+- Specification.md:32-41 lists 8 top-level keys, including `logs` and `sandbox`.
+- Code: `src/config/zod-schema.root-shape.ts:70` starts `OpenClawSchemaShape`, which now has 48 top-level keys; `repositoryBranchPrefix` appears at line 424.
+- Code: there is no top-level `logs` key; `logging: LoggingConfigSchema` is at `src/config/zod-schema.root-shape.ts:112`.
+- Code: there is no top-level `sandbox` key; sandbox policy lives under `tools`, `security`, and per-agent settings.
+- Classification: blocking.
+
+### Blocking: the overview still claims a generated JSON Schema file
+
+- Specification.md:10 still says the zod schema generates a JSON Schema for IDE support.
+- Code: `scripts/generate-base-config-schema.ts:15` reports "runtime-computed; no generated file to write"; `src/config/schema-base.ts` computes the schema at runtime.
+- Code: `src/cli/config-cli.ts:465,485` exposes `openclaw config schema` and `openclaw config validate` as the operator surfaces.
+- Classification: blocking.
+
+### Advisory: the reload path still lives under src/gateway
+
+- Specification.md:47-52 still presents startup load as the whole flow.
+- Code: `src/gateway/config-reload.ts` owns hot reload with `config-reload-plan.ts`, `config-reload-recovery.ts`, and `config-reload-settings.ts`, while `src/config/source-file.ts` provides the file watcher.
+- Classification: advisory.
+
+### Advisory: the JSON-comments risk is still stale
+
+- Specification.md:68 still lists JSON comment support as a risk.
+- Code: `src/config/io.read-helpers.ts:141` parses through `parseJsonWithJson5Fallback` from `src/utils/parse-json-compat.ts:49`, so authored config accepts comments.
+- Classification: advisory.
+
+### Advisory: the merge model is still more than one custom merge-patch
+
+- Specification.md:60 still presents one custom merge-patch stage.
+- Code: `src/config/merge-patch.ts`, the deep merge applied in `src/config/includes.ts`, and `src/config/runtime-write-application.ts` plus `src/config/config-journal-snapshot.ts` form several merge and write layers.
 - Classification: advisory.

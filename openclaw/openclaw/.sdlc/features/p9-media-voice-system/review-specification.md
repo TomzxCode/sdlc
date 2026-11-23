@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Media and Voice System specification
@@ -90,3 +90,37 @@ The specification was not changed since the 2026-10-19 review, so most recorded 
 
 - No artifact text changed, so the advisory findings about the realtime call path and the omission of webhook and ffmpeg risks still hold.
 - Advisory.
+
+## Sync drift: 2026-11-23
+
+The recorded code_ref 0eae4c0 is absent from this checkout, so this run verified the current tree at HEAD 78d2f2e70. The specification text is unchanged since the 2026-11-16 review, and every recorded discrepancy still holds. The concrete discrepancies are restated below against current code.
+
+### The architecture diagram still has no media understanding core (blocking)
+
+- Evidence: `specification.md:12-30` shows only "Media Generation Core" and "Voice/Audio Core". `src/media-understanding/` (91 files), `src/media/` (120 files), `packages/media-understanding-common/` (12 files), `packages/media-core/` (23 files), and `src/link-understanding/` (5 files) are all listed under p9 at `.sdlc/sync-meta.yml:83-100`.
+- The diagram omits the shared media runtime, the media core package, link understanding, and media understanding even though FR-8 belongs to this feature.
+
+### The voice call plugin is still drawn as a provider plugin (blocking)
+
+- Evidence: `specification.md:24-29` places `extensions/voice-call/` in the provider plugin column. `extensions/voice-call/src/tool-schema.ts:33-67` defines seven tool actions, `extensions/voice-call/src/cli-gateway-call.ts:21-29` defines nine `voicecall.*` RPC methods, and `extensions/voice-call/src/config.ts:284-298` defines five config blocks. The plugin also owns a CLI, a call manager, a webhook layer, and a realtime call path.
+- The diagram points a reader at a provider adapter where a telephony product surface lives.
+
+### The API contracts section still names none of the shipped surface (blocking)
+
+- Evidence: `specification.md:53` says only that capabilities are agent tools and not standalone HTTP endpoints. The shipped tools are `image_generate` at `src/agents/tools/image-generate-tool.ts:339`, `video_generate` at `src/agents/tools/video-generate-tool.ts:313`, `music_generate` at `src/agents/tools/music-generate-tool.ts:127`, `tts` at `src/agents/tools/tts-tool.ts:40`, plus the seven-action `voice_call` tool and nine `voicecall.*` RPC methods.
+- The section that should record the public contract names none of it.
+
+### The `TTSRequest` data model documents a type that does not exist (blocking)
+
+- Evidence: `specification.md:43-49` documents `TTSRequest` with `text`, `voice`, and `provider`. No such type exists. `src/tts/provider-types.ts:24-31` declares `SpeechSynthesisRequest` with `text`, `cfg`, `providerConfig`, `target`, `providerOverrides`, and `timeoutMs`. `src/tts/tts-types.ts:16-32` declares `ResolvedTtsConfig`. Voice selection is a persona or directive concern, not a request field.
+- The documented fields do not match either shipped type.
+
+### The `MediaGenerationRequest` data model documents a type that does not exist (blocking)
+
+- Evidence: `specification.md:36-41` documents `MediaGenerationRequest` with `prompt`, `provider`, `options`, and `stream`. A grep across `src/`, `packages/`, and `extensions/` finds no declaration. `src/image-generation/provider-types.ts:21-41` declares `ImageGenerationRequest` with provider, model, prompt, cfg, agentDir, authStore, timeoutMs, signal, count, size, aspectRatio, resolution, quality, outputFormat, background, inputImages, providerOptions, and ssrfPolicy. `src/media-generation/runtime-shared.ts:47-60` takes a request with `cfg`, `agentDir`, `modelOverride`, and `autoProviderFallback`. There is no `stream` flag.
+
+### Provider lists, technical decision, and risks carry forward (advisory)
+
+- The diagram at `specification.md:16-29` still omits `fish-audio-speech/`, `gradium/`, `inworld/`, `muse/`, `omlx/`, `azure-speech/`, `tts-local-cli/`, and the three meeting providers `google-meet/`, `zoom-meetings/`, and `teams-meetings/`.
+- The voice modality decision at `specification.md:61` still ignores the realtime call path in `extensions/voice-call/src/realtime-voice.runtime.ts:1`.
+- The risk list at `specification.md:65-66` still omits webhook signature verification, replay protection, and the ffmpeg limits in `src/media/ffmpeg-limits.ts:1`.

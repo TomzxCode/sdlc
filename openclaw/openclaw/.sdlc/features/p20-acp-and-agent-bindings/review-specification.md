@@ -1,8 +1,8 @@
 ---
 artifact: specification
 verdict: changes-requested
-reviewed_at: 2026-11-16
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+reviewed_at: 2026-11-23
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-11-16
@@ -51,3 +51,63 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: the `/acp` chat surface has exactly the twelve listed actions.
 - What the code actually does: reset-options, doctor, and install are available on the same surface.
 - Needed change: add the three actions to the summary row or note that the row is a subset.
+
+## Sync drift: 2026-11-23
+
+Fresh comparison against current code.
+All four findings from the 2026-11-16 section still hold.
+One new discrepancy was found.
+
+### The pinned ACP SDK version is still stale
+
+- Status: BLOCKING
+- Evidence:
+  - specification.md:14 says the bridge uses `@agentclientprotocol/sdk` 1.8.0.
+  - specification.md:357 repeats 1.8.0 in the Technical Decisions table.
+  - api.yaml:32 also names 1.8.0 as the pinned version.
+  - package.json:2442 declares "@agentclientprotocol/sdk": "2.1.0".
+- Artifact currently says: the pinned version is 1.8.0.
+- What the code actually does: the pinned version is 2.1.0.
+- Needed change: update specification.md:14, specification.md:357, and api.yaml:32 to name 2.1.0.
+
+### The route binding index module is still absent
+
+- Status: BLOCKING
+- Evidence:
+  - specification.md:22 names `src/routing/route-binding-index.ts` as the lookup module.
+  - specification.md:53 defines node `IDX[route-binding-index.ts]` in the architecture diagram.
+  - specification.md:339 and specification.md:344 declare a route-binding-index participant and send `getEvaluatedBindingsForChannelAccount` to it.
+  - The current `src/routing/` listing contains no `route-binding-index.ts`.
+  - src/routing/resolve-route.ts:57 holds the `WeakMap` cache, src/routing/resolve-route.ts:157 builds the index, and src/routing/resolve-route.ts:209 defines `getEvaluatedBindingsForChannelAccount`.
+- Artifact currently says: lookup bucketing lives in a separate module.
+- What the code actually does: `resolve-route.ts` owns the ordered candidate list and its lookup index in one cache generation.
+- Needed change: remove the separate module from the overview, the diagram, and the sequence, and attribute the index to `resolve-route.ts`.
+
+### The ledger budget citation is still wrong
+
+- Status: ADVISORY
+- Evidence:
+  - specification.md:150 cites `src/acp/event-ledger.types.ts` as the source of the budget defaults.
+  - src/acp/event-ledger.worker.ts:28-30 declares MAX_SESSIONS = 200, MAX_EVENTS_PER_SESSION = 5_000, and MAX_SERIALIZED_BYTES = 16 * 1024 * 1024.
+  - The declared values match the documented defaults.
+- Needed change: repoint the heading citation at `src/acp/event-ledger.worker.ts`.
+
+### The API summary still omits three ACP chat actions
+
+- Status: ADVISORY
+- Evidence:
+  - specification.md:244 lists twelve `/acp` actions.
+  - src/auto-reply/reply/commands-acp.ts:16-34 also registers reset-options, doctor, and install.
+- Needed change: add the three actions to the summary row or note that the row is a subset.
+
+### The configured ACP binding key is attributed to the wrong module
+
+- Status: ADVISORY
+- Evidence:
+  - specification.md:213 heads the table "Session key forms (`src/routing/session-key.ts`)".
+  - specification.md:222 lists the configured ACP binding key form in that table.
+  - No `acp:binding` literal appears in `src/routing/`.
+  - src/acp/persistent-bindings.types.ts:70 builds the agent, acp, binding, channel, account id, and hash segments of that key.
+- Artifact currently says: every listed session key form comes from `src/routing/session-key.ts`.
+- What the code actually does: the ACP binding key is built in the ACP persistent bindings types module.
+- Needed change: move that row under a heading citing `src/acp/persistent-bindings.types.ts`.

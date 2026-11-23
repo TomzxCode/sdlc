@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Plugin SDK and Extension System test plan
@@ -69,3 +69,28 @@ Fresh analysis confirms the discrepancies recorded on 2026-10-19 remain, since t
 ### Advisory: tests.md:31 still describes a single failing boundary test.
 
 - Enforcement is an inventory report plus narrower guardrail tests.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against current test code confirms the two blocking items and the advisories from 2026-10-19 and 2026-11-16 remain open, because tests.md is unchanged.
+
+### Blocking: tests.md:18 and tests.md:47 still cite `src/plugin-sdk/agent-core.test.ts`
+
+- No file exists at that path in the current tree.
+- `src/plugin-sdk/core.test.ts` exists and is the nearest remaining SDK-surface test.
+
+### Blocking: tests.md:52 still cites `extension-import-boundaries.test.ts`
+
+- No file with that name exists in the repo.
+- The boundary suites are `test/plugin-extension-import-boundary.test.ts`, `test/test-helper-extension-import-boundary.test.ts`, and `test/scripts/extension-import-boundary-checker.test.ts`.
+
+### Advisory: tests.md:31 still describes one failing boundary test
+
+- `scripts/check-plugin-extension-import-boundary.mts:1-3` inventories core imports into bundled extension files rather than failing as a test.
+- `src/plugins/loader-sdk-import-guardrails.test.ts` still provides the narrower guardrail assertions.
+
+### Advisory: tests.md still omits the test areas that dominate the current surface
+
+- `src/plugin-sdk/api-baseline.test.ts`, `src/plugin-sdk/facade-loader.test.ts`, `src/plugin-sdk/facade-runtime.activation.test.ts`, `src/plugin-sdk/channel-entry-contract.test.ts`, and `src/plugin-sdk/provider-entry.test.ts` all exist and are unlisted.
+- `src/plugins/install-managed-npm.ts`, `src/plugins/clawhub-archive-verification.ts`, and the installed-plugin index suites exist and are unlisted.
+- The shipped plugin testing utilities behind FR-8 still have no listed test file.

@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -126,3 +126,60 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: those 2026-10-19 entries remain open in this review file.
 - What the code actually does: the file rename and doctor contract observations still hold, while the A2UI build rows are obsolete.
 - Needed change: apply the still-relevant 2026-10-19 changes together with this drift.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against the current code confirms the 2026-11-16 drift is still open and unchanged.
+
+### A2UI test cases still have no code to exercise
+
+- Status: BLOCKING
+- Evidence:
+  - No `ui/src/e2e/board-a2ui.e2e.test.ts`, `scripts/bundle-a2ui.mts`, `scripts/copy-a2ui.mjs`, or `extensions/canvas/scripts/copy-a2ui.mjs` exists.
+  - `extensions/canvas/src/a2ui-jsonl.ts`, `extensions/canvas/src/board-widget.ts`, and the `src/host/a2ui-app/` renderer source are gone.
+  - `test/scripts/bundled-plugin-assets.test.ts` still covers generic bundled-plugin asset discovery but no A2UI dialect bundles.
+- Artifact currently says: TC-6 covers the v0.9 validator, TC-11 and TC-12 cover board kind resources, TC-24 covers lazy A2UI asset loading, and TC-37 through TC-44 cover the A2UI bundle and copy scripts.
+- What the code actually does: none of that A2UI-specific coverage can run because the code was retired.
+- Needed change: delete TC-6, TC-11, TC-12, TC-24, and TC-37 through TC-44, or replace them with HTML document host and `show_widget` validation cases.
+
+### Current test suites are still undocumented and the infrastructure section is stale
+
+- Status: BLOCKING
+- Evidence:
+  - Core suites exist at `src/canvas/constants.test.ts`, `src/canvas/documents.test.ts`, `src/canvas/widget-script-syntax.test.ts`, `src/canvas/widget-tool.test.ts`, `src/canvas/widget-tool.presenter.test.ts`, `src/canvas/widget-tool.prompt.test.ts`, and `src/canvas/wrap.test.ts`.
+  - Plugin suites exist at `extensions/canvas/index.test.ts`, `extensions/canvas/doctor-contract-api.test.ts`, `extensions/canvas/src/cli.test.ts`, `extensions/canvas/src/config.test.ts`, `extensions/canvas/src/config-migration.test.ts`, `extensions/canvas/src/tool.test.ts`, and `extensions/canvas/src/widget-presenter.test.ts`.
+  - `src/commands/doctor-a2ui-widgets.test.ts` covers the A2UI retirement repair.
+  - Control UI suites exist at `ui/src/app/canvas-surface-lease.test.ts`, `ui/src/components/canvas-widget-view.test.ts`, and `ui/src/components/canvas-widget-view-layout.test.ts`.
+  - The Test Infrastructure section says suites are colocated under `extensions/canvas/**/*.test.ts` and that prebuilt A2UI bundles are stubbed or resolved from the source asset tree.
+- Artifact currently says: 46 cases under one colocated Vitest convention with A2UI bundle stubs.
+- What the code actually does: coverage is spread across core, plugin, Doctor, and Control UI suites, and no A2UI bundles are built or stubbed.
+- Needed change: list the current suites, update the infrastructure section, and add the A2UI retirement repair coverage.
+
+### The end-to-end statement still needs a scope note
+
+- Status: ADVISORY
+- Evidence:
+  - `ui/src/e2e/chat-canvas-detail-width.e2e.test.ts`, `ui/src/e2e/chat-canvas-unavailable.e2e.test.ts`, and `ui/src/e2e/canvas-sandbox.test-support.ts` exist under `ui/src/e2e/`, outside the `p12-canvas-dynamic-ui` code index.
+  - The A2UI e2e suite cited in the 2026-10-19 review was deleted.
+- Artifact currently says: no dedicated end-to-end tests exist for this feature.
+- What the code actually does: plugin-owned A2UI e2e is gone, but Canvas widget e2e coverage exists under the Control UI.
+- Needed change: keep the statement for plugin-owned coverage and name the Control UI canvas e2e suites as out of scope or add them.
+
+### The coverage matrix is still stale
+
+- Status: BLOCKING
+- Evidence:
+  - FR-5 and FR-6 no longer exist as implemented requirements.
+  - The A2UI portions of the FR-7, FR-10, and NFR-3 rows have no code.
+  - The FR-9 row still maps to `extensions/canvas/doctor-contract-api.test.ts`, which remains correct.
+- Artifact currently says: the matrix assigns cases to FR-5, FR-6, A2UI-bearing rows, and the build-script row.
+- What the code actually does: the matrix no longer reflects the requirement set or the suite layout.
+- Needed change: rebuild the matrix against the revised requirements and current suites.
+
+### The Control UI canvas widget view path is still wrong
+
+- Status: ADVISORY
+- Evidence: the code index and artifact name `ui/src/components/canvas-widget-view.ts`, but the file is `ui/src/components/canvas-widget-view.tsx` with companions `canvas-widget-view-owner.ts`, `canvas-widget-view-requests.ts`, `canvas-widget-view-events.ts`, `canvas-widget-view-layout.test.ts`, and `canvas-widget-view.types.ts`.
+- Artifact currently says: the plan references `ui/src/components/canvas-widget-view.ts`.
+- What the code actually does: the Control UI canvas rendering path is a Solid 2 component split across several modules.
+- Needed change: update the referenced path to `.tsx`.

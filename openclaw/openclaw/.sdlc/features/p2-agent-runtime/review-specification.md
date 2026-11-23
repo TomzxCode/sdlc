@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Specification review: Agent Runtime
@@ -101,3 +101,55 @@ The three blocking and four advisory items in the 2026-10-19 section still apply
 - Code says: `package.json:7-13` sets `openclaw.databaseEngines` to `["sqlite", "postgres"]`, so the store is engine-selectable.
 - Code says: `src/plugins/registry-registrars-providers.ts` and `src/plugins/provider-catalog.ts` still own the provider layer.
 - Impact: unchanged from 2026-10-19, still misleading.
+
+## Sync drift: 2026-11-23
+
+The specification artifact was not changed since the 2026-11-16 review.
+The blocking and advisory items recorded in 2026-10-19 and 2026-11-16 still apply.
+The evidence below reflects the current checkout.
+
+### Blocking: the TranscriptTurn data model does not match `transcript_events`
+
+- Classification: blocking.
+- The artifact says at lines 29-38 that `TranscriptTurn` has `turnId` as PK, `sessionId` as FK, `role`, `content` JSON, `timestamp`, and `tokenCount`.
+- Code says: `src/state/openclaw-agent-schema.sql:454-469` defines `transcript_events` with a composite primary key of `(session_id, seq)`.
+- Code says: `:457-468` stores `event_json`, `event_zstd`, `event_utf8_bytes`, and navigation fields including `navigation_json`, `navigation_type`, `navigation_display`, `message_role`, `navigation_last_type`, `navigation_last_custom_type`, and `navigation_valid`.
+- Code says: there is no `turnId` column and no `tokenCount` column.
+- Code says: `src/agents/AGENTS.md:15` requires transcript messages to be appended only through awaited `SessionManager.appendMessageAsync`.
+- Impact: a reader would model a table that does not exist and would miss the compression and navigation layers.
+
+### Blocking: the architecture diagram still omits three owners
+
+- Classification: blocking.
+- The artifact says at lines 14-25 that the runtime talks directly to a model provider transport and a `SQLite Store (Transcripts)`.
+- Code says: `src/context-engine/registry.ts:1` owns context assembly between the runtime and the model.
+- Code says: `src/plugins/registry-registrars-providers.ts` and `src/plugins/provider-catalog.ts` own the provider layer.
+- Code says: `src/agents/sessions/session-manager-metadata.worker.ts` and `src/agents/sessions/session-manager-message-admission.worker.ts` put transcript and metadata writes behind workers.
+- Code says: `src/agents/embedded-agent-runner/` holds the turn loop and `src/auto-reply/` holds inbound dispatch.
+- Impact: a reader would not know where to add a new capability.
+
+### Blocking: the store box is contradicted by engine selection
+
+- Classification: blocking.
+- The artifact says at line 24 that transcripts live in a `SQLite Store (Transcripts)`.
+- Code says: `package.json:8-11` sets `openclaw.databaseEngines` to `["sqlite", "postgres"]`.
+- Code says: `src/infra/database-engine/registry.ts:26` marks the `agent` family as `postgres: true`.
+- Code says: `:43-52` resolves a per-family engine override.
+- Impact: a fixed storage choice is documented where the code provides an operator-selectable one.
+
+### Advisory: the compaction decision misses the package owner and engine-owned path
+
+- Classification: advisory.
+- The artifact says at line 61 that compaction is LLM-based summarization owned by the runtime.
+- Code says: `src/agents/compaction.ts:1-5` imports summarization and checkpoint helpers from `packages/agent-core/src/harness/compaction/`.
+- Code says: `packages/agent-core/src/harness/types.ts` holds the core compaction types.
+- Code says: `src/context-engine/types.ts:36-43` allows a context engine to own compaction, and `src/context-engine/compaction-watchdog.ts` bounds that path.
+- Impact: the decision is accurate for the default path but names no package owner and no alternative path.
+
+### Advisory: the subagent decision omits the Gateway dispatch path
+
+- Classification: advisory.
+- The artifact says at line 63 that a managed subagent registry handles spawning.
+- Code says: `src/agents/subagents/registry/` still owns that registry.
+- Code says: `src/gateway/server-plugin-subagent-runtime.ts` and `src/gateway/server-plugin-in-process-dispatch.ts` add in-process Gateway dispatch.
+- Impact: the decision is accurate but incomplete.

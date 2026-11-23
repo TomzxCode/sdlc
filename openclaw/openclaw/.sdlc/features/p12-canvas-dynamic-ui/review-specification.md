@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -149,3 +149,59 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: those 2026-10-19 entries remain open in this review file.
 - What the code actually does: the drift persists except where A2UI removal superseded it.
 - Needed change: apply the still-relevant 2026-10-19 needed changes.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against the current code confirms the 2026-11-16 drift is still open and unchanged.
+
+### A2UI data models, routes, sequences, and technical decisions still have no implementation
+
+- Status: BLOCKING
+- Evidence:
+  - A2UI was retired. See `docs/gateway/doctor/config-migrations.md:62-72`, `src/commands/doctor-a2ui-widgets.ts:76-207`, and `src/canvas/widget-tool.ts:43`.
+  - `extensions/canvas/package.json:10-12` declares only `typebox`, so no `@a2ui/*` dependency exists.
+  - No `extensions/canvas/src/a2ui-jsonl.ts`, `extensions/canvas/src/board-widget.ts`, `src/host/a2ui-app/`, or `/__openclaw__/a2ui/` route exists.
+- Artifact currently says: the Overview promises A2UI renderer bundles and a board content kind, the Data Models define v0.9 and v0.8 A2UI messages, the API Contracts list `/__openclaw__/a2ui/*`, the Sequences contain two A2UI flows, and the Technical Decisions define the A2UI dialect, renderer stack, and renderer delivery.
+- What the code actually does: Canvas hosts HTML documents in core storage and presents them inline, on a node panel, or pinned to a dashboard.
+- Needed change: delete the A2UI data models, route row, sequences, and technical decisions, and rewrite the Overview around the HTML document flow.
+
+### The architecture diagram still names modules that do not exist
+
+- Status: BLOCKING
+- Evidence:
+  - The diagram's Plugin subgraph names `src/board-widget.ts`, `src/a2ui-jsonl.ts`, and `src/host/a2ui.ts`, none of which exist.
+  - `extensions/canvas/src/` contains `cli.ts`, `config.ts`, `config-migration.ts`, `node-eligibility.ts`, `tool-schema.ts`, `tool.ts`, and `widget-presenter.ts`.
+  - Core `src/canvas/` owns `documents.ts`, `serve.runtime.ts`, `constants.ts`, `config.ts`, `widget-tool.ts`, `wrap.ts`, and the `widget-script-*.ts` family.
+- Artifact currently says: one plugin block with five modules plus a Gateway block with an A2UI asset route.
+- What the code actually does: Canvas is split between a core document host and a multi-entry plugin, with no A2UI route.
+- Needed change: redraw the diagram with the current core and plugin modules and remove the A2UI route node.
+
+### The API contract table still describes the wrong route and method contract
+
+- Status: BLOCKING
+- Evidence:
+  - `src/canvas/constants.ts:4-6` sets the document path to `/__openclaw__/canvas/documents`.
+  - `src/canvas/documents.ts:193` builds entry URLs as `/__openclaw__/canvas/documents/<id>/index.html`.
+  - `src/canvas/serve.runtime.ts:43-101` serves documents for GET and HEAD only, returns 405 for other methods, and adds a per-document CSP sandbox and no-referrer header.
+  - No `CANVAS_DISABLED` string exists in `src/` or `extensions/`.
+- Artifact currently says: the route table lists `/__openclaw__/a2ui/*` and a generic `/__openclaw__/canvas/*`, and the error code table lists `CANVAS_DISABLED`.
+- What the code actually does: only the core document subtree is served, with a stricter path and a different method and header contract, and the `CANVAS_DISABLED` code is gone from the codebase.
+- Needed change: correct the path, document GET and HEAD plus the 405 behavior, and remove `CANVAS_DISABLED`.
+
+### Risks 1 and 4 still depend on retired subsystems
+
+- Status: ADVISORY
+- Evidence: risk 1 depends on two A2UI dialects and risk 4 depends on renderer root resolution across source, dist, and packaged layouts. Both subsystems were removed.
+- Artifact currently says: risks 1 and 4 are open.
+- What the code actually does: neither risk can occur.
+- Needed change: remove risks 1 and 4 and recheck risks 2 and 3.
+
+### The hosted widget document model is still missing from the specification
+
+- Status: ADVISORY
+- Evidence:
+  - `src/canvas/documents.ts:13-39` defines the document kind union, the surface union, `retentionScope`, and `cspSandbox: "scripts"`.
+  - `src/canvas/constants.ts:8-33` owns the core Canvas node capability surface and strips stale plugin-owned duplicates.
+- Artifact currently says: hosted documents are described only as a route with no data model.
+- What the code actually does: documents are structured core records with a kind, surface, retention scope, and per-document CSP sandbox.
+- Needed change: add a hosted widget document data model and record the core-owned capability surface.

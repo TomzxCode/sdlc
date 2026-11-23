@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Plugin SDK and Extension System requirements
@@ -88,3 +88,36 @@ Fresh analysis confirms the discrepancies recorded on 2026-10-19 remain, since r
 ### Advisory: FR-9 is still ranked May despite shipped permission gates.
 
 - `docs/plugins/plugin-permission-requests.md` and `src/security/install-policy.ts` implement shipped approval and install-policy gates.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against current code confirms the four blocking items and the advisory item from 2026-10-19 and 2026-11-16 remain open, because requirements.md is unchanged.
+
+### Blocking: requirements.md:43 and requirements.md:49 still point authors at the private package name
+
+- `packages/plugin-sdk/package.json:2-4` still declares `@openclaw/plugin-sdk` as `0.0.0-private` and private.
+- `package.json:522` starts the published `./plugin-sdk/*` export map, which now has 368 subpath exports.
+- `scripts/lib/plugin-sdk-entrypoints.json` lists 389 public subpaths.
+- `docs/plugins/sdk-overview/imports.md:22-25` still requires imports from a specific subpath such as `openclaw/plugin-sdk/channel-core`.
+
+### Blocking: NFR-2 still promises compatibility the code disclaims
+
+- `docs/plugins/sdk-overview.md:25-30` still states all plugin APIs are experimental and may change between releases.
+- `src/plugin-sdk/plugin-entry.ts:1` still marks every public SDK contract experimental.
+- `requirements.md:60` still leaves the semver policy as an open question.
+
+### Blocking: FR-2 and requirements.md:44 still narrow installs to npm
+
+- `src/plugins/install-provenance.ts:13-20` still classifies sources as git, local-archive, local-path, marketplace, npm, and npm-pack.
+- `docs/plugins/manage-plugins.md:247-265` documents `npm:`, `npm-pack:`, `git:`, `--link`, and `clawhub:` sources.
+- `docs/plugins/manage-plugins.md:422` documents `openclaw plugins install clawhub:<package> --force`.
+
+### Blocking: the SDK boundary rules are still absent from the artifact
+
+- `src/plugin-sdk/AGENTS.md:24-31` still requires narrow documented subpaths, cheap acyclic facades, and no broad convenience barrels.
+- `src/plugin-sdk/AGENTS.md:33-38` still requires versioned required capabilities with a documented deprecation window.
+- `src/plugin-sdk/AGENTS.md:50` still requires docs, entrypoint JSON, entry list, and the three SDK export checks when adding a subpath.
+
+### Advisory: FR-9 is still ranked May despite shipped permission gates
+
+- `src/cli/plugins-cli.ts:158-168` still exposes `--accept-capabilities`, `--acknowledge-install-policy-warning`, and the deprecated `--dangerously-force-unsafe-install` no-op.

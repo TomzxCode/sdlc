@@ -1,3 +1,4 @@
+<!-- session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3 -->
 # Vocabulary
 
 ## Domain Terms
@@ -47,7 +48,7 @@
 
 | Term | Definition |
 |---|---|
-| A2UI | Agent-to-UI protocol for dynamic agent-driven interfaces |
+| A2UI | Agent-to-UI protocol; OpenClaw retired A2UI widgets, replaced by `show_widget` with `kind: "html"` |
 | ACP | Agent Client Protocol for agent-to-agent, agent-to-editor, and agent-to-gateway communication |
 | Auth Profile | A named set of credentials for a provider (API keys, OAuth tokens) |
 | Canvas | Agent-driven visual workspace rendered in the Control UI for rich interactive content |
@@ -66,7 +67,7 @@
 | Provider | An AI model provider (OpenAI, Anthropic, Google, etc.) |
 | Provider Registry | The plugin registry index that collects and indexes provider, tool, and route contributions from loaded plugins |
 | QA Lab | Internal testing framework using YAML-based scenario packs under `qa/scenarios` for regression and behavior testing |
-| Sandbox | Execution isolation mode for agent tools (configurable as main, non-main, or off) |
+| Sandbox | Execution isolation mode for agent tools (configurable as off, non-main, or all via `agents.defaults.sandbox.mode`) |
 | SecretRef | A reference to a secret held by a provider (env, file, exec, or store) that the Gateway resolves at the point of use |
 | Session Key | The stable, agent-scoped identifier the Gateway uses to route, store, and reconcile a session |
 | Slot | A mutually exclusive plugin selection, such as `plugins.slots.memory` or `plugins.slots.contextEngine`, that picks exactly one plugin for a role |

@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Command-Line Interface test plan
@@ -105,3 +105,40 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 
 - The 2026-10-19 review cited `src/cli/program/route-args.test.ts` and `root-help.test.ts` as existing suites.
 - Neither path exists now.
+
+## Sync drift: 2026-11-23
+
+### Blocking: two listed unit test files still do not exist
+
+- Artifact says (tests.md:17): `src/cli/program/root-help.test.ts`.
+- Code: that path does not exist.
+- Code: root help is now covered by `src/cli/program/openclaw-command.help.test.ts`, `src/cli/root-help-metadata.test.ts`, and `src/cli/program/help.test.ts`.
+- Artifact says (tests.md:19): `src/cli/program/routes.test.ts`.
+- Code: that path does not exist, and routing is covered by `src/cli/program/action-reparse.test.ts` plus the descriptor suites.
+
+### Blocking: the yargs test infrastructure claim remains wrong
+
+- Artifact says (tests.md:39): "- Mock yargs for command parsing tests".
+- Code: `package.json:2473` declares `commander` 15.0.0, and no yargs dependency exists.
+- Code: `src/cli/program/build-program.test.ts`, `src/cli/program/command-tree.test.ts`, and `src/cli/program/openclaw-command.help.test.ts` exercise the Commander program.
+
+### Blocking: the FR-5 and NFR-2 coverage rows remain wrong
+
+- Artifact says (tests.md:49): "FR-5 (Onboarding wizard) | `commands/agent.test.ts`".
+- Code: onboarding is covered by `src/cli/program/register.onboard.test.ts`, `src/commands/onboard-agent.test.ts`, `src/commands/onboard-auth.test.ts`, `src/commands/onboard-config.test.ts`, and `src/commands/onboard-channels.e2e.test.ts`.
+- Artifact says (tests.md:51): "NFR-2 (Startup performance) | `run-main.test.ts`".
+- Code: `src/cli/run-main.test.ts:100-128` asserts admission and dispatch mocks with no timing assertion.
+- Code: `src/cli/command-startup-timing.test.ts:45-56` asserts span shape and event count, not a duration.
+
+### Advisory: the doctor and plugin coverage rows still name sources instead of suites
+
+- Artifact says (tests.md:47, 50): "`plugins-cli.ts` (co-located tests)" and "`commands/doctor.ts` (co-located tests)".
+- Code: plugin CLI tests split into suites such as `src/cli/plugins-cli.install.test.ts`, `src/cli/plugins-cli.list.test.ts`, and `src/cli/plugins-cli.uninstall.test.ts`.
+- Code: `src/commands/doctor.test.ts` exists, alongside `src/commands/doctor/` and `src/flows/doctor-*.test.ts`.
+
+### Advisory: large test areas remain undocumented
+
+- Artifact lists 10 unit test files.
+- Code: `src/cli/` holds 1426 tracked files, `src/cli/program/` holds 81, `src/commands/` holds 1570, `src/tui/` holds 185, `src/wizard/` holds 76, and `src/system-agent/` holds 147.
+- Code: completion is covered by suites such as `src/cli/completion-cli.bash.test.ts`, `src/cli/completion-fish.test.ts`, and `src/cli/completion-runtime.windows.test.ts`.
+- Code: `src/tui/commands.test.ts`, `src/tui/gateway-chat.test.ts`, and `src/tui/embedded-backend.test.ts` cover the TUI that FR-11 depends on.

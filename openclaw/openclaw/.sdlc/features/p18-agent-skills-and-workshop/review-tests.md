@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-11-16
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-11-16
@@ -41,3 +41,27 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: the plan covers the pipeline suites in `src/skills/` and the operator command suites in `src/cli/`.
 - What the code actually does: the plugin owns a substantial set of Workshop suites, and the plan's Scope section does not mention them.
 - Needed change: extend the Scope section to name the `skill-workshop` plugin suites and add case rows for the draft lifecycle and the Workshop gateway methods.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against current code confirms the three findings from 2026-11-16 remain open, because tests.md is unchanged.
+
+### Blocking: the nine documented `src/skills/workshop/` test paths are still absent
+
+- `tests.md:24-26` and `:59-64` still name `skill-lint.test.ts`, `changes.kernel.test.ts`, `tool-policy-diagnostic.test.ts`, `library.test.ts`, `review-undo.test.ts`, `unused-archive.test.ts`, `experience-review.test.ts`, `experience-review-scheduler.test.ts`, and `review-outcome.test.ts` under `src/skills/workshop/`.
+- `src/skills/` has no `workshop/` directory, so none of those nine paths resolves.
+- Six suites survive in `extensions/skill-workshop/src/`: `skill-lint.test.ts`, `tool-policy-diagnostic.test.ts`, `library.test.ts`, `experience-review.test.ts`, `experience-review-scheduler.test.ts`, and `review-outcome.test.ts`.
+- `changes.kernel.test.ts` survives at `src/skills/workshop-changes/changes.kernel.test.ts`.
+- No `review-undo.test.ts` or `unused-archive.test.ts` exists anywhere in the repository. Undo behavior is covered in `extensions/skill-workshop/src/review-service.test.ts`, `review-outcome.test.ts`, `gateway-methods.test.ts`, and `library.test.ts`, and unused-skill archive behavior is covered in `library.test.ts` and `review-service.test.ts`.
+
+### Blocking: three other documented test paths are still absent
+
+- `tests.md:52` and `:98` still name `src/skills/library/mutations-worker.test.ts`, which does not exist and has no same-named file elsewhere.
+- `tests.md:33`, `:85`, and `:86` still name `src/skills/loading/skill-root-discovery.test.ts`, which does not exist. Only the implementation at `src/skills/loading/skill-root-discovery.ts` remains.
+- `tests.md:68` still names `src/cli/skills-cli.workshop.test.ts`, which does not exist. The surviving file is `src/cli/skills-cli.workshop-contract.test.ts`.
+
+### Advisory: new plugin-owned suites are still undocumented
+
+- `extensions/skill-workshop/src/` still contains suites absent from the plan, including `drafts.test.ts`, `gateway-methods.test.ts`, `review-service.test.ts`, `cli.test.ts`, `tool.test.ts`, `skill-diet.test.ts`, `library.record-failure.test.ts`, and `extensions/skill-workshop/doctor-health-api.test.ts`.
+- `src/cli/skills-cli.formatting.test.ts` and `src/skills/discovery/status.test.ts` are also present without being named in the plan.
+- `tests.md:11` still limits the Scope to suites in `src/skills/` and `src/cli/`, so the plugin suites and the draft lifecycle are not covered by the stated plan.

@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-11-16
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-11-16
@@ -42,3 +42,27 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: the Workshop RPC surface ends at list, changes, read, archive, restore, and undo.
 - What the code actually does: two additional Workshop methods create and discard drafts for the `propose` mode.
 - Needed change: add `skills.workshop.applyDraft` and `skills.workshop.discardDraft` to the API Contracts table and to `api.yaml` with their request and response schemas, and describe the `propose` mode in the sequences.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against current code confirms the three blocking items from 2026-11-16 remain open, because specification.md and api.yaml are unchanged.
+
+### Blocking: Workshop is still described as a `src/skills/` pipeline stage
+
+- `specification.md:11`, `:37`, and `:332` still place `workshop/` inside the `src/skills/` staged pipeline and name it as one of the owner stages.
+- `src/skills/` has no `workshop/` directory. It has `src/skills/workshop-changes/changes.kernel.ts`, `changes.ts`, and `changes.worker.ts`, which own the change feed kernel and worker only.
+- `src/skills/workshop-changes/changes.ts:1-8` imports the kernel and state worker helpers and holds the change store, so this directory owns persistence, not the full Workshop loop.
+- `extensions/skill-workshop/` holds the experience review, undo, lint, unused-skill archive, library, tool policy diagnostic, and CLI sources, and `extensions/skill-workshop/openclaw.plugin.json:6` sets `enabledByDefault: true`, so it ships as a bundled plugin.
+
+### Blocking: the bundled skill count is still stated as 50
+
+- `specification.md:11` still says the `skills/` directory holds 50 bundled skills, and `:25` still labels the diagram root `bundled skills/ (50)`.
+- `find skills -name SKILL.md` returns 52 files, and `skills/` has 52 immediate subdirectories.
+- `custodian-skills/` still has 4 `SKILL.md` files, which matches the stated playbook count.
+
+### Blocking: the API contract still omits the draft methods
+
+- `specification.md:231-236` still ends the Workshop API table at `skills.workshop.undo`.
+- `api.yaml` has no occurrence of `draft`, `applyDraft`, or `discardDraft`.
+- `extensions/skill-workshop/src/gateway-methods.ts:220` and `:235` still register `skills.workshop.applyDraft` and `skills.workshop.discardDraft`.
+- `extensions/skill-workshop/src/drafts.test.ts` still covers the draft lifecycle, and `extensions/skill-workshop/openclaw.plugin.json:24` still documents the `propose` mode that produces those drafts.

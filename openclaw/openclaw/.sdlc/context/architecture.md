@@ -1,3 +1,4 @@
+<!-- session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3 -->
 # Architecture
 
 ## System overview
@@ -41,13 +42,22 @@ flowchart TB
 ## Entity relationship diagram
 
 The control-plane entities live in the shared state database (`src/state/openclaw-state-schema.sql`), and the per-agent entities live in each agent database (`src/state/openclaw-agent-schema.sql`).
+Agents themselves are config-defined through `agents.entries`, and their database paths are registered in `agent_databases`.
 The full typed schema, constraints, and indexes live in `schema.dbml`.
 
 ```mermaid
 erDiagram
     AGENT {
         string agent_id PK
-        string created_via
+        string name
+        string workspace
+        string model
+    }
+    AGENT_DATABASE {
+        string agent_id PK
+        string path PK
+        int schema_version
+        int last_seen_at
     }
     CONVERSATION {
         string conversation_id PK
@@ -56,7 +66,7 @@ erDiagram
         string kind
         string peer_id
     }
-    CONVERSATION_BINDING {
+    CURRENT_CONVERSATION_BINDING {
         string binding_key PK
         string target_session_key
         string channel
@@ -124,7 +134,7 @@ erDiagram
     EXECUTION_IDENTITY_CONTEXT {
         string context_id PK
         string execution_id UK
-        string run_id UK
+        string run_id
         string coverage_state
     }
     DEVICE_IDENTITY {
@@ -240,10 +250,11 @@ erDiagram
         string event_type
         string message_role
     }
-    MESSAGE {
-        string message_id PK
-        string session_id
-        string idempotency_key
+    TRANSCRIPT_EVENT_IDENTITY {
+        string session_id PK
+        string event_id PK
+        int seq
+        string message_idempotency_key
     }
     CONVERSATION_DELIVERY {
         string operation_id PK
@@ -264,7 +275,8 @@ erDiagram
         int position
     }
     MEMORY_INDEX_CHUNK {
-        string id PK
+        int chunk_rowid PK
+        string id UK
         string path
         string source
         string model
@@ -283,6 +295,7 @@ erDiagram
         string payload_json
     }
 
+    AGENT ||--o{ AGENT_DATABASE : registry
     AGENT ||--o{ SESSION_NODE : owns
     AGENT ||--o{ SESSION_STATE_EVENT : attributes
     AGENT ||--o{ CRON_JOB : schedules
@@ -291,13 +304,13 @@ erDiagram
 
     CONVERSATION ||--o{ SESSION_CONVERSATION : linked
     CONVERSATION ||--o{ CONVERSATION_DELIVERY : delivers
-    CONVERSATION ||--o{ CONVERSATION_BINDING : routes
+    CONVERSATION ||--o{ CURRENT_CONVERSATION_BINDING : routes
     CONVERSATION ||--o{ SESSION_WINDOW : "primary conversation"
 
     CHANNEL_INGRESS_EVENT }o--o| CONVERSATION : drains into
     DELIVERY_QUEUE_ENTRY }o--o| CONVERSATION : renders for
 
-    CONVERSATION_BINDING }o--|| SESSION_NODE : targets
+    CURRENT_CONVERSATION_BINDING }o--|| SESSION_NODE : targets
 
     SESSION_NODE ||--o{ SESSION_WINDOW : "current and history"
     SESSION_NODE ||--o{ SESSION_PARTICIPANT : counts
@@ -312,12 +325,11 @@ erDiagram
     SESSION_WINDOW ||--o{ STANDING_INTENT : "source session"
     SESSION_WINDOW ||--o{ WORKER_SESSION_PLACEMENT : "placed session"
 
-    TRANSCRIPT_EVENT ||--o| MESSAGE : identifies
+    TRANSCRIPT_EVENT ||--o{ TRANSCRIPT_EVENT_IDENTITY : identifies
 
     SESSION_STATE_HEAD ||--o{ SESSION_STATE_EVENT : caps
 
     CRON_JOB ||--o{ CRON_RUN_RECEIPT : produces
-    CRON_JOB }o--|| AGENT : "owned by"
 
     USER_PROFILE_IDENTITY ||--o{ SECRET_STORE_ENTRY : "identity scope"
 
@@ -398,7 +410,7 @@ flowchart LR
 | Runtime | Node.js `>=24.16.0 <25 \|\| >=26.1.0`, Bun compatible |
 | State storage | SQLite via Kysely query builder, with an experimental PostgreSQL engine under `src/infra/database-engine/` |
 | Schema sources | `src/state/openclaw-state-schema.sql` for the shared control plane, `src/state/openclaw-agent-schema.sql` for the per-agent data plane, and generated PostgreSQL DDL under `src/state/postgres-schema.generated/` |
-| Schema versions | State 40 and agent 42 (`src/state/openclaw-schema-versions.ts`) |
+| Schema versions | State 41 and agent 43 (`src/state/openclaw-schema-versions.ts`) |
 | Configuration | JSON files with zod schema validation |
 | CI/CD | GitHub Actions, Blacksmith Testbox |
 | Package manager | pnpm 12.15.0 (workspace monorepo) |

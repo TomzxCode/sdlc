@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Specification review: Channel Integration
@@ -120,3 +120,50 @@ The schema line numbers recorded in the 2026-10-19 review have since shifted.
 - Artifact says (lines 57-62): the table lists the plugin contract, streaming, thread binding, and attachment handling.
 - Code says: the durable ingress decision, the claim and retry lifecycle, and the closed action vocabulary are absent from the table.
 - Impact: the table is incomplete rather than wrong.
+
+## Sync drift: 2026-11-23
+
+A fresh analysis against current code confirms the recorded drift stands.
+The specification was not edited during this sync, so those findings remain open.
+
+### Blocking: the ChannelMessage data model still does not exist in the schema
+
+- Classification: blocking.
+- Artifact says (lines 31-40): a `ChannelMessage` table with `messageId` as PK, `channelId`, `sessionId` as a NOT NULL foreign key, `text`, `attachments` JSON, and `timestamp`.
+- Code says: `src/state/openclaw-state-schema.sql:1255-1277` defines `channel_ingress_events` with composite key `(queue_name, event_id)`, channel and account ids, status, lane key, payload and metadata JSON, claim columns, attempt columns, and completion columns, and no `text` or `attachments` column.
+- Code says: `src/channels/message/ingress-queue.types.ts:4-25` scopes every record by channel id, account id, and queue name and carries the whole envelope in `payload`.
+- Code says: `src/channels/AGENTS.md:19-26` requires completion at turn adoption, tombstoning, and a claim refresh heartbeat.
+- Impact: a reader would model a row that does not exist and miss the durability contract.
+
+### Blocking: the receive flow still omits durable ingress
+
+- Classification: blocking.
+- Artifact says (lines 46-52): the sequence moves from a normalized envelope straight to gateway routing.
+- Code says: `src/channels/message/ingress-drain.ts`, `ingress-monitor.ts`, `ingress-claim-owner.ts`, and `ingress-retry-policy.ts` persist, lease, and retry inbound events before `src/channels/turn/run-channel-turn.ts` adopts them.
+- Code says: `src/channels/turn/durable-delivery.ts` and `src/channels/turn/pending-delivery-notice.ts` own the outbound side.
+- Impact: the sequence still hides the durable step between platform and agent.
+
+### Blocking: the architecture tree still names the wrong owners
+
+- Classification: blocking.
+- Artifact says (lines 16-23): the tree lists `inbound-event/`, `message/` as formatting and delivery, `status/`, `transport/`, and `turn/`.
+- Code says: `src/channels/AGENTS.md:9-11` names the public contract as `src/channels/plugins/types.{plugin,core,adapters}.ts`.
+- Code says: `src/channels/plugins/types.plugin.ts:69-126` holds roughly twenty optional adapter surfaces, and `src/channels/plugins/` also holds the registry, catalog, and config write policy.
+- Code says: `src/channels/message-access/` and `src/channels/allowlists/` own inbound admission, while `src/channels/message/` holds the durable ingress queue and monitor.
+- Impact: the tree still points an implementer at the wrong directories for the contract and the ingress guarantee.
+
+### Advisory: the plugin contract owner and adapter granularity are still imprecise
+
+- Classification: advisory.
+- Artifact says (line 59): the plugin contract is a Channel SDK interface in `@openclaw/plugin-sdk`.
+- Code says: `src/plugin-sdk/channel-plugin-common.ts:4` and `src/plugin-sdk/channel-contract.ts:28-45` re-export types owned by `src/channels/plugins/types.*.ts`.
+- Code says: `src/channels/plugins/channel-runtime-surface.types.ts:40` models the actual runtime surface because `ChannelPlugin` adapters are optional.
+- Impact: the statement is not false, but it names the re-export rather than the owner and hides which capabilities are mandatory.
+
+### Advisory: the Technical Decisions table is still incomplete and one pointer moved
+
+- Classification: advisory.
+- Artifact says (lines 57-62): the table lists the plugin contract, streaming, thread binding, and attachment handling, and the prior review at line 69 cites `types.core.ts:302-307` for streaming.
+- Code says: `src/channels/plugins/types.core.ts:286` now defines `ChannelStreamingAdapter`, and `src/channels/draft-stream-loop.ts` with `draft-stream-controls.ts` still owns chunked draft delivery.
+- Code says: the durable ingress decision, claim and retry lifecycle, and closed action vocabulary remain absent from the table.
+- Impact: the streaming decision holds, the line pointer is stale, and the table is incomplete rather than wrong.

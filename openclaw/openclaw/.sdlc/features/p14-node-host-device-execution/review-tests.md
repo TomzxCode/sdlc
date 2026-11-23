@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-11-16
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Test Plan for Node Host and Device Execution
@@ -22,3 +22,16 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Evidence: all 12 node-host test files named in tests.md exist, along with all 5 Gateway node suites and the referenced helpers.
 - Artifact says: tests.md:15 claims every listed file exists.
 - Code: every listed path was confirmed present in the repository.
+
+## Sync drift: 2026-11-23
+
+Fresh reconciliation against current code found the same coverage gap recorded on 2026-11-16. No documented test file is missing.
+
+### The test plan is still not exhaustive against the current suite
+
+- Evidence: `src/node-host/` contains 96 `*.test.ts` files and tests.md names 12 of them.
+- Artifact says: tests.md:15 states that every listed file was confirmed to exist, which remains true, and the plan does not claim to be exhaustive.
+- Code: undocumented suites cover OpenClaw ID enrollment and transport (`openclaw-id-*.test.ts`), runner inventory (`runner.inventory.test.ts`), exec policy (`exec-policy.test.ts` and `plugin-exec-policy.test.ts`), connection (`connection.test.ts` and `gateway-candidate-connection.test.ts`), host stats, MCP, plugin hosting, supervisor lifecycle variants, workspace variants, prepared workspaces, transfers, native inference, container engine, and publication.
+- Evidence: all 17 test files named in tests.md are present, including all 12 node-host suites and all 5 Gateway node suites.
+- Impact: the coverage matrix at tests.md:86-107 does not show which requirements the newer suites protect.
+- Verdict: unchanged from the 2026-11-16 finding and still non-blocking.

@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Requirements review: Agent Runtime
@@ -102,3 +102,55 @@ The four blocking and two advisory items in the 2026-10-19 section still apply.
 - FR-1 still names only OpenAI, Anthropic, Google, and open-source.
 - Code says: 11 provider extensions ship, and `src/llm/providers/` now holds only fast-mode and stream wrappers such as `minimax-fast-mode.ts` and `openai-fast-mode.ts`.
 - Impact: the parenthetical list remains out of date.
+
+## Sync drift: 2026-11-23
+
+The requirements artifact was not changed since the 2026-11-16 review.
+The blocking and advisory items recorded in 2026-10-19 and 2026-11-16 still apply.
+The evidence below reflects the current checkout.
+
+### Blocking: the SQLite-only transcript constraint is still contradicted
+
+- Classification: blocking.
+- The artifact still says at line 30 that FR-7 persists transcripts to SQLite and at line 48 that transcript storage is SQLite-only.
+- Code says: `package.json:8-11` sets `openclaw.databaseEngines` to `["sqlite", "postgres"]`.
+- Code says: `package.json:12-17` lists `agent` under `openclaw.postgresFamilies`.
+- Code says: `src/infra/database-engine/registry.ts:26` marks the `agent` family as `postgres: true`, and `:43-52` resolves the per-family engine override.
+- Code says: `src/state/openclaw-agent-schema.sql:454-469` stores transcripts in `transcript_events` inside the agent family database, which may use PostgreSQL.
+- Impact: the constraint remains wrong.
+
+### Blocking: context ownership remains delegated to a plugin registry
+
+- Classification: blocking.
+- The artifact still says at line 25 that FR-2 makes the runtime the context owner.
+- Code says: `src/context-engine/registry.ts:1` states that the registry owns engine registration, resolution, compatibility, and quarantine.
+- Code says: `src/context-engine/types.ts:5-34` defines `AssembleResult` with `messages`, `estimatedTokens`, `promptAuthority`, `systemPromptAddition`, and `contextProjection`.
+- Code says: `src/context-engine/types.ts:36-43` now models `contextProjection` as an object with `mode: "per_turn" | "thread_bootstrap"`, an `epoch`, and a `fingerprint`.
+- Code says: `src/context-engine/registry-selection.ts`, `src/context-engine/registry-quarantine.ts`, and `src/context-engine/compaction-watchdog.ts` add selection, quarantine, and bounded engine-owned compaction.
+- Impact: the requirement still reads true at a high level, but it hides a plugin slot that can replace context assembly and compaction.
+
+### Blocking: memory search is still owned outside `src/agents/`
+
+- Classification: blocking.
+- The artifact still says at line 34 that FR-11 is a May-level runtime capability.
+- Code says: `src/agents/memory-search.ts` owns only the agent-side entry point.
+- Code says: `src/agents/memory-search-source-policy.ts`, cited in the 2026-10-19 and 2026-11-16 reviews, no longer exists.
+- Code says: `src/gateway/server-methods/memory-search.ts` now holds the gateway search handler.
+- Code says: the subsystem lives in `src/memory-host-sdk/` with `query.ts`, `dreaming.ts`, `event-store.ts`, `event-export.ts`, `engine-storage.ts`, `multimodal.ts`, and `status.ts`.
+- Code says: `extensions/memory-core/`, `extensions/memory-lancedb/`, `extensions/memory-wiki/`, and `extensions/active-memory/` ship the backends and workers.
+- Impact: the May priority and the runtime ownership both understate the shipped plugin subsystem.
+
+### Advisory: the FR-1 provider list is further out of date
+
+- Classification: advisory.
+- The artifact still names OpenAI, Anthropic, Google, and open-source at line 24.
+- Code says: provider extensions now include `amazon-bedrock`, `amazon-bedrock-mantle`, `anthropic`, `anthropic-vertex`, `deepseek`, `google`, `groq`, `kimi-coding`, `minimax`, `mistral`, `moonshot`, `ollama`, `openai`, `openrouter`, and `xai`.
+- Code says: `src/llm/providers/` holds only `minimax-fast-mode.ts`, `openai-fast-mode.ts`, and `stream-wrappers/`.
+- Impact: the parenthetical list names four families where the code now ships more than fifteen plugin extensions.
+
+### Advisory: the FR-2 acceptance criterion still omits engine-owned context
+
+- Classification: advisory.
+- The artifact says at line 53 that compaction triggers a summary and continues within limits.
+- Code says: `src/context-engine/types.ts:36-43` allows `mode: "thread_bootstrap"`, where assembled context is injected once for an epoch and the backend thread is reused.
+- Impact: the criterion exercises only the in-process summarization path.

@@ -2,6 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-11-16
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: test plan for Internal Event Hooks
@@ -23,3 +24,23 @@ The test plan does not document several test files that exist in the feature sou
 - `src/cli/plugins-install-hook-fallback.test.ts` covers the plugin installer fallback for hook packs.
 
 The coverage matrix still references TC-9, TC-21, TC-24, and TC-27, so it should be updated when the file paths are reconciled.
+
+## Sync drift: 2026-11-23
+
+The drift recorded on 2026-11-16 is still present on 2026-11-23.
+
+Four paths in the unit test table no longer exist in the checkout.
+
+- TC-9 at `tests.md:27` lists `src/hooks/import-url.test.ts`. The replacement `src/hooks/loader.cache-invalidation.test.ts` still covers the same-size edit with restored mtime at line 63.
+- TC-21 at `tests.md:39` lists `src/hooks/llm-slug-generator.test.ts`. The replacement `src/hooks/bundled/session-memory/handler.slug.test.ts` exists.
+- TC-24 at `tests.md:42` lists `src/hooks/install-policy-warning.test.ts`. The acknowledgement coverage now lives in `src/cli/install-policy-warning-acknowledgement.test.ts`.
+- TC-27 at `tests.md:45` lists `src/hooks/plugin-hooks.test.ts`. The bundle cases now live in `src/hooks/loader.test.ts:370`.
+
+Four existing test files are absent from the test plan.
+
+- `src/hooks/gmail-gog.test.ts` covers gog inspection and upgrade.
+- `src/hooks/install-npm.test.ts` covers npm spec installs.
+- `src/hooks/loader.imports.test.ts` covers cold workspace discovery when internal hooks are unconfigured.
+- `src/cli/plugins-install-hook-fallback.test.ts` covers the plugin installer fallback.
+
+The coverage matrix at `tests.md:121` still references TC-9, TC-21, TC-24, and TC-27.
