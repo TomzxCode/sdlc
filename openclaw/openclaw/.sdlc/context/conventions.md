@@ -1,8 +1,10 @@
+<!-- session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3 -->
 # Conventions
 
 ## Naming
 
-- **Files and directories:** kebab-case for source, test, and config files, and for `src/` subdirectories, `packages/` names, `apps/` names, and `extensions/` plugin directories; UI components are kebab-case `*.tsx` files with `*.test.tsx` siblings, and no PascalCase source files remain anywhere.
+- **Files and directories:** kebab-case for source, test, and config files, and for `src/` subdirectories, `packages/` names, `apps/` names, and `extensions/` plugin directories; standard root config filenames (`package.json`, `tsconfig.json`, `.oxlintrc.json`) keep their canonical names.
+- **UI components:** kebab-case `*.tsx` files, with `*.test.tsx` files for their tests; no PascalCase or snake_case TypeScript source files remain anywhere, while Rust files under `crates/` use snake_case.
 - **Identifiers:** camelCase for variables, functions, and methods; PascalCase for classes, types, and interfaces; UPPER_SNAKE_CASE for true constants and camelCase for module-level const values; a `Type` suffix marks string-union and discriminated-union types.
 - **Test files:** the file suffix selects the suite; shared test code uses `*.test-support.ts`, `*.test-helpers.ts`, `*.test-fixtures.ts`, `*.test-mocks.ts`, or `*.test-harness.ts`.
 
@@ -29,7 +31,7 @@
 ├── deploy/               # Deployment manifests
 ├── docs/                 # Documentation
 ├── examples/             # Runnable examples
-├── extensions/           # Plugin packages (188 directories, 184 packages)
+├── extensions/           # Plugin packages (one directory per plugin)
 ├── git-hooks/            # Repository Git hooks
 ├── packages/             # Workspace packages (SDK, protocol, core libraries)
 ├── patches/              # pnpm package patches
@@ -37,7 +39,7 @@
 ├── scripts/              # Build, CI, and release scripts
 ├── security/             # Security rules (OpenGrep)
 ├── skills/               # Bundled agent skills shipped with the package
-├── src/                  # Core TypeScript source (77 kebab-case subdirectories: agents, channels, cli, config, gateway, skills, state, tui, worker, ...)
+├── src/                  # Core TypeScript source in kebab-case subdirectories (agents, channels, cli, config, gateway, skills, state, tui, worker, ...)
 ├── test/                 # Repo-level test suites and helpers
 ├── tools/                # Isolated tool dependencies (Solid lint)
 └── ui/                   # Control UI (Solid 2 web components)
@@ -45,7 +47,7 @@
 
 ## Coding Standards
 
-- TypeScript ESM strict mode; `any` is banned by the `typescript/no-explicit-any` rule outside test support files, so use `unknown` with narrow adapters.
+- TypeScript ESM strict mode; `any` is banned by the `typescript/no-explicit-any` rule outside test and test-support files, so use `unknown` with narrow adapters.
 - No `@ts-nocheck` anywhere in the tree; lint suppressions must be intentional and explained.
 - Use zod for external boundaries and config schemas; prefer discriminated unions over freeform strings for routing and state.
 - Prefer `satisfies` for registries and config maps, and prefer ctor parameter properties for injected deps and config.
@@ -61,16 +63,18 @@
 
 ## Commit Messages
 
-- Conventional Commits: `type(scope): description`, for example `fix(doctor): reclaim runtimes despite unrelated Node processes (#177407)`.
-- Types include `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `perf`, `ci`, `build`, and `style`; a `!` after the type or scope marks a breaking change, and the scope is the affected area (channel, component, or package name).
-- The PR number goes in parentheses at the end.
+- Use a Conventional Commits style `type: description`, as required by the PR template, for example `fix(ui): keep a reader who reaches the top of a chat at the top (#204220)`.
+- The PR template lists `feat`, `fix`, `improve`, `refactor`, `docs`, and `chore`; merged commit subjects also use `test`, `perf`, and `ci`.
+- A parenthesized scope names the affected area (channel, component, or package name) and is optional; add it only when it helps the reader.
+- A `!` after the type or scope marks a breaking change.
+- Squash merges append the PR number in parentheses at the end of the subject.
 
 ## Branching
 
 - `main` is the primary branch.
 - PRs land with squash merge; `OPENCLAW_PR_MERGE_METHOD` defaults to `squash` in `scripts/pr-lib/merge.sh`.
 - Do not rebase onto `main` just because `main` advanced; refresh only for a conflict, a failing guard, an explicit request, or material stale-base risk.
-- Keep one issue or topic per PR, and note that branch names are not enforced by tooling.
+- Open PRs from a branch maintainers can push to, and keep **Allow edits from maintainers** enabled; branch names are not restricted by a naming convention.
 
 ## SDLC Documentation Style
 
@@ -78,5 +82,6 @@
 - Use sentence case for headings, not title case
 - Prefer bullet lists over prose paragraphs for enumerations
 - American English spelling and grammar
+- Avoid em dashes; use commas or parentheses instead
 - Tables for structured data (requirements, specs, comparisons)
 - ASCII diagrams for architecture flows

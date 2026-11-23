@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -74,3 +74,18 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - The per-file counts are still off by one for protocol at 17, runtime at 16, and node at 6, giving 98 unit cases instead of 99.
 - The two TypeScript contract suites and their conformance job are still not named in the test infrastructure section.
 - The infrastructure line still lists only `cargo test` and omits the fmt, clippy, and rustdoc gates on Rust 1.99.0.
+
+## Sync drift: 2026-11-23
+
+### Previously recorded drift items remain unaddressed
+
+- Status: BLOCKING
+- Evidence:
+  - `.sdlc/features/p11-rust-node-host/tests.md:24` still names `shared_authority_handoff_contract_matches_openclaw`, which does not exist, while `crates/openclaw-node-host/src/runtime.rs:1388` defines `shared_manifest_and_local_admission_match_openclaw`.
+  - `tests.md:17` still claims 99 inline node-host unit cases, while the twelve `src/*.rs` files hold 98 cases in total, with counts of 1, 5, 3, 0, 3, 1, 6, 13, 16, 14, 17, and 19.
+  - `tests.md:21`, `tests.md:24`, and `tests.md:26` still report 16 protocol cases, 17 runtime cases, and 7 node cases, while the actual counts are 17, 16, and 6.
+  - `tests.md:50` still names the single `native_signed_connect_preserves_product_fields_and_rejects_invalid_node_manifests`, while `crates/openclaw-node-host/tests/node_session.rs:1159` and `node_session.rs:1213` define two separate tests.
+  - `tests.md:80-83` lists six fixtures but does not name `src/infra/node-invoke-lifecycle-contract.test.ts:7` or `src/infra/node-runtime-integration-contract.test.ts:4`, which consume two of them in the `.github/workflows/node-runtime-conformance.yml:209-213` job.
+  - `tests.md:83` still says only `cargo test`, while `.github/workflows/node-runtime-conformance.yml:244`, `:247`, `:251`, and `:261-263` also gate on fmt, `--locked` test, clippy `-D warnings`, and rustdoc `-D warnings` with Rust 1.99.0.
+- The artifact was not overwritten.
+- No new discrepancies were found in tests.md during this reconciliation.

@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Plugin SDK and Extension System specification
@@ -112,3 +112,38 @@ Fresh analysis confirms the discrepancies recorded on 2026-10-19 remain, since s
 ### Advisory: ClawHub is still more than a remote marketplace.
 
 - ClawHub participates in the CLI through publish commands and top-level command families.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against current code confirms the three blocking items remain open and refines one advisory, because specification.md is unchanged.
+
+### Blocking: specification.md:18-23 still shows four SDK barrels instead of narrow subpaths
+
+- `package.json:522` starts the `./plugin-sdk/<name>` export map with 368 subpath exports, and `scripts/lib/plugin-sdk-entrypoints.json` lists 389 public subpaths.
+- `src/plugin-sdk/AGENTS.md:24` still forbids broad convenience barrels and re-exports.
+- `docs/plugins/sdk-overview/imports.md:22-25` still directs authors to specific subpaths.
+- `api.ts` and `runtime-api.ts` remain plugin-local files under `extensions/<id>/`, not SDK barrels.
+
+### Blocking: specification.md:36-43 still misstates PluginManifest
+
+- `src/plugins/manifest-types.ts:447-449` declares `id: string` and a required `configSchema: JsonSchemaObject`, not a nullable Zod schema.
+- `src/plugins/manifest-types.ts:464` uses `kind?: PluginKind | PluginKind[]`, and the type has no `type` field.
+- `src/plugins/manifest-types.ts:563` and `src/plugins/manifest-types.ts:569` declare `name?` and `version?` as optional, and the type has no `entry` field.
+
+### Blocking: specification.md:49-55 still omits install gates and source prefixes
+
+- `src/cli/plugins-cli.ts:158-168` still gates installs with capability, policy, and force flags.
+- `src/plugins/install-provenance.ts:13-20` still classifies git, local-archive, local-path, marketplace, npm, and npm-pack sources.
+- `src/security/install-policy.ts` can still refuse an install outright.
+- `src/plugins/loader.ts` and `src/plugins/lifecycle.ts` still support activation beyond the next start.
+
+### Advisory: the import boundary scripts are still `.mts`, not the `.mjs` glob
+
+- `scripts/check-plugin-extension-import-boundary.mts:1-3` and `scripts/check-test-helper-extension-import-boundary.mts` are the current scripts.
+- `package.json:2025` runs the check as `lint:plugins:no-extension-imports`.
+
+### Advisory: the ClawHub CLI advisory has partly expired
+
+- `src/cli/plugins-authoring-command.test.ts:771-775` still asserts the `npm exec clawhub -- login` and `npm exec clawhub -- package publish .` publishing path.
+- `src/cli/program/subcli-command-metadata.ts:20` still registers `promos`.
+- `src/cli/program/command-registry.test.ts:52` now asserts that a top-level `claws` command is absent, so that part of the 2026-10-19 advisory is no longer true.

@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Companion Applications requirements
@@ -71,3 +71,35 @@ The 2026-10-19 drift remains present. The artifact is unchanged and the code sti
 - Code: a browser approval flow lets a user approve a pairing request from a browser using a code, and the device-pair plugin can notify subscribers of pending pairing requests.
 - An implemented user-facing behavior is missing from the requirements.
 - Advisory.
+
+## Sync drift: 2026-11-23
+
+Fresh comparison against the current code confirms the 2026-10-19 and 2026-11-16 drift remains. The artifact is unchanged at `status: done` and the code still contradicts it. Verdict stays `changes-requested`.
+
+### The platform inventory is still incomplete (blocking)
+
+- Evidence: `apps/linux/README.md:1-3` names the shipped Tauri v2 desktop app for Linux and Windows. The files `apps/linux/src-tauri/src/tray.rs`, `apps/linux/src-tauri/src/quickchat.rs`, `apps/linux/src-tauri/src/gateway.rs`, and `apps/linux/src-tauri/src/updater.rs` are present. The watch, widget, share-extension, wear, wake-word, and MLX speech surfaces exist at `apps/ios/WatchApp/`, `apps/ios/ActivityWidget/`, `apps/ios/ShareExtension/`, `apps/android/wear/`, `apps/swabble/`, `apps/macos-mlx-tts/`, and `apps/shared/OpenClawKit/`.
+- Artifact says: requirements.md:10 lists only "macOS desktop app, iOS app, Android app, and Windows companion", and requirements.md:41-43 constrains only iOS, macOS, and Android.
+- Code: the in-tree companion set includes the Linux and Windows Tauri client plus six additional native surfaces, none of which has a requirement.
+- Blocking: a reader cannot discover shipped platforms from the requirements.
+
+### FR-8 still describes an out-of-tree Windows Hub (blocking)
+
+- Evidence: `docs/platforms/windows.md:22-25` states Windows Hub is maintained in `openclaw/openclaw-windows-node`. A tree search returns 0 `.cs` files and 0 `.csproj` files. The in-tree Windows client is `apps/linux/src-tauri/src/gateway_windows.rs`, `apps/linux/src-tauri/src/cli_windows_tests.rs`, and `apps/linux/src-tauri/src/runtime_action_windows_tests.rs`.
+- Artifact says: requirements.md:30 requires setup, tray status, chat, node mode, and local MCP mode of "the Windows companion app".
+- Code: no Windows Hub source is in this repository, and the in-tree Tauri client has no local MCP server mode.
+- Blocking: the requirement names capabilities of a product that is not built from this tree.
+
+### FR-7 and FR-2 still omit browser pairing and pairing notifications (advisory)
+
+- Evidence: `src/state/openclaw-state-schema.sql:645-656` defines `device_pairing_browser_requests` with consumers `src/infra/device-pairing-browser-code.worker.ts` and `src/gateway/server.browser-pair.test.ts`. `extensions/device-pair/notify.ts` and `extensions/device-pair/notify-state.ts` implement a pairing notification service.
+- Artifact says: requirements.md:24 covers push notifications only for assistant messages, and requirements.md:29 covers device pairing generically.
+- Code: browser approval of pairing requests and pairing-request notifications are implemented user-facing behaviors.
+- Advisory.
+
+### FR-5 and FR-1 wording drift persists (advisory)
+
+- Evidence: `apps/macos/Sources/OpenClaw/TalkMLXSpeechSynthesizer.swift` and `apps/macos-mlx-tts/Package.swift:1-3` show a local MLX speech helper alongside `apps/shared/OpenClawKit/Sources/OpenClawKit/TalkSystemSpeechSynthesizer.swift`. `apps/macos/Sources/OpenClaw/MenuBar.swift` and `StatusMenuController.swift` implement a macOS menu bar.
+- Artifact says: requirements.md:27 requires text-to-speech using system voices, and requirements.md:23 calls the macOS surface a system tray.
+- Code: a second local speech engine exists, and macOS documentation reserves "tray" for the Windows and Linux Tauri clients.
+- Advisory: wording only, the capabilities exist.

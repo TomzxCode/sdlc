@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Control UI requirements
@@ -88,4 +88,36 @@ Fresh analysis of the owned paths under `ui/src/` confirms the drift recorded on
 - Evidence: `ui/src/e2e/` now holds 1004 e2e test files, including phone-specific scenarios, and `ui/vitest.config.ts` defines browser projects.
 - Artifact says: "What is the target mobile browser support for the Control UI?" (requirements.md:63).
 - Code: phone-specific test lanes exist, but no supported browser matrix is stated in the tree.
+- Advisory: the question is still open, but the test lanes narrow it.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis of `ui/src/` and directly related gateway files confirms the drift recorded on 2026-10-19 and 2026-11-16 is still present. Solid packages remain at `2.0.0-rc.18`, and the unit test corpus under `ui/src/` has grown to 3435 files. The current requirements.md has no "Out of Scope" section, so the earlier plugin-out-of-scope finding is not repeated here.
+
+### The Lit constraint is still contradicted by the code (blocking)
+
+- Evidence: `grep -rl "from ['\"]lit" ui/src` returns 0 files, `grep -rl "solid-js" ui/src --include="*.ts" --include="*.tsx"` returns 1756 files, `ui/package.json:37-38,55` lists `@solidjs/signals`, `@solidjs/web`, and `solid-js` at `2.0.0-rc.18` with no `lit` dependency, `ui/AGENTS.md:7`, `.sdlc/context/conventions.md:43`
+- Artifact says: "Uses Lit web components (legacy decorators)" (requirements.md:45).
+- Code: the Control UI is a Solid 2 application.
+- Blocking: the constraint directs an implementer to a framework the repository forbids.
+
+### The scope still omits shipped subsystems (blocking)
+
+- Evidence: `ui/src/pages/terminal/terminal-page.tsx`, `ui/src/components/desktop/desktop-client.ts`, `ui/src/pages/chat/components/file-editor-view.ts`, `ui/src/plugins/control-ui-view.solid.tsx`, `ui/package.json:13-17` (`@codemirror/*`), `ui/package.json:24` (`@novnc/novnc`), `ui/package.json:27` (`@openclaw/libterminal`), `ui/package.json:44` (`ghostty-web`)
+- Artifact says: the Overview lists chat, sessions, configuration, status, and plugin management (requirements.md:10), and FR-9 only promises a "plugin management interface" (requirements.md:31).
+- Code: the UI also embeds a terminal, a noVNC desktop viewer, a CodeMirror file and diff editor, and Solid views that render plugin-supplied UI.
+- Blocking: a reader would not know these surfaces exist.
+
+### The configuration, theming, and session items remain understated (advisory)
+
+- Evidence: `ui/src/pages/config/config-page.tsx`, `ui/src/pages/config/curated-settings.tsx`, `ui/src/app/theme.test.ts`, `ui/src/app/bootstrap-theme.ts`, `ui/src/app/app-host.tsx`
+- Artifact says: FR-7 promises viewing and editing configuration, FR-10 promises dark mode, and Open Question 1 asks about simultaneous sessions (requirements.md:29, requirements.md:32, requirements.md:62).
+- Code: the UI has a curated settings editor with routed settings pages, custom theme import with a palette system, and multiple concurrent sessions through a session roster.
+- Advisory: the requirements still hold, but they understate the shipped behavior.
+
+### Open Question 2 is partly answered (advisory)
+
+- Evidence: `ui/src/e2e/` now holds 1041 e2e test files, including phone-specific scenarios, and `ui/vitest.config.ts:4-5,32` wires Playwright Chromium and an optional WebKit browser project.
+- Artifact says: "What is the target mobile browser support for the Control UI?" (requirements.md:63).
+- Code: phone-specific test lanes and browser projects exist, but no supported browser matrix is stated in the tree.
 - Advisory: the question is still open, but the test lanes narrow it.

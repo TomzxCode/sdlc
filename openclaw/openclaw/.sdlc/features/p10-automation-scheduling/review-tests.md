@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -105,3 +105,42 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: the plan lists no active-hours cases and no Lobster plugin cases, while treating the flow engine as covered by one doctor test.
 - What the code actually does: execution windows and the Lobster pipeline runtime both have dedicated tests.
 - Needed change: add rows for the active-hours suites and for the four Lobster suites, and update the scope text to name the Lobster plugin.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis of the test surface confirms the recorded drift still stands. No new discrepancy was found beyond the items below.
+
+### Cited test files are still missing
+
+- Status: BLOCKING
+- Evidence:
+  - `extensions/webhooks/` is absent, so TC-8 (`extensions/webhooks/src/http.test.ts`), TC-9 (`extensions/webhooks/src/config.test.ts`), and TC-16 (`extensions/webhooks/index.test.ts`) point at nonexistent files. Coverage now lives in `src/gateway/hooks.test.ts`, `src/gateway/hooks-mapping.test.ts`, and `src/gateway/server/hooks.*.test.ts`.
+  - `src/cron/pacing.test.ts` (TC-5), `src/cron/heartbeat-policy.test.ts` (TC-17), `src/cron/service.prevents-duplicate-timers.test.ts` (TC-20), and `src/cron/service.store-load-invalid-main-job.test.ts` (TC-22) are all absent.
+- Artifact still lists those paths in TC-5, TC-8, TC-9, TC-16, TC-17, TC-20, and TC-22.
+- Needed change: repoint the seven cases at the surviving suites.
+
+### TC-13 still misses the isolated-agent suite tree
+
+- Status: BLOCKING
+- Evidence:
+  - `src/cron/isolated-agent/` holds 130 files, including `run.sandbox-admission.test.ts`, `run.fallback-policy.test.ts`, and `run.tools-allow.test.ts`.
+  - Artifact still cites only the root-level glob `src/cron/isolated-agent.*.test.ts`.
+- Needed change: cite both the root-level files and the `src/cron/isolated-agent/` directory.
+
+### The failure-repair suite is still unlisted
+
+- Status: BLOCKING
+- Evidence:
+  - `src/cron/service.failure-repair.test.ts` exists and exercises the repair-before-alert behavior.
+  - Artifact maps FR-7 only to TC-4, TC-12, and TC-14.
+- Needed change: add a row for the repair suite and map FR-7 to it.
+
+### Heartbeat, active-hours, and Lobster coverage are still absent
+
+- Status: ADVISORY
+- Evidence:
+  - `src/cron/isolated-agent.heartbeat-migration.test.ts` and `src/cron/service.heartbeat-payload.test.ts` exist; `src/cron/heartbeat-policy.test.ts` and `src/cron/heartbeat-monitor.test.ts` do not.
+  - `src/cron/active-hours.test.ts` and `src/cron/active-jobs.test.ts` exist.
+  - `extensions/lobster/src/` ships `lobster-runner.test.ts`, `lobster-runner.validation.test.ts`, `lobster-schema-compiler.test.ts`, and `lobster-tool.test.ts`.
+- Artifact still has no rows for these areas and no mention of Lobster in scope.
+- Needed change: add rows for heartbeat migration, execution windows, and the four Lobster suites, and replace or repoint TC-17.

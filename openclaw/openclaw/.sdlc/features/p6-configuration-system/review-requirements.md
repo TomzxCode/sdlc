@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Configuration System requirements
@@ -65,4 +65,31 @@ The requirements still describe the pre-SecretRef system and keep the schema-gen
 
 - Requirements.md:44 still says config is a single JSON file by default.
 - Code: `src/config/includes.ts` implements the `$include` chain with a cycle check and a 2 MiB per-file limit, and `src/config/paths.ts` resolves the file under the state directory.
+- Classification: advisory.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against the current checkout confirms the 2026-10-19 drift is still open. Requirements.md was left unchanged.
+
+### Blocking: FR-7 still omits the SecretRef provider model and secrets runtime
+
+- Requirements.md:30 still names only env vars, config file, and credentials file as auth configuration methods.
+- Code: `src/secrets/ref-contract.ts:4` defines `SecretRefSource = "env" | "file" | "exec" | "store"`, and lines 14-18 define the `{ source, provider, id }` shape.
+- Code: `src/config/zod-schema.core.ts:132` defines `SecretsConfigSchema`, with `providers` at line 141 and per-source `defaults` at lines 142-149.
+- Code: `src/config/zod-schema.root-shape.ts:359` exposes `secrets: SecretsConfigSchema` as a top-level config key.
+- Code: `src/cli/secrets-cli.ts:139,207,326` gates exec providers with `--allow-exec`, and the `secrets audit`, `configure`, and `apply` commands are operator surfaces with no matching requirement.
+- Classification: blocking.
+
+### Blocking: the schema-generation open question is still stale
+
+- Requirements.md:62 still asks whether a config schema generation tool should exist.
+- Code: `scripts/generate-base-config-schema.ts:15` prints "runtime-computed; no generated file to write" for `--write`.
+- Code: `src/config/schema.base.generated.test.ts:4` verifies the computed base schema, and `src/config/bundled-channel-config-metadata.generated.ts:1` is the generated channel metadata artifact.
+- Code: `package.json:1849-1850,1911` wires `check:base-config-schema`, `check:bundled-channel-config-metadata`, and `config:channels:check`.
+- Classification: blocking.
+
+### Advisory: the single-file constraint still omits includes
+
+- Requirements.md:44 still says config is a single JSON file by default.
+- Code: `src/config/includes.ts:28-29` defines `INCLUDE_KEY = "$include"` and `MAX_INCLUDE_DEPTH = 10`, with the cycle budget documented at line 33.
 - Classification: advisory.

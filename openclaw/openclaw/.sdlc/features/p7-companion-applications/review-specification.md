@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Companion Applications specification
@@ -97,3 +97,49 @@ The 2026-10-19 drift remains present. The artifact is unchanged and the code sti
 - Artifact says: the architecture diagram (specification.md:14-20) shows one generic companion app speaking the Gateway Protocol.
 - Code: the Linux and Windows Tauri client now also manages a bundled Gateway runtime, deep links, remote gateways, pending approvals, gateway control auth, and a desktop bridge.
 - Advisory: the 2026-10-19 review already flagged the missing Tauri client. Its responsibilities have grown.
+
+## Sync drift: 2026-11-23
+
+Fresh comparison against the current code confirms the 2026-10-19 and 2026-11-16 drift remains. The artifact is unchanged at `status: done` and the code still contradicts it. Verdict stays `changes-requested`.
+
+### Linux is still marked out of scope while the client ships (blocking)
+
+- Evidence: `apps/linux/README.md:1-3` describes a Tauri v2 app for Linux and Windows. The files `apps/linux/src-tauri/src/tray.rs`, `apps/linux/src-tauri/src/first_run.rs`, `apps/linux/src-tauri/src/gateway.rs`, `apps/linux/src-tauri/src/native_browser.rs`, `apps/linux/src-tauri/src/updater.rs`, and `apps/linux/omarchy/manifest.json` are present.
+- Artifact says: specification.md:73 lists "- Linux desktop app (Linux users use CLI and channels)" under Out of Scope.
+- Code: the desktop app is built and released for Linux with its own tray, first-run setup, Gateway management, inline browser, and updater.
+- Blocking: the out-of-scope claim states the opposite of a shipped client.
+
+### The Windows stack row still points at code outside this tree (blocking)
+
+- Evidence: `docs/platforms/windows.md:22-25` places Windows Hub in `openclaw/openclaw-windows-node`. A tree search returns 0 `.cs` and 0 `.csproj` files. The in-tree Windows code is `apps/linux/src-tauri/src/gateway_windows.rs` and `apps/linux/src-tauri/src/runtime_action_windows_tests.rs`.
+- Artifact says: specification.md:29 lists "| Windows | C# (Windows Hub) | .NET |", and specification.md:69 calls Windows Hub early stage.
+- Code: the buildable Windows companion is Rust and TypeScript Tauri under `apps/linux/src-tauri/`.
+- Blocking: a reader would look for C# sources that do not exist.
+
+### The DevicePairing model still contradicts the state schema (blocking)
+
+- Evidence: `src/state/openclaw-state-schema.sql:577-604` defines `device_pairing_paired` with 22 columns including `role`, `roles_json`, `scopes_json`, `approved_scopes_json`, `node_surface_json`, and `approved_at_ms`. Six pairing tables exist at lines 554, 577, 605, 628, 638, and 645.
+- Artifact says: specification.md:35-41 defines a single `DevicePairing` table with `deviceId`, `userId`, `publicKey`, `pairedAt`, and `lastSeen`.
+- Code: there is no `userId` or `pairedAt` column, and pairing spans `device_pairing_pending`, `device_pairing_paired`, `device_bootstrap_tokens`, `device_pair_setup_completions`, `device_pairing_join_codes`, and `device_pairing_browser_requests`.
+- Blocking: the artifact asserts a schema the code contradicts.
+
+### The pairing sequence still reverses code generation (blocking)
+
+- Evidence: `extensions/device-pair/README.md:9-14` documents that an authorized chat runs `/pair` or `/pair qr` and the Gateway issues the setup payload. `extensions/device-pair/pair-command-approve.ts` and `extensions/device-pair/pair-command-auth.ts` implement approval.
+- Artifact says: specification.md:48-50 has "App → Gateway: request pairing code" followed by "Gateway → User: display pairing code".
+- Code: the Gateway generates the code and the device redeems it; the app never requests a code first.
+- Blocking: the first hop of the core pairing contract is wrong.
+
+### The architecture diagram still omits the Tauri client (blocking)
+
+- Evidence: `apps/linux/src-tauri/src/bundled_runtime.rs`, `deep_links.rs`, `remote_gateway.rs`, `desktop_bridge.rs`, `gateway_control_auth.rs`, `pending_approvals.rs`, and `apps/linux/ui/` are present.
+- Artifact says: specification.md:14-20 shows one generic companion app speaking only "Gateway Protocol (WebSocket + RPC)".
+- Code: the Tauri client also supervises a bundled Gateway runtime, handles deep links and remote gateways, owns a desktop bridge, gates gateway control auth, and tracks pending approvals.
+- Blocking: the mental model leaves out one of two desktop clients and its responsibilities.
+
+### The platform stacks and decisions tables omit shared Swift code (advisory)
+
+- Evidence: `apps/macos/Package.swift:24-25` depends on `../shared/OpenClawKit` and `../shared/OpenClawMLXTTSProtocol`. `apps/ios/project.yml:17-19` and `:88-94` depend on `OpenClawKit` and `Swabble`. `apps/shared/` holds `OpenClawKit`, `OpenClawMLXTTSProtocol`, and `OpenClawWatchRTC`.
+- Artifact says: specification.md:24-29 lists only four platform rows, and specification.md:58-63 omits the shared-code strategy.
+- Code: chat UI, protocol types, native state, MLX TTS protocol, and watch RTC are shared through local SwiftPM packages, with `SwabbleKit` as an external wake-word dependency.
+- Advisory.

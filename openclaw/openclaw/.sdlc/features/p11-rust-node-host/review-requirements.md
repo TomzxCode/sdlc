@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -76,3 +76,18 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - The durable device-token storage question still stands because `issued_device_token` remains in process memory only.
 
 No new discrepancies were found in requirements.md during this reconciliation.
+
+## Sync drift: 2026-11-23
+
+### Previously recorded drift items remain unaddressed
+
+- Status: BLOCKING
+- Evidence:
+  - `.sdlc/features/p11-rust-node-host/requirements.md:13` still assigns the Gateway-side pairing, approval, and registry surface to FEAT-p1.
+  - `.sdlc/features/p14-node-host-device-execution/requirements.md:42` (FR-14) claims that surface, and `src/gateway/node-pairing-auto-approve.ts:1`, `src/gateway/node-pairing-ssh-verify.ts:1`, `src/gateway/node-registry-pairing.ts:1`, `src/gateway/node-registry.ts:1`, and `docs/gateway/pairing.md:1-14` implement it.
+  - `.sdlc/features/p11-rust-node-host/requirements.md:60` still points the pairing-authority constraint at FEAT-p1.
+  - `src/node-host/` still holds the shipped TypeScript node host, which `docs/nodes/node-host.md:11` documents instead of the Rust crate.
+  - `crates/openclaw-node-host/Cargo.toml:6` and `crates/openclaw-gateway-client/Cargo.toml:6` still declare `rust-version = "1.93"`, while `.github/workflows/node-runtime-conformance.yml:231` installs Rust 1.99.0 and lines 244, 247, 251, and 263 run cargo with that toolchain.
+  - `crates/openclaw-node-host/src/host.rs:175` still keeps the issued device token in an in-memory `Option<String>`, so Open Question 3 at `requirements.md:245` still stands.
+- The artifact was not overwritten.
+- No new discrepancies were found in requirements.md during this reconciliation.

@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Command-Line Interface specification
@@ -98,3 +98,33 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact says (specification.md:32-39): a `CLICommand` has `name`, `description`, `handler`, and `options` of type `yargs.Options`.
 - Code: `src/cli/program/command-group-descriptors.ts` defines `NamedCommandDescriptor` and `RegisteredCommandDescriptor`.
 - Code: `src/cli/command-catalog-types.ts` defines `CliCommandCatalogEntry` with a policy describing `configGuard`, `loadPlugins`, `networkProxy`, and `ensureCliPath`.
+
+## Sync drift: 2026-11-23
+
+### Blocking: the framework claim is still yargs instead of Commander
+
+- Artifact says (specification.md:10, 39, 57) the CLI is built on yargs and uses `yargs.Options`.
+- Code: `package.json:2473` declares `"commander": "15.0.0"`, and no yargs dependency exists.
+- Code: `src/cli/program/build-program.ts:12-19` constructs `new OpenClawCommand()`, calls `enablePositionalOptions()`, and calls `exitOverride(...)`.
+- Code: `src/cli/program/openclaw-command.ts:23` defines `OpenClawCommand` as a `Command` subclass.
+- Code: `src/cli/program/command-group-descriptors.ts:1-17` types every registrar as `(program: Command, ...)`.
+
+### Blocking: the prompt library claim is still Inquirer instead of @clack/prompts
+
+- Artifact says (specification.md:60): "Interactive flow | Inquirer-based prompts".
+- Code: `package.json:2448` declares `"@clack/prompts": "1.8.1"`, and no Inquirer dependency exists.
+- Code: `src/wizard/clack-prompter.ts:1-16` imports `confirm`, `select`, `multiselect`, `password`, `text`, `intro`, and `outro` from `@clack/prompts`.
+
+### Blocking: the architecture tree still omits the dominant layers
+
+- Artifact shows (specification.md:14-28) eight files under `src/cli/` and no program, handler, wizard, system-agent, or TUI layer.
+- Code: `src/cli/program/build-program.ts:2-8` delegates registration to `command-registry-core.js` and `register.subclis.js`.
+- Code: `src/cli/program/command-group-descriptors.ts:4-17` defines the descriptor contract, `src/cli/program/core-command-descriptors.ts:16-78` defines the core catalog, and `src/cli/program/subcli-command-metadata.ts:15-76` defines the sub-CLI catalog.
+- Code: `src/plugins/cli.ts:76` exports the plugin-owned registration path, which the artifact never mentions.
+- Code: `src/cli/` holds 1426 tracked files, `src/commands/` holds 1570, `src/tui/` holds 185, `src/wizard/` holds 76, `src/system-agent/` holds 147, and `src/cli/program/` holds 81.
+
+### Advisory: the CLICommand data model still does not match the descriptor model
+
+- Artifact says (specification.md:32-39): a `CLICommand` has `name`, `description`, `handler`, and `options` of type `yargs.Options`.
+- Code: `src/cli/program/command-group-descriptors.ts:4-17` defines `NamedCommandDescriptor` and `RegisteredCommandDescriptor`, with `register`, `hasSubcommands`, `machineOutput`, and `hidden` fields.
+- Code: `src/cli/command-catalog-types.ts:35-38` defines `CliCommandCatalogEntry` with `commandPath`, `exact`, `policy`, and `route`.

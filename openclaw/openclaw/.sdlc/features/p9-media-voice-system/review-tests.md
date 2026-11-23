@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Media and Voice System test plan
@@ -88,3 +88,37 @@ The test plan was not changed since the 2026-10-19 review, so most recorded drif
 
 - No artifact text changed, so the advisory findings about the live test suffix convention and omitted suites still hold.
 - Advisory.
+
+## Sync drift: 2026-11-23
+
+The recorded code_ref 0eae4c0 is absent from this checkout, so this run verified the current tree at HEAD 78d2f2e70. The test plan is unchanged since the 2026-11-16 review, and every recorded discrepancy still holds. The concrete discrepancies are restated below against current code.
+
+### TC-21 still names a test file that does not exist (blocking)
+
+- Evidence: `tests.md:32` cites `src/media-generation/provider-capabilities.contract.test.ts`. That file is absent. `src/media-generation/` contains only `live-test-helpers.test.ts`, `provider-assets.test.ts`, `registry.test.ts`, and `runtime-shared.test.ts`. `src/video-generation/capabilities.test.ts` and `src/music-generation/capabilities.test.ts` exist, but `src/image-generation/capabilities.test.ts` does not.
+- The cited replacement from 2026-10-19 is also gone, so the plan points a reviewer at two files that cannot be opened.
+
+### TC-3 still names a config test file that does not exist (blocking)
+
+- Evidence: `tests.md:18` cites `src/tts/status-config.test.ts`. `src/tts/status-config.ts` exists, but the only config suite present is `src/tts/tts-config.test.ts`.
+
+### The coverage matrix still maps FR-7 to a test that cannot cover it (blocking)
+
+- Evidence: `tests.md:42` maps FR-7 to TC-24, which `tests.md:35` defines as `extensions/elevenlabs/shared.test.ts` with outcome "Types are correct". Real transcription suites are `src/realtime-transcription/websocket-session.test.ts` and the Deepgram provider tests under `extensions/deepgram/`.
+- The matrix directs a reader to a type-shape test that cannot fail for a transcription defect.
+
+### The coverage matrix still mislabels FR-10 (blocking)
+
+- Evidence: `requirements.md:33` defines FR-10 as meeting bot integration. `tests.md:43` maps FR-10 to TC-7 through TC-10, all of which are talk-runtime tests in `src/talk/`. `src/meeting-bot/` holds 31 `*.test.ts` files, and none appear in the plan.
+- The meeting bot requirement still has no listed coverage.
+
+### Voice call, talk, meeting bot, and media understanding coverage is still absent (blocking)
+
+- Evidence: `extensions/voice-call/` holds 66 `*.test.ts` files, `src/talk/` holds 40, `src/meeting-bot/` holds 31, `src/media-understanding/` holds 43, and `src/tts/` holds 22. `tests.md:10` excludes voice call E2E and live tests, and no voice call suite appears in any table.
+- The 2026-11-16 count for voice call was 65 and for media understanding was 42, so both grew while the plan stayed unchanged.
+
+### Live test and unlisted suite findings carry forward (advisory)
+
+- Live tests follow the `*.live.test.ts` suffix convention, for example `extensions/elevenlabs/elevenlabs.live.test.ts` and `extensions/deepgram/audio.live.test.ts`, so they are labelable rather than needing a blanket exclusion at `tests.md:10`.
+- `extensions/elevenlabs/media-understanding-provider.test.ts:1` exists but is absent from the integration table at `tests.md:33-35`.
+- Background generation suites under `src/agents/tools/`, including `media-generate-background.test.ts`, remain unlisted.

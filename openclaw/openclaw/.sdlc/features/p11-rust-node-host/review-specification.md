@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -63,3 +63,18 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - The feature-mask risk statement about JavaScript adapters still holds and needed no change.
 
 No new discrepancies were found in specification.md during this reconciliation.
+
+## Sync drift: 2026-11-23
+
+### Previously recorded drift items remain unaddressed
+
+- Status: ADVISORY
+- Evidence:
+  - `.sdlc/features/p11-rust-node-host/specification.md:32` still lists eleven node-host source modules and omits `crates/openclaw-node-host/src/lib.rs`, which exists on disk.
+  - `specification.md:89` still groups `commands/caps/permissions` into one row, while `crates/openclaw-node-host/src/node.rs:246-257` declares separate advertised and declared fields and `node.rs:352` copies declared into advertised on activation.
+  - `specification.md:106` and `specification.md:153` still assign the Gateway WebSocket surface to FEAT-p1, while `.sdlc/features/p14-node-host-device-execution/requirements.md:42` owns that surface.
+  - `specification.md:191` still omits the rustdoc gate, while `.github/workflows/node-runtime-conformance.yml:261` sets `RUSTDOCFLAGS: -D warnings` and line 263 runs `cargo +1.99.0 doc`.
+  - `specification.md:194` still states the JavaScript adapter constraint, and the constraint still holds because `crates/openclaw-node-host/src/sidecar_protocol.rs:31` sets `SIDECAR_MAX_FEATURE_BITS` to `2^53 - 1` and `test/fixtures/node-sidecar-negotiation-v1.json:12` pins 4503599627370499.
+  - `specification.md:122-123` still matches `crates/openclaw-node-host/src/host.rs:637-639` for the health endpoints, so no new drift exists there.
+- The artifact was not overwritten.
+- No new discrepancies were found in specification.md during this reconciliation.

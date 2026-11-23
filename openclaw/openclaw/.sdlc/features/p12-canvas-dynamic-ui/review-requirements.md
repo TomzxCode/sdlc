@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -150,3 +150,43 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: the 2026-10-19 entries for these items are still marked BLOCKING and the artifacts have not been edited.
 - What the code actually does: the drift persists, and the earlier advisory about `scripts/bundle-a2ui.mts` is now moot because that script was deleted with A2UI.
 - Needed change: apply the 2026-10-19 needed changes, then recheck against the current code.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against the current code confirms the 2026-11-16 drift is still open and unchanged.
+
+### A2UI requirements still have no implementation
+
+- Status: BLOCKING
+- Evidence:
+  - `src/canvas/widget-tool.ts:43` defines `REMOVED_A2UI_ERROR = 'A2UI widgets were removed; use kind "html"'`.
+  - `src/canvas/widget-tool.ts:328-339` rejects `kind: "a2ui"` during argument preparation and execution.
+  - `extensions/canvas/package.json:10-12` declares only `typebox` as a runtime dependency, so no `@a2ui/*` package remains.
+  - `docs/gateway/doctor/config-migrations.md:62-72` records A2UI and `registerBoardWidgetContentKind` as removed, with a Doctor repair path.
+  - No `extensions/canvas/src/a2ui-jsonl.ts`, `extensions/canvas/src/board-widget.ts`, `/__openclaw__/a2ui/` route, or `scripts/bundle-a2ui.mts` exists.
+- Artifact currently says: FR-5 requires A2UI JSONL validation, FR-6 requires an A2UI board widget document, FR-7 names the `/__openclaw__/a2ui/` route, FR-10 includes A2UI Control UI rendering, NFR-3 names lazy A2UI renderer loading, and the Overview describes A2UI dashboard widgets.
+- What the code actually does: Canvas hosts HTML documents only and rejects A2UI with a migration message.
+- Needed change: remove FR-5 and FR-6, narrow FR-7 and FR-10 to HTML Canvas documents, drop the A2UI clause from NFR-3, and rewrite the Overview and Constraints.
+
+### The 32-widget retention policy is still recorded as an open question
+
+- Status: ADVISORY
+- Evidence:
+  - `src/canvas/documents.ts:11` sets `WIDGET_MAX_PER_SCOPE = 32`.
+  - `src/canvas/documents.ts:98-140` prunes the oldest documents in a retention scope on overflow.
+  - `docs/tools/show-widget.md:477` documents the 32-widget limit per session or agent scope.
+- Artifact currently says: open question 2 asks whether any retention or quota policy exists.
+- What the code actually does: core Canvas keeps at most 32 documents per session scope, or per agent scope without a session.
+- Needed change: resolve open question 2 into a requirement or remove it.
+
+### Implemented show_widget behavior still has no requirement
+
+- Status: ADVISORY
+- Evidence:
+  - `src/canvas/widget-tool.ts:242-254` and `src/canvas/widget-tool.ts:471-521` support native dashboard reports with `pin: true`.
+  - `src/canvas/widget-tool.ts:106-123` supports a current-channel widget presenter in addition to `node_panel`.
+  - `src/canvas/widget-script-syntax.ts` and `src/canvas/widget-script-validation.ts` parse and validate inline JavaScript with line and column diagnostics.
+  - `src/canvas/documents.ts:13-39` carries document kind, surface, retention scope, and CSP sandbox fields.
+- Artifact currently says: the functional requirements cover only the canvas tool, node eligibility, CLI, node panel presenter, A2UI, hosting routes, config, doctor migration, and Control UI rendering.
+- What the code actually does: reports, channel presenters, script validation, and retention are user-visible `show_widget` behavior with no requirement in the artifact.
+- Needed change: add requirements for these behaviors or scope them out with a pointer to `docs/tools/show-widget.md`.

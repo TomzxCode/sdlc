@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Companion Applications test plan
@@ -69,3 +69,42 @@ The 2026-10-19 drift remains present. The listed `test/scripts/ios-pull-gateway-
 - Artifact says: the CI and script test table lists 11 files plus a helper glob (tests.md:14-27).
 - Code: new browser-pairing, join-code, and notify test lanes exist with no counterpart in the plan.
 - Advisory: these are release and behavior lanes added since 2026-10-19.
+
+## Sync drift: 2026-11-23
+
+Fresh comparison against the current code confirms the 2026-10-19 and 2026-11-16 drift remains. The artifact is unchanged at `status: done` and the code still contradicts it. Verdict stays `changes-requested`.
+
+### The listed iOS gateway-log test file is still absent (blocking)
+
+- Evidence: `test/scripts/ios-pull-gateway-log.test.ts` does not exist in this checkout.
+- Artifact says: tests.md:25 lists "| `test/scripts/ios-pull-gateway-log.test.ts` | iOS gateway log retrieval |".
+- Code: no replacement with that responsibility exists under `test/scripts/` or `apps/ios/scripts/`.
+- Blocking: the plan points at a file that cannot be opened.
+
+### The native test inventory still covers only Android (blocking)
+
+- Evidence: current file counts are `apps/ios/Tests` 145, `apps/ios/UITests` 21, `apps/ios/WatchTests` 5, `apps/macos/Tests/OpenClawIPCTests` 330, `apps/shared/OpenClawKit/Tests` 247, `apps/swabble/Tests` 6, `apps/macos-mlx-tts/Tests` 2, `apps/linux/tests` 19, `apps/linux/src-tauri/tests` 7, `apps/android/app/src/test` 301, `apps/android/wear/src/test` 24, and `apps/android/wear-shared/src/test` 3.
+- Artifact says: tests.md:31-34 lists only the two Android test locations.
+- Code: twelve native suite locations exist, and the 2026-11-16 counts have grown further (macOS 328 to 330, shared 244 to 247, Android app 300 to 301, iOS UITests 20 to 21).
+- Blocking: the plan understates native coverage.
+
+### The scope still excludes macOS testing that exists (blocking)
+
+- Evidence: `apps/macos/Tests/OpenClawIPCTests/` holds 330 files and `apps/macos/AGENTS.md:9-15` gives the command to build them.
+- Artifact says: tests.md:10 states "Does not cover macOS app UI testing or Windows Hub testing outside CI scripts."
+- Code: the macOS app has a native Swift test target covering app lifecycle, dashboard windows, approvals, node permissions, and Control UI download behavior.
+- Blocking: the scope statement tells the reader the opposite of the tree.
+
+### The coverage matrix still claims proof that does not exist (blocking)
+
+- Evidence: the listed iOS files are release-script tests such as `test/scripts/ios-version.test.ts` and `test/scripts/ios-release-signing.test.ts`. Push delivery lives in `apps/ios/Sources/Push/PushRegistrationManager.swift` and `PushRelayClient.swift`. The macOS tray is `apps/macos/Sources/OpenClaw/MenuBar.swift`.
+- Artifact says: tests.md:40-41 claims "Covered by macOS app build/CI" for FR-1 and "Covered by iOS release tests" for FR-2.
+- Code: release-script tests do not assert push delivery, and a build does not cover a menu bar interaction.
+- Blocking: the matrix misdirects anyone checking whether FR-1 and FR-2 are verified.
+
+### New script and pairing test lanes remain undocumented (advisory)
+
+- Evidence: `test/scripts/ios-behavior-grade.test.ts`, `test/scripts/macos-mlx-native.test.ts`, `test/scripts/macos-mlx-settings.test.ts`, `src/gateway/server.browser-pair.test.ts`, `src/gateway/server-http.device-pairing-join.test.ts`, `extensions/device-pair/notify.test.ts`, and `extensions/device-pair/notify-cas.test.ts` are present.
+- Artifact says: tests.md:14-27 lists 11 files plus a helper glob.
+- Code: browser-pairing, join-code, notify, and MLX speech test lanes have no counterpart in the plan.
+- Advisory.

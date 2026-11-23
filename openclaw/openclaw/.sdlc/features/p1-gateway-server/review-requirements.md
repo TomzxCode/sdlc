@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Requirements review: Gateway Server
@@ -116,4 +116,61 @@ Fresh analysis of the owned source paths confirms the 2026-10-19 drift is still 
 - Classification: advisory.
 - Artifact says (lines 51-58): every acceptance criterion still uses `- [ ]`.
 - Code says: the behaviors remain implemented and covered, for example the hot-reload assertion at `src/gateway/gateway.test.ts:254`.
+- Impact: the checklist state still misleads a reader who treats unchecked boxes as unimplemented work.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against the current checkout at version 2026.11.7 confirms the 2026-11-16 drift is still unresolved.
+The requirements artifact was not edited since that review, so earlier findings stand with updated line numbers.
+Every finding below is classified as blocking or advisory.
+
+### Persisting: the Node.js runtime constraint still contradicts the package manifest
+
+- Classification: blocking.
+- Artifact says (line 46): "Must run on Node.js 22.19+ (Node 24 recommended)".
+- Code says: `package.json:2584` sets `"node": ">=24.16.0 <25 || >=26.1.0"`.
+- Impact: Node 22 remains unsupported and Node 26 is supported, so a reader would still plan an uninstallable deployment.
+
+### Persisting: FR-2 still names three of the eight authentication methods
+
+- Classification: blocking.
+- Artifact says (line 25): FR-2 lists bearer tokens, device pairing, and pre-auth tokens only.
+- Code says: `src/gateway/auth-policy.types.ts:5-13` lists `none`, `token`, `password`, `tailscale`, `device-token`, `bootstrap-token`, `trusted-proxy`, and `remote-ingress`.
+- Code says: `src/gateway/auth.ts:61-65` adds `delegation`, a verified Tailscale identity, and an OpenClaw ID tunnel principal.
+- Impact: a reader still would not plan password, Tailscale, or reverse-proxy deployments.
+
+### Persisting: no requirement covers the pluggable database storage engine
+
+- Classification: blocking.
+- Artifact says (lines 22-33 and 45): the functional requirements never mention storage engines and the constraint states single-user architecture.
+- Code says: `package.json:8-18` sets `databaseEngines` to `["sqlite", "postgres"]` and `postgresFamilies` to five families.
+- Code says: `src/infra/database-engine/registry.ts:24-33` marks those five families PostgreSQL-capable and `:39-52` resolves per-family engine overrides.
+- Impact: NFR-1 still promises crash recovery without stating that the session store can live outside a local SQLite file.
+
+### Persisting: FR-5 describes one health endpoint where the code exposes three probe classes
+
+- Classification: advisory.
+- Artifact says (line 28): FR-5 is a single health check endpoint.
+- Code says: `src/gateway/gateway-http-route-contracts.ts:1-8` defines six routes across `live`, `ready`, and `startup` classes.
+- Impact: the requirement holds, but a supervisor still needs to know that readiness, not liveness, carries admission state.
+
+### Persisting: FR-4 does not name the four config reload modes
+
+- Classification: advisory.
+- Artifact says (line 27): FR-4 is generic hot-reload without full restart.
+- Code says: `src/config/types.gateway.ts:92` defines `GatewayReloadMode` as `off`, `restart`, `hot`, or `hybrid`.
+- Impact: the requirement holds, but reload strategy is still operator-selectable and unnamed in the artifact.
+
+### Persisting: FR-3 understates the current session management surface
+
+- Classification: advisory.
+- Artifact says (line 26): FR-3 lists create, list, read, update, delete, and reset.
+- Code says: `src/gateway/methods/core-descriptors.ts:236` declares `sessions.create` and `:243-244` declares `sessions.goal.update` and `sessions.goal.clear` as methods introduced in version 2026.8.
+- Impact: the requirement is not contradicted, but it still omits methods a reader will encounter.
+
+### Persisting: the acceptance criteria are all unchecked
+
+- Classification: advisory.
+- Artifact says (lines 51-58): every acceptance criterion still uses `- [ ]`.
+- Code says: `src/gateway/gateway.test.ts:254` asserts the hot-reload status and `src/gateway/server-http.probe.test.ts:206` opens the HTTP probe contract suite.
 - Impact: the checklist state still misleads a reader who treats unchecked boxes as unimplemented work.

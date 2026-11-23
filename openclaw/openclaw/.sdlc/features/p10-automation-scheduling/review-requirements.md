@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 ## Sync drift: 2026-10-19
@@ -120,3 +120,46 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact currently says: no requirement mentions execution windows, quiet hours, or idle-only gating.
 - What the code actually does: jobs can be restricted to an active-hours window and gated on agent idleness.
 - Needed change: add a functional requirement for job-level execution windows and idle-only gating.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis of `src/cron/`, `src/flows/`, `src/gateway/hooks.ts`, and `extensions/lobster/` confirms the recorded drift still stands. No new discrepancy was found beyond the items below.
+
+### FR-3 still names a retired webhook plugin
+
+- Status: BLOCKING
+- Evidence:
+  - `src/plugins/config-state.ts:31-34` lists `"webhooks"` in `RETIRED_PLUGIN_IDS`; `isRetiredPluginId` at line 44 rejects it.
+  - `extensions/webhooks/` does not exist in this checkout.
+  - `src/gateway/hooks.ts:41` sets `DEFAULT_HOOKS_PATH = "/hooks"`; lines 93-94 return `null` unless `cfg.hooks?.enabled === true`.
+  - `src/gateway/server/hooks-request-handler.ts` and `src/gateway/server/hooks-event-dispatch.ts` carry the inbound HTTP handling.
+- Artifact still says: "FR-3 | Must | The system shall support webhook receivers for external HTTP triggers" with no mention of the core `hooks` config block or the retired plugin id.
+- Needed change: restate FR-3 as core Gateway HTTP hooks gated by `hooks.enabled` and a bearer token, and record that the `webhooks` plugin id is retired.
+
+### FR-4 still claims a core multi-step workflow engine
+
+- Status: BLOCKING
+- Evidence:
+  - `src/flows/` holds 144 files, all doctor and setup code; no flow-execution engine remains there.
+  - `extensions/lobster/src/lobster-runner.ts` implements the multi-step pipeline runtime; `docs/tools/lobster.md:69` calls it "The separately installed official `@openclaw/lobster` plugin".
+  - `docs/automation/index.md:75` records removal of "The shared Tasks ledger, TaskFlow orchestration API, and TaskFlow Webhooks plugin".
+- Artifact still says: "FR-4 | Must | The system shall provide a flow/workflow engine for multi-step automations" and the Overview lists a workflow/flow engine as a first-class capability.
+- Needed change: narrow FR-4 to the doctor/setup flows in `src/flows/`, or restate it as the optional Lobster plugin, and record the TaskFlow removal.
+
+### FR-8 still describes a separate heartbeat scheduler
+
+- Status: BLOCKING
+- Evidence:
+  - `src/cron/heartbeat-monitor.ts` is absent from `src/cron/`.
+  - `docs/automation/cron-jobs/schedules.md:63` states "no separate heartbeat runner is involved"; `docs/automation/index.md:97` says existing monitors migrate into ordinary editable jobs.
+  - `src/cron/isolated-agent.heartbeat-migration.test.ts` and `src/cron/default-proactive-job.worker.ts` cover migration and default-proactive provisioning.
+- Artifact still says: "FR-8 | Should | The system shall support heartbeat-style recurring jobs in addition to cron".
+- Needed change: retire FR-8 or restate it as a Doctor-driven migration path into ordinary automation jobs.
+
+### FR-1 still frames cron as the only schedule form
+
+- Status: ADVISORY
+- Evidence:
+  - `packages/gateway-protocol/src/schema/cron.ts:52-58` defines the schedule kinds as `event`, `at`, `every`, `cron`, `on-exit`, and `stream`.
+- Artifact still says: "FR-1 | Must | The system shall support cron-based job scheduling with standard cron expressions".
+- Needed change: note that cron is one schedule kind among six, and keep the existing acceptance criterion as one example.

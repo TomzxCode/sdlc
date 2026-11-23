@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Configuration System test plan
@@ -79,4 +79,33 @@ The plan still names two missing suites, misattributes the env-substitution cove
 ### Advisory: notable test areas are still unlisted
 
 - Code: suites for secrets resolution and audit, Doctor health checks and lint, schema generation, the write journal and snapshot layers, includes, deferred plugin migration, and the env-var count ratchet are absent from the plan.
+- Classification: advisory.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against the current checkout confirms the 2026-10-19 drift is still open. Tests.md was left unchanged.
+
+### Blocking: two listed test files still do not exist
+
+- Tests.md:17 still lists `src/config/validation.test.ts`, and tests.md:20 still lists `src/config/io.parse.test.ts`.
+- Code: neither file exists; validation now has suites such as `src/config/validation.policy.test.ts`, `src/config/validation.async.test.ts`, and `src/config/validation.workshop-contract.test.ts`, while parsing has the `src/config/io.load.ts` suites and `src/config/io.read-helpers.test.ts`.
+- Classification: blocking.
+
+### Blocking: the FR-3 row still names the wrong suite
+
+- Tests.md:24 and tests.md:48 still point FR-3 at `src/config/config.env-vars.test.ts`, which covers runtime env publication and ownership.
+- Code: `src/config/env-substitution.test.ts:20-33` asserts the `${VAR}`, `${VAR:-fallback}`, and `$${LITERAL}` grammar that FR-3 describes.
+- Classification: blocking.
+
+### Blocking: the FR-9 redaction row still names no file
+
+- Tests.md:52 still says "Covered by general redaction tests".
+- Code: `src/config/redact-snapshot.test.ts`, `src/config/redact-snapshot.plugin-secret-ref.test.ts`, `src/config/redact-snapshot.secret-ref.ts`, `src/config/redact-snapshot.raw.ts`, and `src/secrets/store/secret-store.redaction.test.ts` cover redaction.
+- Classification: blocking.
+
+### Advisory: notable test areas are still unlisted
+
+- Code: `src/cli/secrets-cli.ts:139,207,326` and `src/secrets/ref-contract.ts:4` define a secrets operator surface whose suites (`src/secrets/ref-contract.test.ts`, `src/secrets/audit.test.ts`, `src/secrets/configure.test.ts`, `src/secrets/apply.test.ts`, `src/secrets/plan.test.ts`) are absent from the plan.
+- Code: `src/flows/doctor-lint-flow.ts:104` and `src/flows/bundled-health-checks.ts:156` implement the Doctor lint and bundled health-check layer that FR-6 depends on; no listed suite covers them.
+- Code: `scripts/check-env-var-count.mts` and `config/env-var-count-budget.txt` implement the env-var count ratchet; no listed suite covers it.
 - Classification: advisory.

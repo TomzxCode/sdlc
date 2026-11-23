@@ -2,7 +2,7 @@
 artifact: specification
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Control UI specification
@@ -102,6 +102,45 @@ Fresh analysis of the owned paths under `ui/src/` confirms the drift recorded on
 - Evidence: `ui/src/pages/terminal/terminal-page.tsx`, `ui/src/components/desktop/desktop-client.ts`, `ui/src/pages/chat/components/file-editor-view.ts`, `ui/src/plugins/control-ui-host.ts`, and `src/plugins/registry-control-ui.ts`.
 - Artifact says: the diagram shows only a browser SPA over REST and WebSocket with three gateway files, and Out of Scope excludes "Plugin-provided UI components" (specification.md:14-26, specification.md:69).
 - Code: the UI also hosts a terminal, a noVNC desktop, a CodeMirror editor, and plugin views, and the gateway now uses a `server-methods/` method family.
+- Blocking: the map leaves out every embedded surface and excludes a shipped capability.
+
+### The risks and styling decision remain partly resolved (advisory)
+
+- Evidence: `specification.md:56,62,63`, `src/gateway/control-ui-csp.ts:42,114`, and the stylesheet policy in `ui/AGENTS.md`.
+- Artifact says: a legacy decorator migration risk, a CSP risk, and a plain CSS styling decision.
+- Code: the decorator migration is complete, CSP computes inline script hashes and frame-ancestor rules, and styling has strict CSS ownership rules for tokens, breakpoints, `@layer`, and `:has()`.
+- Advisory: these items are not harmful, but they no longer describe the current state.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis confirms the drift recorded on 2026-10-19 and 2026-11-16 is still present. `gateway.controlUi` keeps the same field set, with no `title` or `theme`, and Solid packages remain at `2.0.0-rc.18`. Line numbers below follow the current specification.md.
+
+### The overview and framework decision still describe Lit (blocking)
+
+- Evidence: 0 `lit` imports and 1756 `solid-js` imports under `ui/src`, `ui/package.json:37-38,55`, `ui/vitest.config.ts:32` (`controlUiSolidPlugin`), `ui/vitest.config.ts:59-61` (`@solidjs/compiler`, `@solidjs/testing-library`, `@solidjs/vite-plugin`), `ui/AGENTS.md:7`.
+- Artifact says: the Overview calls this a "Lit-based web component application" using "legacy decorators" and the technical decision chooses Lit (specification.md:10, specification.md:55).
+- Code: the application compiles Solid JSX through `@solidjs/vite-plugin`, uses `@solidjs/signals`, and tests with `@solidjs/testing-library`.
+- Blocking: the recorded decision is the opposite of the shipped design.
+
+### The chat flow still names a nonexistent endpoint (blocking)
+
+- Evidence: `src/gateway/server-methods.ts:321,409` dispatches `chat.send`, and `src/gateway/remote-control-ui-http-routing.ts:105` only serves `/api/chat/media/outgoing/`.
+- Artifact says: "Browser → Gateway: POST /api/chat" (specification.md:45).
+- Code: chat is sent over the Gateway Protocol WebSocket as `chat.send`, and there is no `POST /api/chat` route.
+- Blocking: the central sequence names a transport that was replaced.
+
+### The ControlUIConfig table still does not match the schema (blocking)
+
+- Evidence: `src/config/zod-schema.gateway.ts:163-240`.
+- Artifact says: the fields `title`, `theme` (light or dark), and `allowedOrigins` (specification.md:34-36).
+- Code: `gateway.controlUi` has `enabled`, `basePath`, `experimental` (including `customPlugins`, `chatBubbles`, `composerPredictions`), `root`, `environment`, `communityInvite`, `newSessionModelDefaults`, `github`, `sessionObserver`, `embedSandbox`, `allowExternalEmbedUrls`, `automaticallyFetchFavicons`, `allowedOrigins`, `dangerouslyAllowHostHeaderOriginFallback`, and `dangerouslyDisableDeviceAuth`. There is no `title` or `theme` field.
+- Blocking: two of the three documented fields do not exist.
+
+### The architecture diagram and out-of-scope list are still stale (blocking)
+
+- Evidence: `ui/src/pages/terminal/terminal-page.tsx`, `ui/src/components/desktop/desktop-client.ts`, `ui/src/pages/chat/components/file-editor-view.ts`, `ui/src/plugins/control-ui-host.ts`, `src/plugins/registry-control-ui.ts:78-84`.
+- Artifact says: the diagram shows only a browser SPA over REST and WebSocket with three gateway files (specification.md:14-26), and Out of Scope excludes "Plugin-provided UI components" (specification.md:70).
+- Code: the UI also hosts a terminal, a noVNC desktop, a CodeMirror editor, and seven kinds of plugin views registered through `registry-control-ui.ts`, and the gateway uses a `server-methods/` method family.
 - Blocking: the map leaves out every embedded surface and excludes a shipped capability.
 
 ### The risks and styling decision remain partly resolved (advisory)

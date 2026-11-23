@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Requirements review: Channel Integration
@@ -128,3 +128,51 @@ No new requirement drift was found beyond those findings.
 - Artifact says (lines 30-32): FR-8, FR-9, and FR-10 describe editing, voice, and reactions without naming an implementation seam.
 - Code says: the 56 actions in `src/channels/plugins/message-action-names.ts` implement these behaviors through `src/channels/plugins/message-action-dispatch.ts`.
 - Impact: the requirements are satisfied but would be clearer if they named the shared vocabulary.
+
+## Sync drift: 2026-11-23
+
+A fresh analysis against current code confirms the recorded drift stands.
+The requirements were not edited during this sync, so those findings remain open.
+
+### Blocking: durable inbound delivery is still absent from the requirements
+
+- Classification: blocking.
+- Artifact says (lines 22-39): FR-1 through FR-10 plus NFR-1 and NFR-2 describe transport, formatting, attachments, typing, threads, debounce, editing, voice, reactions, connection recovery, and credential secrecy.
+- Code says: `src/channels/AGENTS.md:13-26` names Durable Ingress and requires tombstone completion at turn adoption, an attempt floor of 8 and an age gate of 24 hours, a claim refresh heartbeat, and no silent completion on transient failure.
+- Code says: `src/channels/message/ingress-queue.types.ts:4-25` defines queue records with `attempts`, `lastAttemptAt`, `lastError`, and a claim with `token`, `ownerId`, and `claimedAt`.
+- Code says: `src/state/openclaw-state-schema.sql:1255-1277` stores the queue in `channel_ingress_events` with claim, attempt, and completion columns and the composite key `(queue_name, event_id)`.
+- Impact: a reader still cannot tell that inbound messages are persisted, leased, and retried across gateway restarts.
+
+### Blocking: sender access control is still absent from the requirements
+
+- Classification: blocking.
+- Artifact says (line 38): NFR-1 covers connection auto-recovery, and NFR-2 at line 39 covers credential secrecy only.
+- Code says: `src/channels/message-access/decision.ts` and its siblings `allowlist.ts`, `effective-allow-from.ts`, `dm-allow-state.ts`, `identifier-authentication.ts`, `sender-gates.ts`, `admission-evidence.ts`, and `runtime-access-groups.ts` own the inbound admission decision.
+- Code says: `src/channels/allow-from.ts:18` merges configured DM allowFrom entries with pairing-store sender ids, and `src/channels/direct-dm-access.ts:58-172` resolves legacy access lists, pairing entries, command authorization, and pairing challenges.
+- Code says: `src/channels/mention-gating.ts` and `src/channels/command-gating.ts` gate mentions and commands separately, and `docs/channels/pairing.md` and `docs/channels/access-groups.md` document the approval layers.
+- Impact: the requirements still omit who may talk to the assistant.
+
+### Blocking: the channel set and capability model are still undefined
+
+- Classification: blocking.
+- Artifact says (lines 23-24): FR-1 and FR-2 promise sending and receiving across all integrated channels, and line 62 still asks whether capability discovery is needed.
+- Code says: `src/channels/bundled-channel-ids.generated.ts:11-` lists 28 bundled channel ids, including `buzz`, `clickclack`, `qa-channel`, and `raft` that the artifact does not name.
+- Code says: `src/channels/plugins/types.plugin.ts:69-126` defines `ChannelPlugin` as about twenty optional adapter surfaces, and `src/channels/plugins/channel-runtime-surface.types.ts:40` models the surface a plugin actually exposes.
+- Code says: `src/channels/plugins/message-action-names.ts:62-141` holds the closed vocabulary of 56 core-owned message actions.
+- Impact: the code effectively answers the open question, and the promised uniform channel surface does not exist.
+
+### Advisory: the platform count and evidence pointers are stale
+
+- Classification: advisory.
+- Artifact says (line 10): the system spans 30+ messaging platforms, and the prior review at line 59 cites 56 pages under `docs/channels/`.
+- Code says: `extensions/` now holds 189 directories, 185 with a package.json, and 28 manifests declare a channel capability.
+- Code says: `docs/channels/` now holds 49 markdown pages, including the external-only pages named in the prior review.
+- Impact: the claim still holds, but the count in the prior review is stale and the artifact still names no source of truth.
+
+### Advisory: FR-7 and FR-8 through FR-10 omit the current implementation seams
+
+- Classification: advisory.
+- Artifact says (line 29): FR-7 merges rate limiting and debouncing, and lines 30-32 omit any action vocabulary.
+- Code says: `src/channels/inbound-debounce-policy.ts:1-18` owns debounce, and `src/channels/message/ingress-retry-policy.ts:12-14` owns the retry floor and age gate.
+- Code says: `src/channels/plugins/message-action-names.ts:62-141` and `src/channels/plugins/message-action-dispatch.ts` implement editing, reactions, and interactive actions through the shared vocabulary.
+- Impact: the requirements are satisfied but still imprecise.

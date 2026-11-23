@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Test plan review: Agent Runtime
@@ -107,3 +107,48 @@ Two replacement paths cited in that review no longer exist, so the code has move
 - Classification: advisory.
 - Code says: FR-5, FR-6, FR-9, FR-10, and FR-11 still have no row in the coverage matrix.
 - Impact: unchanged from 2026-10-19, still incomplete.
+
+## Sync drift: 2026-11-23
+
+The test plan artifact was not changed since the 2026-11-16 review.
+The blocking and advisory items recorded in 2026-10-19 and 2026-11-16 still apply.
+Two evidence paths cited in the 2026-11-16 section have moved again.
+
+### Blocking: the FR-4 row still points at a deleted file
+
+- Classification: blocking.
+- The artifact still lists `src/agents/subagent-spawn.test.ts` at line 21 and in the coverage matrix at line 55.
+- Code says: that path does not exist.
+- Code says: split coverage lives under `src/agents/subagents/spawn/`, including `subagent-spawn.authority.test.ts`, `acp-spawn.test.ts`, `acp-spawn.authority.test.ts`, and `subagent-capabilities.test.ts`.
+- Impact: a reader following the row lands on a dead path.
+
+### Blocking: the FR-2 row still maps compaction to a test that never compacts
+
+- Classification: blocking.
+- The artifact maps FR-2 to `src/agents/context.test.ts` at lines 20 and 53.
+- Code says: `src/agents/context.test.ts` is now 93 lines with four `it(...)` cases about configured context windows and token caches.
+- Code says: the file contains zero occurrences of `compact`.
+- Code says: compaction coverage now includes `src/agents/sessions/agent-session-compaction-boundary.test.ts`, `agent-session-compaction-headroom.test.ts`, `agent-session-compaction-noop-budget.test.ts`, `session-compaction-persistence.test.ts`, and suites under `src/agents/embedded-agent-runner/compact.*.test.ts`.
+- Impact: the mapped test cannot fail for compaction.
+
+### Blocking: the FR-7 row still maps persistence to a replay-policy test
+
+- Classification: blocking.
+- The artifact maps FR-7 to `src/agents/transcript-policy.test.ts` at lines 24 and 56.
+- Code says: `describe("resolveTranscriptPolicy")` now starts at line 77, not line 145 as recorded in 2026-10-19.
+- Code says: the cases assert provider-specific replay behavior such as `sanitizeToolCallIds`.
+- Code says: persistence coverage now includes `src/agents/command/transcript-persistence.test.ts`, `src/gateway/server-methods/chat-transcript-persistence.mirrors.test.ts`, `chat-transcript-persistence.node-loss.test.ts`, and `src/agents/sessions/session-compaction-persistence.test.ts`.
+- Impact: the mapped test does not exercise persistence.
+
+### Advisory: the coverage matrix still omits five requirements
+
+- Classification: advisory.
+- The artifact covers FR-1, FR-2, FR-3, FR-4, FR-7, and FR-8 at lines 50-57.
+- Code says: FR-5, FR-6, FR-9, FR-10, and FR-11 still have no row.
+
+### Advisory: the inventory and infrastructure descriptions remain stale
+
+- Classification: advisory.
+- The artifact says at line 45 that tests use in-memory SQLite for transcript persistence.
+- Code says: the store is worker-backed and engine-selectable per `src/infra/database-engine/registry.ts:26` and `:43-52`.
+- Code says: `src/agents/` still holds 2,437 `*.test.ts` files, so the ten listed files remain a small share of the runtime.

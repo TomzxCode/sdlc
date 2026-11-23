@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Media and Voice System requirements
@@ -78,3 +78,32 @@ The requirements were not changed since the 2026-10-19 review, so most recorded 
 ### FR-1, FR-5, FR-9, FR-10, FR-12, and open question 1 carry forward
 
 - No artifact text changed, so the advisory findings recorded on 2026-10-19 still hold without new evidence.
+
+## Sync drift: 2026-11-23
+
+The recorded code_ref 0eae4c0 is absent from this checkout, so this run verified the current tree at HEAD 78d2f2e70. The requirements text is unchanged since the 2026-11-16 review, and every recorded discrepancy still holds. The concrete discrepancies are restated below against current code.
+
+### FR-6 still understates the voice call surface (blocking)
+
+- Evidence: `extensions/voice-call/src/tool-schema.ts:33-67` defines the seven `voice_call` actions (`initiate_call`, `steer_call`, `continue_call`, `speak_to_user`, `send_dtmf`, `end_call`, `get_status`). `extensions/voice-call/src/cli-gateway-call.ts:21-29` defines nine `voicecall.*` Gateway RPC methods. `extensions/voice-call/src/config.ts:284-298` adds `inboundPolicy`, `reports`, `live`, `callbacks`, and `voicemail` config blocks.
+- Artifact says: "FR-6 | Must | The system shall support voice call initiation and management through provider integrations" (requirements.md:29).
+- The requirement names none of the seven agent tool actions, the nine RPC methods, or the five config blocks, so a reader cannot see the shipped voice call contract.
+
+### FR-8 is vague for a subsystem now inside the feature (blocking)
+
+- Evidence: `.sdlc/sync-meta.yml:83-100` places `src/media/`, `src/media-understanding/`, `src/link-understanding/`, and `packages/media-understanding-common/` inside p9. `src/media-understanding/` holds 91 files, `src/media/` holds 120, `packages/media-understanding-common/` holds 12, and `src/link-understanding/` holds 5.
+- Artifact says: "FR-8 | Should | The system shall support media understanding (describe, analyze, transcribe media content)" (requirements.md:31), while the overview calls it a unified media generation and understanding framework (requirements.md:10).
+- The boundary objection from 2026-10-19 is resolved, but the requirement still gives no hint that a fourth core with four directories sits behind it.
+
+### FR-10 still hides the meeting bot subsystem (advisory)
+
+- Evidence: `src/meeting-bot/` holds 102 files, including `src/meeting-bot/node-host.ts`, `src/meeting-bot/browser-controller.ts`, and `src/meeting-bot/meeting-modes.ts`. `src/state/openclaw-state-schema.sql:1736` creates `meeting_transcript_sessions` with related utterance and summary tables.
+- Artifact says: "FR-10 | Should | The system shall support meeting bot integration (Google Meet, Zoom, Teams)" (requirements.md:33).
+- The requirement holds but omits the browser controller, node host, modes, and durable transcript store.
+
+### FR-1, FR-5, FR-9, FR-12, and open question 1 carry forward (advisory)
+
+- `extensions/` still ships provider plugins beyond the named examples, including `fish-audio-speech/`, `gradium/`, `inworld/`, `muse/`, `omlx/`, `senseaudio/`, `tts-local-cli/`, and `azure-speech/`. The "etc." wording at requirements.md:24 and requirements.md:28 makes this granularity, not a contradiction.
+- Wake word detection lives in `apps/swabble/Sources/SwabbleKit/WakeWordGate.swift` and `apps/android/`, with core routing in `src/infra/voicewake.ts:1` and `src/infra/voicewake-routing.ts:1`, not in `src/talk/`. The requirement at requirements.md:32 remains satisfied.
+- Long-running generation runs through `src/agents/tools/media-generate-background.ts:1` with batch persistence and completion delivery, not in-turn streaming progress as requirements.md:35 suggests.
+- The same background generation modules answer open question 1 at requirements.md:54, so the question can be closed with a pointer to the owning module.

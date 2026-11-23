@@ -1,4 +1,4 @@
-<!-- session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA -->
+<!-- session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3 -->
 # Project Overview
 
 ## Purpose
@@ -8,7 +8,7 @@ It answers users on the messaging channels they already use (Discord, iMessage, 
 One Gateway runs as a personal assistant on a laptop or as a shared team deployment; configuration is the only difference.
 The Gateway is the control plane; the product is the assistant itself, not just a gateway.
 It remembers past conversations, can hand long work to a paired device or a leased cloud machine, and can learn repeatable procedures as skills.
-Anonymous feature statistics are opt-in and off by default; `update.checkOnStart: false` disables the daily version check and statistics together.
+Anonymous feature statistics are opt-in and off by default; update checks and bounded terminal update-outcome reports are on by default, and `update.checkOnStart: false` or `OPENCLAW_NO_AUTO_UPDATE=1` disables those update requests.
 
 ## Key Stakeholders
 
@@ -41,10 +41,10 @@ Anonymous feature statistics are opt-in and off by default; `update.checkOnStart
 
 **Out of scope:**
 - Multi-tenant SaaS hosting for mutually untrusted parties (run one Gateway per tenant instead)
-- Centralized cloud service or hosted OpenClaw fleet (runs on user's own infrastructure)
-- Formal enterprise SSO or RBAC
-- No paid tier, hosted service, or token (stewarded by the OpenClaw Foundation)
-- Native desktop app beyond macOS and Linux (Windows via CLI only; Windows Hub companion app available)
+- A centralized cloud service or hosted OpenClaw fleet run by the project (self-hosting is the default, and hosted services stay optional)
+- A first-party enterprise SSO or RBAC product (named operator roles and reverse-proxy SSO integration are supported instead)
+- A paid tier, hosted service, or token from the OpenClaw Foundation
+- A core-repo native desktop app for Windows (Windows Hub lives in `openclaw/openclaw-windows-node`, and a Tauri desktop app is the backup)
 
 ## Key Constraints
 
@@ -52,7 +52,8 @@ Anonymous feature statistics are opt-in and off by default; `update.checkOnStart
 - Single trust-domain architecture by design; team use shares one control plane, not multi-tenant isolation
 - Plugin isolation via explicit import boundaries and capability gating; plugins import core only through `openclaw/plugin-sdk/*`
 - Configuration is single-source-of-truth via `openclaw.json`; no silent config compat
-- SQLite-first for all runtime state; no JSON/JSONL sidecar files for state. PostgreSQL is a supported alternative engine (schema versions state 40, agent 42)
+- SQLite-first for all runtime state; no JSON/JSONL sidecar files for state
+- PostgreSQL is a supported alternative engine (schema versions state 41, agent 43)
 - Security-first: no secrets in logs, explicit trust model, rate limiting on auth
-- TypeScript ESM strict throughout; no `any` types, discriminated unions for routing
+- TypeScript ESM strict throughout; no `any` outside test support files, discriminated unions for routing
 - The Gateway process is the single owner of every OpenClaw database and its state; other processes route mutations through it

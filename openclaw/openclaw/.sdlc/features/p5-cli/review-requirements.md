@@ -2,7 +2,7 @@
 artifact: requirements
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Command-Line Interface requirements
@@ -103,3 +103,39 @@ session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
 - Artifact uses inline checkbox text with a bold requirement ID at requirements.md:51-55.
 - The template requires a checked item containing a fenced `gherkin` block tagged with the requirement ID.
 - None of the five criteria follow the template format.
+
+## Sync drift: 2026-11-23
+
+### Blocking: the Node constraint still contradicts the runtime guard
+
+- Artifact says (requirements.md:46): "Must work with Node.js 22.19+ (Node 24 recommended)".
+- Code: `package.json:2584` declares `"node": ">=24.16.0 <25 || >=26.1.0"`.
+- Code: `openclaw.mjs:42-43` sets `RECOMMENDED_NODE_MAJOR = 26` and builds the supported range string.
+- Code: `docs/install/index.md:13` and `docs/install/installer.md:158` state that Node 24.16.0+ on 24.x and 26.1.0+ are supported, 24.22.1+/26.12.1+ are recommended for security, and Node 22, 23, and 25 are unsupported.
+- The artifact admits Node 22, which the runtime guard refuses to start, and it omits the security recommendation.
+
+### Blocking: the FR-1 acceptance criterion still names a command that does not exist
+
+- Artifact says (requirements.md:51): "when the user runs `openclaw gateway start`, then the gateway process starts".
+- Code: `src/cli/gateway-cli/register.ts:232` registers `gateway run` ("Run the WebSocket Gateway (foreground)").
+- Code: `src/cli/daemon-cli/register-service-commands.ts:44-156` registers `daemon status`, `daemon install`, `daemon stop`, and `daemon restart`, with no `gateway start` and no `daemon start`.
+
+### Blocking: the command inventory is still far narrower than the shipped surface
+
+- Artifact says (requirements.md:10) the CLI manages plugins, channels, models, sessions, configurations, credentials, and the gateway.
+- Code: `src/cli/program/core-command-descriptors.ts:16-78` registers core groups such as `setup`, `onboard`, `configure`, `config`, `backup`, `database`, `migrate`, `storage`, `doctor`, `triage`, `dashboard`, `reset`, `uninstall`, `message`, `mcp`, `transcripts`, `agent`, `agents`, `status`, `health`, `audit`, and `sessions`.
+- Code: `src/cli/program/subcli-command-metadata.ts:15-76` registers sub-CLI groups such as `gateway`, `daemon`, `tui`, `terminal`, `chat`, `resume`, `plugins`, `channels`, `secrets`, `skills`, `update`, and `completion`.
+- Code: `src/plugins/cli.ts:76` exports `registerPluginCliCommandsFromValidatedConfig`, so part of the command surface is plugin-owned.
+
+### Advisory: FR-11 still understates the TUI and the owned source surface
+
+- Artifact says (requirements.md:33) the TUI is May priority.
+- Code: `src/tui/` holds 185 tracked files, up from 184 on 2026-11-16, and `tui`, `terminal`, `chat`, and `resume` are top-level commands at `src/cli/program/subcli-command-metadata.ts:48-53`.
+- Code: `src/cli/` holds 1426 tracked files, `src/commands/` holds 1570, and `src/system-agent/` holds 147.
+- Code: `src/cli/program/register.onboard.ts:377` and `src/cli/program/register.setup.ts:27` load the system-agent path that backs onboarding and setup, which no requirement describes.
+
+### Advisory: NFR-2 still has no automated guard
+
+- Artifact says (requirements.md:40): CLI startup time under 500ms.
+- Code: `src/cli/command-startup-timing.test.ts:45-56` asserts span shape and event count with no duration assertion.
+- Code: `src/cli/run-main.test.ts:100-128` asserts startup admission and dispatch mocks with no timing.

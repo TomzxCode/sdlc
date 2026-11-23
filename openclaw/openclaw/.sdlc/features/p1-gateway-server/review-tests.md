@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Test plan review: Gateway Server
@@ -103,4 +103,50 @@ Fresh analysis of the owned test paths confirms the 2026-10-19 drift is still un
 - Classification: advisory.
 - Artifact says (lines 12-35): the plan lists four unit files, one integration file, and five live files.
 - Code says: `src/gateway/` still holds thousands of test files. Unlisted areas still include RPC method dispatch and authorization, plugin reload and recovery, event broadcast and subscription, worker placement, and plugin in-process dispatch. New: version 2026.8 session goal methods at `src/gateway/methods/core-descriptors.ts:251-252` indicate another area with no listed coverage.
+- Impact: the plan still under-represents the gateway, which matters for future coverage planning.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis against the current checkout at version 2026.11.7 confirms the 2026-11-16 drift is still unresolved.
+All ten test files listed in the artifact still exist, so no listed file has been removed.
+Line numbers and file names below refer to the current checkout.
+
+### Persisting: FR-6 and NFR-1 are still mapped to a file that tests neither shutdown nor crash recovery
+
+- Classification: blocking.
+- Artifact says (lines 18, 61, and 62): `src/gateway/gateway-stability.test.ts` covers graceful shutdown and crash recovery.
+- Code says: `src/gateway/gateway-stability.test.ts:67` holds a single test named "keeps diagnostics bounded and queues drained under synthetic gateway churn", and its imports at `:2-3` are diagnostic helpers only.
+- Code says: the mapped file never starts, drains, or restarts a gateway. Shutdown coverage now lives in `src/gateway/server-shutdown.test.ts:11` and `src/gateway/server-shutdown.runtime.test.ts:112`, and `src/gateway/drain-active-sessions-for-shutdown.test.ts` is present.
+- Code says: two recovery files cited in the 2026-11-16 review are no longer present, `src/gateway/server-run-shutdown.recovery.test.ts` and `src/gateway/server-startup-recovery-boundary.test.ts`, so fresh recovery references must be located before the matrix is updated.
+- Impact: the mapped test still cannot fail for the requirements it claims to cover.
+
+### Persisting: FR-5 is still mapped to a file that never touches the HTTP probe routes
+
+- Classification: blocking.
+- Artifact says (line 60): `src/gateway/gateway.test.ts` covers the health check.
+- Code says: `src/gateway/gateway.test.ts:130`, `:254`, `:371`, and `:921` all call the `health` gateway RPC method, not an HTTP probe route.
+- Code says: `src/gateway/server-http.probe.test.ts:206` opens the "gateway probe endpoints" suite and `:231-233` asserts `/readyz` responses, while `:258-261` covers probe namespace variants.
+- Impact: the mapped test still cannot catch a broken `/health`, `/readyz`, or `/startupz` route.
+
+### Persisting: the coverage matrix still omits five functional requirements
+
+- Classification: advisory.
+- Artifact says (lines 55-63): FR-4, FR-7, FR-8, FR-9, and FR-10 have no row.
+- Code says: `src/gateway/server-reload-handlers.hot-reload-status.test.ts`, `src/gateway/auth-rate-limit.test.ts`, `src/gateway/node-registry-pairing.test.ts`, and `src/gateway/server/plugins-http.test.ts` exist for FR-4, FR-7, FR-8, and FR-10.
+- Code says: the FR-9 file named in the 2026-11-16 review is now `src/gateway/server-broadcast.live-text.test.ts`, while `src/gateway/server-broadcast-live-text.test.ts` is absent.
+- Impact: the map is still incomplete, and the FR-9 reference needs the current file name.
+
+### Persisting: the Test Infrastructure section still describes a mocked transport
+
+- Classification: advisory.
+- Artifact says (lines 49-50): mock HTTP and WebSocket servers and an in-memory SQLite database.
+- Code says: `src/gateway/server-http.ts:1-2` creates a real `node:http` or `node:https` server, `src/gateway/server-runtime-state.ts:312-313` creates a real WebSocket server, and `src/infra/database-engine/registry.ts:24-33` selects among engine families.
+- Impact: the infrastructure description still does not match how the gateway is exercised.
+
+### Persisting: large gateway areas remain unlisted
+
+- Classification: advisory.
+- Artifact says (lines 12-35): the plan lists four unit files, one integration file, and five live files.
+- Code says: `src/gateway/` still holds over 1,500 test files. Unlisted areas include RPC method dispatch and authorization, plugin reload and recovery, event broadcast and subscription, worker placement, and worker and MCP app HTTP routes.
+- Code says: `src/gateway/methods/core-descriptors.ts:243-244` adds version 2026.8 session goal methods, and `src/gateway/worker-environments/artifact-transfer-http.test.ts` covers worker bootstrap transfer.
 - Impact: the plan still under-represents the gateway, which matters for future coverage planning.

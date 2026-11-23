@@ -2,7 +2,7 @@
 artifact: tests
 verdict: changes-requested
 reviewed_at: 2026-10-19
-session_link: http://localhost:10000/?session=ses_eab0ae6abffe8Exw5lqWwhTxoA
+session_link: http://localhost:10000/?session=ses_df5cb8fcdffe6NShEL28nBp8i3
 ---
 
 # Review: Control UI test plan
@@ -80,6 +80,44 @@ Fresh analysis of the owned paths under `ui/src/` confirms the drift recorded on
 - Evidence: 3369 unit, 288 browser, and 1004 e2e test files under `ui/src`.
 - Artifact says: the suite covers about ten areas and "Does not cover gateway server behavior or browser compatibility" (tests.md:10).
 - Code: the browser projects run the 288 browser tests, so browser compatibility is covered.
+- Blocking: the scope misdescribes the suite.
+
+### Edge cases and new test areas are still undocumented (advisory)
+
+- Evidence: `ui/src/app/session-route-recovery.test.ts`, `ui/src/app/bootstrap.warm-boot.test.ts`, `ui/src/components/desktop/desktop-client.test.ts`, `ui/src/plugins/control-ui-view.test.tsx`, and `ui/src/plugins/control-ui-dashboard.test.ts`.
+- Artifact says: the edge case table lists only four scenarios and no terminal, desktop, editor, or plugin test entry (tests.md:29-34).
+- Code: the UI also handles stale-build and warm-boot recovery, auth recovery, and deleted-session route recovery, and each embedded subsystem has its own suites.
+- Advisory: the table is incomplete, not wrong.
+
+## Sync drift: 2026-11-23
+
+Fresh analysis confirms the drift recorded on 2026-10-19 and 2026-11-16 is still present and the suite has grown again. The workspace now has 3435 unit and component test files, 292 browser test files, and 1041 e2e test files, up from 3369, 288, and 1004.
+
+### Three of the ten listed test files are still missing (blocking)
+
+- Evidence: `ui/src/app/router-outlet.test.ts`, `ui/src/app/gateway-store.test.ts`, and `ui/src/components/app-sidebar.test.ts` are absent, while the other seven listed files exist.
+- Artifact says: the unit test table lists all ten files (tests.md:16-25).
+- Code: routing is covered by `ui/src/app-routes.test.ts` and `ui/src/app/route-transition.test.ts`, the gateway store has split suites such as `ui/src/app/gateway-store.auth.test.ts` and `ui/src/app/gateway-store.plugins.test.ts`, and the sidebar has dedicated suites under `ui/src/components/`.
+- Blocking: the plan points a reviewer at files that cannot be opened.
+
+### The coverage matrix still names a deleted file (blocking)
+
+- Evidence: `ui/src/app/gateway-store.test.ts` is absent, yet FR-1, FR-2, FR-4, and FR-5 map to it (tests.md:47-51).
+- Code: that coverage now lives in the split gateway-store suites and in the browser and e2e lanes.
+- Blocking: most matrix entries are dangling.
+
+### The test infrastructure still names Lit utilities (blocking)
+
+- Evidence: `ui/package.json:59-64,70,73` lists `@solidjs/testing-library` `1.0.0-rc.2`, `@solidjs/vite-plugin` `3.0.0-next.51`, `@vitest/browser` and `@vitest/browser-playwright` `5.0.5`, `playwright` `1.64.1`, and `vitest` `5.0.5`, and `ui/vitest.config.ts:4-5,32,97` wires Playwright Chromium, the Solid plugin, and an optional WebKit lane.
+- Artifact says: "- Lit testing utilities" among the infrastructure entries (tests.md:39).
+- Code: rendering tests use `@solidjs/testing-library` and run in real Chromium and WebKit browser projects.
+- Blocking: the plan instructs a contributor to set up a replaced stack.
+
+### The scope statement is still a material understatement (blocking)
+
+- Evidence: 3435 unit, 292 browser, and 1041 e2e test files under `ui/src`.
+- Artifact says: the suite covers about ten areas and "Does not cover gateway server behavior or browser compatibility" (tests.md:10).
+- Code: the browser projects run the 292 browser tests, so browser compatibility is covered.
 - Blocking: the scope misdescribes the suite.
 
 ### Edge cases and new test areas are still undocumented (advisory)
